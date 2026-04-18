@@ -7,7 +7,7 @@ alwaysApply: true
 
 ## About
 
-**better-errors** is a small Next.js application template using the App Router, TypeScript, Tailwind CSS v4, and shadcn/ui (Base UI primitives, Hugeicons). It is a starter-style layout: root shell in `app/layout.tsx`, shared UI under `components/`, and utilities in `lib/`.
+**error wolf** is a small Next.js application template using the App Router, TypeScript, Tailwind CSS v4, and shadcn/ui (Base UI primitives, Hugeicons). It is a starter-style layout: root shell in `app/layout.tsx`, shared UI under `components/`, and utilities in `lib/`.
 
 ## Core
 
@@ -31,7 +31,7 @@ alwaysApply: true
 | **Styling**           | **Tailwind CSS v4** via `@tailwindcss/postcss` and `postcss.config.mjs`                                          |
 | **Components**        | **shadcn/ui** (`shadcn`, `components.json`), **@base-ui/react**, **class-variance-authority**                    |
 | **Icons**             | **Hugeicons** (`@hugeicons/react`, `@hugeicons/core-free-icons`; `components.json` → `iconLibrary: "hugeicons"`) |
-| **Theming**           | **next-themes** (`attribute="class"`, system default, `**d`** toggles light/dark when not typing in inputs)      |
+| **Theming**           | **next-themes** (`attribute="class"`, system default; header sun/moon icon toggles light/dark)                    |
 | **Animation helpers** | **tw-animate-css** (imported from `app/globals.css`)                                                             |
 | **Lint**              | **ESLint 9** flat config: `eslint-config-next` (core-web-vitals + typescript)                                    |
 | **Format**            | **Prettier** + **prettier-plugin-tailwindcss** (see `.prettierrc`)                                               |

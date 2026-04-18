@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises"
+import { mkdir, readFile, unlink, writeFile } from "node:fs/promises"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -9,8 +9,15 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url))
 
 const LOGO_SVG_FILE = join(ROOT, "public", "logo.svg")
 
-/** Matches `.dark` `--background` in app/globals.css (oklch(0.1 0.008 150) → #020403). */
-const FAVICON_SQUARE_BG = "#020403"
+/** `:root` `--primary` in app/globals.css (oklch 0.55 0.16 150). */
+const LIGHT_UI_PATH_FILL = "#008a39"
+/** `:root` `--background` (oklch 0.985 0.008 95). */
+const LIGHT_UI_BG = "#fcfaf4"
+
+/** `.dark` `--primary` (oklch 0.82 0.2 145). */
+const DARK_UI_PATH_FILL = "#60e56b"
+/** `.dark` `--background` (oklch 0.1 0.008 150). */
+const DARK_UI_BG = "#020403"
 
 function parseViewBoxRect(svg: string): {
   x: number
@@ -44,17 +51,28 @@ function insertDirectlyAfterSvgOpenTag(svg: string, snippet: string): string {
   return svg.slice(0, afterOpen + 1) + snippet + svg.slice(afterOpen + 1)
 }
 
+function stripXmlComments(svg: string): string {
+  return svg.replace(/<!--[\s\S]*?-->/gu, "")
+}
+
 /**
- * Full-bleed background for raster icons; strips self-closing circles if present
- * (not used by the current wolf mark).
+ * Removes authored `<style>`, applies `pathFill` to `.cls-0` paths, optional
+ * circle strip, then full-viewBox background for raster export.
  */
-export function prepareIconSvgForFaviconRaster(svg: string): string {
-  const withoutCircles = svg.replace(/<circle\b[^/]*\/>/gu, "")
-  const vb = parseViewBoxRect(svg)
+export function buildRasterSvg(
+  rawSvg: string,
+  pathFill: string,
+  bgHex: string
+): string {
+  let s = stripXmlComments(rawSvg)
+  s = s.replace(/<style[^>]*>[\s\S]*?<\/style>\s*/iu, "")
+  s = s.replace(/<circle\b[^/]*\/>/gu, "")
+  s = s.replace(/class="cls-0"/gu, `fill="${pathFill}"`)
+  const vb = parseViewBoxRect(s)
   const rect = vb
-    ? `<rect x="${vb.x}" y="${vb.y}" width="${vb.width}" height="${vb.height}" fill="${FAVICON_SQUARE_BG}"/>`
-    : `<rect width="100%" height="100%" fill="${FAVICON_SQUARE_BG}"/>`
-  return insertDirectlyAfterSvgOpenTag(withoutCircles, rect)
+    ? `<rect x="${vb.x}" y="${vb.y}" width="${vb.width}" height="${vb.height}" fill="${bgHex}"/>`
+    : `<rect width="100%" height="100%" fill="${bgHex}"/>`
+  return insertDirectlyAfterSvgOpenTag(s, rect)
 }
 
 function renderSvgToPng(svg: string, widthPx: number): Uint8Array {
@@ -64,42 +82,56 @@ function renderSvgToPng(svg: string, widthPx: number): Uint8Array {
   return resvg.render().asPng()
 }
 
+async function rmIfExists(path: string) {
+  try {
+    await unlink(path)
+  } catch (e: unknown) {
+    const code = e && typeof e === "object" && "code" in e ? e.code : null
+    if (code !== "ENOENT") {
+      throw e
+    }
+  }
+}
+
 async function main() {
-  const iconSourceSvg = await readFile(LOGO_SVG_FILE, "utf8")
-  const faviconSvg = prepareIconSvgForFaviconRaster(iconSourceSvg)
+  const raw = await readFile(LOGO_SVG_FILE, "utf8")
 
-  const png16 = renderSvgToPng(faviconSvg, 16)
-  const png32 = renderSvgToPng(faviconSvg, 32)
-  const png180 = renderSvgToPng(faviconSvg, 180)
-  const png192 = renderSvgToPng(faviconSvg, 192)
-  const png512 = renderSvgToPng(faviconSvg, 512)
+  const lightSvg = buildRasterSvg(raw, LIGHT_UI_PATH_FILL, LIGHT_UI_BG)
+  const darkSvg = buildRasterSvg(raw, DARK_UI_PATH_FILL, DARK_UI_BG)
 
-  const faviconIco = join(ROOT, "app", "favicon.ico")
+  const light16 = renderSvgToPng(lightSvg, 16)
+  const light32 = renderSvgToPng(lightSvg, 32)
+  const dark16 = renderSvgToPng(darkSvg, 16)
+  const dark32 = renderSvgToPng(darkSvg, 32)
+
+  const faviconLightIco = join(ROOT, "public", "favicon-light.ico")
+  const faviconDarkIco = join(ROOT, "public", "favicon-dark.ico")
   const appleTouch = join(ROOT, "app", "apple-icon.png")
-  const icon1 = join(ROOT, "app", "icon1.png")
-  const icon2 = join(ROOT, "app", "icon2.png")
   const logo192 = join(ROOT, "public", "logo192.png")
   const logo512 = join(ROOT, "public", "logo512.png")
 
-  const icoBuffer = await pngToIco([Buffer.from(png16), Buffer.from(png32)])
+  const icoLight = await pngToIco([Buffer.from(light16), Buffer.from(light32)])
+  const icoDark = await pngToIco([Buffer.from(dark16), Buffer.from(dark32)])
 
-  for (const dir of [dirname(faviconIco), dirname(logo192)]) {
-    await mkdir(dir, { recursive: true })
-  }
+  await mkdir(dirname(faviconLightIco), { recursive: true })
+  await mkdir(dirname(appleTouch), { recursive: true })
 
-  await writeFile(faviconIco, icoBuffer)
-  await writeFile(appleTouch, png180)
-  await writeFile(icon1, png32)
-  await writeFile(icon2, png16)
-  await writeFile(logo192, png192)
-  await writeFile(logo512, png512)
+  await writeFile(faviconLightIco, icoLight)
+  await writeFile(faviconDarkIco, icoDark)
+  await writeFile(appleTouch, renderSvgToPng(darkSvg, 180))
+  await writeFile(logo192, renderSvgToPng(darkSvg, 192))
+  await writeFile(logo512, renderSvgToPng(darkSvg, 512))
 
-  console.log(`Wrote ${faviconIco}`)
+  await rmIfExists(join(ROOT, "app", "favicon.ico"))
+  await rmIfExists(join(ROOT, "app", "icon1.png"))
+  await rmIfExists(join(ROOT, "app", "icon2.png"))
+
+  console.log(`Wrote ${faviconLightIco}`)
+  console.log(`Wrote ${faviconDarkIco}`)
   console.log(`Wrote ${appleTouch}`)
-  console.log(`Wrote ${icon1} (32×32)`)
-  console.log(`Wrote ${icon2} (16×16)`)
   console.log(`Wrote ${logo192}`)
   console.log(`Wrote ${logo512}`)
+  console.log("Removed legacy app/favicon.ico, app/icon1.png, app/icon2.png")
 }
 
 void main().catch((err: unknown) => {

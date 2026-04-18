@@ -1,7 +1,10 @@
 import type { Metadata } from "next"
 import { Space_Mono } from "next/font/google"
+import { ViewTransition } from "react"
 
 import "./globals.css"
+import { SiteBackgroundLayer } from "@/components/site-background-layer"
+import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
@@ -18,7 +21,16 @@ export const metadata: Metadata = {
     default: "error-wolf",
     template: "%s · error-wolf",
   },
-  description: "collapse noisy stacks. ship clean issues.",
+  description: "collapse noisy error stacks. save tokens.",
+  icons: {
+    icon: [
+      {
+        url: "/favicon-light.ico",
+        sizes: "any",
+        type: "image/x-icon",
+      },
+    ],
+  },
 }
 
 export default function RootLayout({
@@ -34,9 +46,15 @@ export default function RootLayout({
     >
       <body>
         <ThemeProvider>
-          <div className="isolate flex min-h-svh flex-col">
+          <SiteBackgroundLayer />
+          <div className="relative z-10 isolate flex min-h-svh flex-col">
             <SiteHeader />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1">
+              <ViewTransition default="none" enter="ew-enter" exit="ew-exit">
+                {children}
+              </ViewTransition>
+            </main>
+            <SiteFooter />
           </div>
         </ThemeProvider>
       </body>

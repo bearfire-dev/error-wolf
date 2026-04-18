@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Reference snapshots (import paths may not match removed production files)
+    "scripts/example-bg-photo-tuner/**",
   ]),
 ]);
 
