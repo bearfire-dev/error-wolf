@@ -1,20 +1,25 @@
-import { Geist, Geist_Mono, Lora } from "next/font/google"
+import type { Metadata } from "next"
+import { Space_Mono } from "next/font/google"
 
 import "./globals.css"
+import { SiteHeader } from "@/components/site-header"
 import { ThemeProvider } from "@/components/theme-provider"
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
-const lora = Lora({subsets:['latin'],variable:'--font-serif'});
-
-const fontSans = Geist({
+const spaceMono = Space_Mono({
   subsets: ["latin"],
-  variable: "--font-sans",
+  weight: ["400", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-space-mono",
 })
 
-const fontMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-})
+export const metadata: Metadata = {
+  title: {
+    default: "error-wolf",
+    template: "%s · error-wolf",
+  },
+  description: "collapse noisy stacks. ship clean issues.",
+}
 
 export default function RootLayout({
   children,
@@ -25,10 +30,15 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn("antialiased", fontSans.variable, fontMono.variable, "font-serif", lora.variable)}
+      className={cn("antialiased", spaceMono.variable)}
     >
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <div className="isolate flex min-h-svh flex-col">
+            <SiteHeader />
+            <main className="flex-1">{children}</main>
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   )

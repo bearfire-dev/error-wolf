@@ -1,5 +1,5 @@
 {
-  "name": "better-errors",
+  "name": "error-wolf",
   "version": "0.0.1",
   "type": "module",
   "private": true,
@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "generate:icons": "tsx scripts/generate-icons.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",
@@ -17,6 +18,7 @@
     "@hugeicons/react": "^1.1.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "gpt-tokenizer": "^3.4.0",
     "next": "16.1.7",
     "next-themes": "^0.4.6",
     "react": "^19.2.4",
@@ -27,16 +29,19 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/postcss": "^4.2.1",
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "eslint": "^9.39.4",
     "eslint-config-next": "16.1.7",
+    "png-to-ico": "^3.0.1",
     "postcss": "^8",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4.2.1",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
 }
