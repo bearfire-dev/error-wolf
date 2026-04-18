@@ -1,0 +1,97 @@
+---
+
+## description:
+alwaysApply: true
+
+# Agent Guidelines
+
+## About
+
+**better-errors** is a small Next.js application template using the App Router, TypeScript, Tailwind CSS v4, and shadcn/ui (Base UI primitives, Hugeicons). It is a starter-style layout: root shell in `app/layout.tsx`, shared UI under `components/`, and utilities in `lib/`.
+
+## Core
+
+- Cold, professional tone. No flattery. Objective corrections only.
+- Stay focused; do not pad answers.
+- Prefer existing patterns over new frameworks or parallel design systems.
+- Refine touched code in place: same behavior, fewer moving parts.
+- Prefer single-purpose modules, components, and functions with consistent names.
+- This repo has no `.agents/skills/` tree; use this file, `README.md`, and `components.json` as the primary conventions.
+
+## Stack
+
+
+| Area                  | Choice                                                                                                           |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **Package manager**   | **pnpm** (`pnpm-lock.yaml`)                                                                                      |
+| **Runtime / app**     | **Next.js 16** (App Router: `app/`)                                                                              |
+| **UI**                | **React 19**                                                                                                     |
+| **Language**          | **TypeScript** (`strict: true` in `tsconfig.json`)                                                               |
+| **Dev server**        | **Turbopack** (`next dev --turbopack`)                                                                           |
+| **Styling**           | **Tailwind CSS v4** via `@tailwindcss/postcss` and `postcss.config.mjs`                                          |
+| **Components**        | **shadcn/ui** (`shadcn`, `components.json`), **@base-ui/react**, **class-variance-authority**                    |
+| **Icons**             | **Hugeicons** (`@hugeicons/react`, `@hugeicons/core-free-icons`; `components.json` → `iconLibrary: "hugeicons"`) |
+| **Theming**           | **next-themes** (`attribute="class"`, system default, `**d`** toggles light/dark when not typing in inputs)      |
+| **Animation helpers** | **tw-animate-css** (imported from `app/globals.css`)                                                             |
+| **Lint**              | **ESLint 9** flat config: `eslint-config-next` (core-web-vitals + typescript)                                    |
+| **Format**            | **Prettier** + **prettier-plugin-tailwindcss** (see `.prettierrc`)                                               |
+
+
+**Module system:** ESM — `package.json` has `"type": "module"`; config files use `.mjs` where applicable (`next.config.mjs`, `eslint.config.mjs`, `postcss.config.mjs`).
+
+## Layout
+
+- `**app/`** — Next App Router: `layout.tsx` (root shell, fonts, `ThemeProvider`), `page.tsx`, `globals.css` (Tailwind entry, design tokens, shadcn theme imports).
+- `**components/**` — Shared UI: `theme-provider.tsx`, `ui/` (e.g. shadcn-style primitives).
+- `**lib/**` — Cross-cutting helpers (e.g. `cn()` in `lib/utils.ts`).
+- `**hooks/**` — Reserved alias in `components.json`; add hooks here when needed.
+
+Colocate by feature as the app grows; keep routes and route-local UI under `app/` when it is page-specific.
+
+## UI
+
+- **Tailwind v4** is driven from `[app/globals.css](app/globals.css)`: `@import "tailwindcss"`, `@import "tw-animate-css"`, `@import "shadcn/tailwind.css"`, `@theme inline` tokens, and `:root` / `.dark` CSS variables (shadcn-style palette).
+- **Dark mode** uses the `.dark` class on ancestors (see `@custom-variant dark` in `globals.css`); `next-themes` applies the class on `html`.
+- **Fonts:** `next/font/google` — Geist Sans, Geist Mono, Lora (serif); variables are wired in `app/layout.tsx`.
+- **New shadcn pieces:** follow `[README.md](README.md)` (e.g. `npx shadcn@latest add <component>`). Prefer **pnpm** for installs: `pnpm dlx shadcn@latest add <component>` when adding dependencies through the CLI.
+- **Imports:** use path aliases from `components.json` / `tsconfig.json` — e.g. `@/components/ui/button`, `@/lib/utils`.
+- **Do not** introduce a second component library or icon set; stay on Base UI + Hugeicons + existing tokens.
+
+## Tooling
+
+Use **pnpm** (lockfile present).
+
+
+| Command          | Purpose                             |
+| ---------------- | ----------------------------------- |
+| `pnpm dev`       | Dev server (`next dev --turbopack`) |
+| `pnpm build`     | Production build (`next build`)     |
+| `pnpm start`     | Production server (`next start`)    |
+| `pnpm lint`      | ESLint                              |
+| `pnpm format`    | Prettier write on `**/*.{ts,tsx}`   |
+| `pnpm typecheck` | `tsc --noEmit`                      |
+
+
+There is **no** combined `check` script; run `pnpm format`, `pnpm lint`, and `pnpm typecheck` as needed after substantive edits.
+
+**Node version:** not pinned in-repo; use a current LTS compatible with Next 16 if you need a local baseline.
+
+## Code style
+
+- **TypeScript:** strict mode; path alias `@/`* → repo root (matches `baseUrl: "."` and `components.json` aliases).
+- **Prettier** (`.prettierrc`): LF, **no semicolons**, double quotes, 2 spaces, print width 80, trailing commas `es5`; Tailwind class sorting via `prettier-plugin-tailwindcss` with `tailwindStylesheet: app/globals.css` and `tailwindFunctions: ["cn", "cva"]`.
+- **ESLint:** `eslint.config.mjs` composes Next presets; ignores `.next/`, `out/`, `build/`, `next-env.d.ts`.
+- **React:** use `"use client"` only where client APIs are required (e.g. theme provider). Prefer server components by default in `app/` where practical.
+- **Utilities:** merge Tailwind classes with `cn()` from `@/lib/utils` (`clsx` + `tailwind-merge`).
+
+## Testing
+
+**No test runner is configured** — there is no `test` script in `package.json` and no Vitest/Jest/Cypress setup in-repo. If you add tests, introduce a single stack (and scripts) deliberately; do not assume tests exist until then.
+
+## CI / observability
+
+No `.github/workflows` or other CI config is present in this repository. No Sentry or other observability SDKs are wired in `package.json`.
+
+## Git
+
+Use standard git workflows. This repo does not define mandatory commit-message prefixes or PR tooling; use project or team conventions if provided separately.
