@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import type { Dispatch, SetStateAction } from "react"
 
 import type { HuntStep } from "@/lib/hunt-constants"
@@ -140,16 +140,10 @@ export function useHuntRun({
   >(null)
 
   const outputRef = useRef("")
-  const copyTimeoutRef = useRef<number | null>(null)
   const tokenCountRunIdRef = useRef<string | null>(null)
   const outputFeedbackLockedRef = useRef(false)
 
   const resetOutput = useCallback(() => {
-    if (copyTimeoutRef.current !== null) {
-      window.clearTimeout(copyTimeoutRef.current)
-      copyTimeoutRef.current = null
-    }
-
     outputRef.current = ""
     setOutputText("")
     setOutputModelDisplay("")
@@ -167,14 +161,6 @@ export function useHuntRun({
     setOutputFeedbackVote(null)
     setStep("input")
   }, [setStep, throughputBus])
-
-  useEffect(() => {
-    return () => {
-      if (copyTimeoutRef.current !== null) {
-        window.clearTimeout(copyTimeoutRef.current)
-      }
-    }
-  }, [])
 
   const simplify = useCallback(async () => {
     const trimmed = rawInput.trim()
@@ -354,7 +340,6 @@ export function useHuntRun({
 
     try {
       await navigator.clipboard.writeText(outputRef.current)
-      setCopied(true)
 
       const latest = getRecentResults()[0]
       const estimatedCostUsd = latest?.estimatedCostUsd
@@ -365,14 +350,7 @@ export function useHuntRun({
         ...(typeof estimatedCostUsd === "number" ? { estimatedCostUsd } : {}),
       })
 
-      if (copyTimeoutRef.current !== null) {
-        window.clearTimeout(copyTimeoutRef.current)
-      }
-
-      copyTimeoutRef.current = window.setTimeout(() => {
-        copyTimeoutRef.current = null
-        resetOutput()
-      }, 1200)
+      resetOutput()
     } catch {
       setLastError("Could not copy to clipboard.")
     }
