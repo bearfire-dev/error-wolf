@@ -5,9 +5,9 @@ import { useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
 
 import {
+  createAdaptiveTimebase,
   normalizeRate,
   readCssVar,
-  RATE_WINDOW_MS,
   statusLabel,
   statusTone,
   type InstrumentProps,
@@ -35,7 +35,13 @@ type OrbitState = {
   glow: number
 }
 
-const COMET_LIFE_MS = 900
+/**
+ * Baseline comet life; scaled dynamically at runtime against the adaptive
+ * timebase so slow runs keep comets visible while bursty runs don't smear.
+ */
+const COMET_LIFE_BASE_MS = 900
+const COMET_LIFE_MIN_MS = 180
+const COMET_LIFE_MAX_MS = 2200
 
 /**
  * Orbital constellation / radar. A central pulsar responds to summed
@@ -48,6 +54,10 @@ export function Constellation({ steps, bus }: InstrumentProps) {
   const orbitsRef = useRef(new Map<string, OrbitState>())
   const cometsRef = useRef<Comet[]>([])
   const pulseRef = useRef(0)
+  const timebaseRef = useRef(
+    createAdaptiveTimebase({ defaultIntervalMs: 50, defaultWindowMs: 180 })
+  )
+  const cometLifeRef = useRef(COMET_LIFE_BASE_MS)
   const stepsRef = useRef(steps)
   stepsRef.current = steps
   const busRef = useRef(bus ?? null)
@@ -85,6 +95,16 @@ export function Constellation({ steps, bus }: InstrumentProps) {
       const current = stepsRef.current
       const count = Math.max(1, current.length)
 
+      timebaseRef.current.update(busRef.current, current, now)
+      const windowMs = timebaseRef.current.windowMs
+      // Comet life scales so a chunk-streak lasts roughly 18 sample intervals
+      // — long enough to see when arrivals are sparse, short enough that a
+      // burst doesn't paint over itself.
+      cometLifeRef.current = Math.min(
+        COMET_LIFE_MAX_MS,
+        Math.max(COMET_LIFE_MIN_MS, timebaseRef.current.intervalMs * 18)
+      )
+
       // Update per-step orbit state and spawn comets on new ticks.
       let summedGlow = 0
       for (let i = 0; i < current.length; i += 1) {
@@ -95,7 +115,7 @@ export function Constellation({ steps, bus }: InstrumentProps) {
           orbitsRef.current.set(step.id, state)
         }
         const rate = busRef.current
-          ? busRef.current.sampleRate(step.id, RATE_WINDOW_MS, now)
+          ? busRef.current.sampleRate(step.id, windowMs, now)
           : 0
         const activity = normalizeRate(rate)
         state.glow = state.glow * 0.9 + activity * 0.1
@@ -127,10 +147,11 @@ export function Constellation({ steps, bus }: InstrumentProps) {
       pulseRef.current = pulseRef.current * 0.85 + aggregate * 0.15
 
       // Age comets.
+      const life = cometLifeRef.current
       const alive: Comet[] = []
       for (const c of cometsRef.current) {
         c.ageMs += dt
-        if (c.ageMs < COMET_LIFE_MS) alive.push(c)
+        if (c.ageMs < life) alive.push(c)
       }
       cometsRef.current = alive
 
@@ -232,7 +253,7 @@ export function Constellation({ steps, bus }: InstrumentProps) {
         const omega = state?.omega ?? 0.3
         const r = innerR + ringStep * (c.stepIdx + 0.5)
         c.radius = r
-        const progress = c.ageMs / COMET_LIFE_MS
+        const progress = c.ageMs / life
         const alpha = (1 - progress) * c.intensity
         const head = c.angle + (c.ageMs / 1000) * omega
         const tail = head - 0.9

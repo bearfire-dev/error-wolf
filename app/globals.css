@@ -230,19 +230,11 @@
   }
 }
 
-/* App Router: view transitions (main column); header stays fixed */
+/* App Router: view transitions (main column); header stays fixed.
+   Transform-only (no opacity) — avoids transparent frames / flicker. */
 :root {
-  --ew-vt-exit: 280ms;
-  --ew-vt-enter: 400ms;
-}
-
-@keyframes ew-vt-fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  --ew-vt-exit: 300ms;
+  --ew-vt-enter: 300ms;
 }
 
 @keyframes ew-vt-slide-in {
@@ -264,15 +256,11 @@
 }
 
 ::view-transition-old(.ew-exit) {
-  animation:
-    var(--ew-vt-exit) ease-out both ew-vt-fade reverse,
-    var(--ew-vt-exit) ease-out both ew-vt-slide-out;
+  animation: var(--ew-vt-exit) ease-out both ew-vt-slide-out;
 }
 
 ::view-transition-new(.ew-enter) {
-  animation:
-    var(--ew-vt-enter) ease-out var(--ew-vt-exit) both ew-vt-fade,
-    var(--ew-vt-enter) ease-out var(--ew-vt-exit) both ew-vt-slide-in;
+  animation: var(--ew-vt-enter) ease-out both ew-vt-slide-in;
 }
 
 ::view-transition-group(site-header) {

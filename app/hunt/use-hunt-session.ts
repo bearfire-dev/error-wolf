@@ -10,6 +10,7 @@ import {
 import { useRouter } from "next/navigation"
 
 import { hasConsent } from "@/lib/consent"
+import { emitUserSetupMetric } from "@/lib/sentry-product-metrics"
 import type { HuntStep } from "@/lib/hunt-constants"
 import {
   clearOpenRouterKeyCookie,
@@ -117,6 +118,7 @@ export function useHuntSession({
       const ok = await verifyOpenRouterKey(apiKey)
       if (ok) {
         setOpenRouterKeyCookie(apiKey)
+        emitUserSetupMetric()
         setKeyOk(true)
         setVerifyState("ok")
         setVerifyMessage(null)

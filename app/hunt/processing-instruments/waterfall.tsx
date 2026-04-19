@@ -5,16 +5,15 @@ import { useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
 
 import {
+  createAdaptiveTimebase,
   normalizeRate,
   readCssVar,
-  RATE_WINDOW_MS,
   statusLabel,
   statusTone,
   type InstrumentProps,
   type InstrumentStep,
 } from "./types"
 
-const ROW_INTERVAL_MS = 80
 const MAX_ROWS = 140
 
 /**
@@ -29,6 +28,9 @@ export function Waterfall({ steps, bus }: InstrumentProps) {
     { values: Float32Array; status: InstrumentStep["status"][] }[]
   >([])
   const lastRowAtRef = useRef(0)
+  const timebaseRef = useRef(
+    createAdaptiveTimebase({ defaultIntervalMs: 80, defaultWindowMs: 240 })
+  )
   const stepsRef = useRef(steps)
   stepsRef.current = steps
   const busRef = useRef(bus ?? null)
@@ -60,14 +62,18 @@ export function Waterfall({ steps, bus }: InstrumentProps) {
       const current = stepsRef.current
       const cols = Math.max(1, current.length)
 
-      if (now - lastRowAtRef.current >= ROW_INTERVAL_MS) {
+      timebaseRef.current.update(busRef.current, current, now)
+      const rowIntervalMs = timebaseRef.current.intervalMs
+      const windowMs = timebaseRef.current.windowMs
+
+      if (now - lastRowAtRef.current >= rowIntervalMs) {
         lastRowAtRef.current = now
         const values = new Float32Array(cols)
         const status: InstrumentStep["status"][] = []
         for (let i = 0; i < cols; i += 1) {
           const step = current[i]
           const rate = busRef.current
-            ? busRef.current.sampleRate(step.id, RATE_WINDOW_MS, now)
+            ? busRef.current.sampleRate(step.id, windowMs, now)
             : 0
           values[i] = normalizeRate(rate)
           status.push(step.status)
@@ -153,17 +159,21 @@ export function Waterfall({ steps, bus }: InstrumentProps) {
       ctx.stroke()
       ctx.globalAlpha = 1
 
-      // Time axis labels on the right.
+      // Time axis labels on the right (scale with adaptive row interval).
       ctx.fillStyle = muted
       ctx.font = `${Math.max(8, Math.min(10, h / 22))}px var(--font-space-mono), ui-monospace, monospace`
       ctx.textBaseline = "middle"
       ctx.textAlign = "left"
-      const totalSeconds = (MAX_ROWS * ROW_INTERVAL_MS) / 1000
+      const totalMs = MAX_ROWS * rowIntervalMs
       const ticks = [0, 0.25, 0.5, 0.75, 1]
       for (const frac of ticks) {
-        const seconds = frac * totalSeconds
+        const ms = frac * totalMs
         const label =
-          seconds === 0 ? "now" : `-${seconds.toFixed(seconds >= 10 ? 0 : 1)}s`
+          ms === 0
+            ? "now"
+            : ms < 1000
+              ? `-${Math.round(ms)}ms`
+              : `-${(ms / 1000).toFixed(ms / 1000 >= 10 ? 0 : 1)}s`
         const y = Math.min(h - 4, Math.max(8, frac * h))
         ctx.fillText(label, gridW + 4, y)
       }

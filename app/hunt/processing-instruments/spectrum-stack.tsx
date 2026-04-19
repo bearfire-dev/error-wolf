@@ -6,9 +6,9 @@ import { formatDuration } from "@/lib/recent-results"
 import { cn } from "@/lib/utils"
 
 import {
+  createAdaptiveTimebase,
   normalizeRate,
   readCssVar,
-  RATE_WINDOW_MS,
   statusLabel,
   statusTone,
   type InstrumentProps,
@@ -16,19 +16,32 @@ import {
 } from "./types"
 
 const BINS = 56
-const SAMPLE_INTERVAL_MS = 55
 const PEAK_DECAY_PER_SEC = 0.8
 
 /**
  * Stacked spectrum analyzer: one horizontal strip per step with a trailing
  * bar history. Amplitude samples are derived from the throughput bus using
  * a short sliding window so the bars rise and decay with real stream bursts.
+ *
+ * The per-bar time is adaptive — it tracks observed chunk inter-arrival
+ * cadence so tens-of-ms bursts still resolve into individual bars while
+ * slower runs stretch the axis out. A shared timebase keeps every strip on
+ * the same scale.
  */
 export function SpectrumStack({ steps, bus }: InstrumentProps) {
+  const timebaseRef = useRef(
+    createAdaptiveTimebase({ defaultIntervalMs: 50, defaultWindowMs: 140 })
+  )
   return (
     <div className="flex h-full min-h-0 flex-col gap-1.5 overflow-hidden">
       {steps.map((step) => (
-        <SpectrumStrip key={step.id} step={step} bus={bus} />
+        <SpectrumStrip
+          key={step.id}
+          step={step}
+          bus={bus}
+          steps={steps}
+          timebase={timebaseRef.current}
+        />
       ))}
     </div>
   )
@@ -37,9 +50,13 @@ export function SpectrumStack({ steps, bus }: InstrumentProps) {
 function SpectrumStrip({
   step,
   bus,
+  steps,
+  timebase,
 }: {
   step: InstrumentStep
   bus: InstrumentProps["bus"]
+  steps: InstrumentStep[]
+  timebase: ReturnType<typeof createAdaptiveTimebase>
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const hostRef = useRef<HTMLDivElement | null>(null)
@@ -53,13 +70,18 @@ function SpectrumStrip({
   stepRef.current = step
   const busRef = useRef(bus ?? null)
   busRef.current = bus ?? null
+  const stepsRef = useRef(steps)
+  stepsRef.current = steps
+  const timebaseRef = useRef(timebase)
+  timebaseRef.current = timebase
 
-  // Periodic state tick for the inline readouts (rate, elapsed). Kept off
-  // the rAF loop so drawing is not gated by React reconciliation.
-  const [readout, setReadout] = useState<{ rate: number; elapsed: number }>({
-    rate: 0,
-    elapsed: 0,
-  })
+  // Periodic state tick for the inline readouts (rate, elapsed, span). Kept
+  // off the rAF loop so drawing is not gated by React reconciliation.
+  const [readout, setReadout] = useState<{
+    rate: number
+    elapsed: number
+    spanMs: number
+  }>({ rate: 0, elapsed: 0, spanMs: timebase.intervalMs * BINS })
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -89,13 +111,20 @@ function SpectrumStrip({
       const dt = Math.max(0, now - (st.lastFrameAt || now))
       st.lastFrameAt = now
 
+      // Keep the shared timebase fresh on every frame (cheap — it only reads
+      // the bus event ring). Each strip updates it; that's fine since the
+      // state is a shared object and the math is idempotent per-frame.
+      timebaseRef.current.update(busRef.current, stepsRef.current, now)
+      const sampleIntervalMs = timebaseRef.current.intervalMs
+      const windowMs = timebaseRef.current.windowMs
+
       // Push a new amplitude sample into the rightmost bin.
-      if (now - st.lastSampleAt >= SAMPLE_INTERVAL_MS) {
+      if (now - st.lastSampleAt >= sampleIntervalMs) {
         st.lastSampleAt = now
         st.bins.copyWithin(0, 1, BINS)
         st.peaks.copyWithin(0, 1, BINS)
         const rate = busRef.current
-          ? busRef.current.sampleRate(stepRef.current.id, RATE_WINDOW_MS, now)
+          ? busRef.current.sampleRate(stepRef.current.id, windowMs, now)
           : 0
         const amp = normalizeRate(rate)
         st.bins[BINS - 1] = amp
@@ -188,7 +217,11 @@ function SpectrumStrip({
           : s.startedAtMs !== null
             ? now - s.startedAtMs
             : 0
-      setReadout({ rate, elapsed })
+      setReadout({
+        rate,
+        elapsed,
+        spanMs: timebaseRef.current.intervalMs * BINS,
+      })
     }, 160)
 
     return () => {
@@ -218,6 +251,12 @@ function SpectrumStrip({
         <span className="shrink-0 text-muted-foreground tabular-nums">
           {readout.rate > 0 ? `${Math.round(readout.rate)} c/s` : "·"}
         </span>
+        <span
+          className="shrink-0 text-muted-foreground/70 tabular-nums"
+          title="Visible time span across the strip"
+        >
+          {formatSpan(readout.spanMs)}
+        </span>
       </div>
       <div
         ref={hostRef}
@@ -231,4 +270,11 @@ function SpectrumStrip({
       </div>
     </div>
   )
+}
+
+function formatSpan(ms: number): string {
+  if (!Number.isFinite(ms) || ms <= 0) return "—"
+  if (ms < 1000) return `${Math.round(ms)}ms`
+  const s = ms / 1000
+  return s < 10 ? `${s.toFixed(1)}s` : `${Math.round(s)}s`
 }

@@ -5,9 +5,9 @@ import { useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
 
 import {
+  createAdaptiveTimebase,
   normalizeRate,
   readCssVar,
-  RATE_WINDOW_MS,
   statusLabel,
   statusTone,
   type InstrumentProps,
@@ -15,8 +15,6 @@ import {
 } from "./types"
 
 const TRACE_LEN = 220
-const SAMPLE_INTERVAL_MS = 28
-const SWEEP_MS = SAMPLE_INTERVAL_MS * TRACE_LEN
 
 type StepBuffer = {
   /** Circular buffer of amplitude samples in [0, 1]. */
@@ -41,6 +39,9 @@ export function Oscilloscope({ steps, bus }: InstrumentProps) {
   busRef.current = bus ?? null
   const buffersRef = useRef(new Map<string, StepBuffer>())
   const lastSampleAtRef = useRef(0)
+  const timebaseRef = useRef(
+    createAdaptiveTimebase({ defaultIntervalMs: 30, defaultWindowMs: 120 })
+  )
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -82,7 +83,11 @@ export function Oscilloscope({ steps, bus }: InstrumentProps) {
       const dt = prevFrameAt === 0 ? 16 : now - prevFrameAt
       prevFrameAt = now
 
-      const takeSample = now - lastSampleAtRef.current >= SAMPLE_INTERVAL_MS
+      timebaseRef.current.update(busRef.current, stepsRef.current, now)
+      const sampleIntervalMs = timebaseRef.current.intervalMs
+      const windowMs = timebaseRef.current.windowMs
+
+      const takeSample = now - lastSampleAtRef.current >= sampleIntervalMs
       if (takeSample) lastSampleAtRef.current = now
 
       for (const step of stepsRef.current) {
@@ -90,7 +95,7 @@ export function Oscilloscope({ steps, bus }: InstrumentProps) {
         if (takeSample) {
           buf.samples.copyWithin(0, 1, TRACE_LEN)
           const rate = busRef.current
-            ? busRef.current.sampleRate(step.id, RATE_WINDOW_MS, now)
+            ? busRef.current.sampleRate(step.id, windowMs, now)
             : 0
           buf.samples[TRACE_LEN - 1] = normalizeRate(rate)
         }
@@ -163,7 +168,8 @@ export function Oscilloscope({ steps, bus }: InstrumentProps) {
       ctx.fillText("0.0", 4, Math.round(h / 2) - 5)
       ctx.fillText("-1.0", 4, h - 10)
       ctx.textAlign = "right"
-      ctx.fillText(`${(SWEEP_MS / 1000).toFixed(1)}s`, w - 4, 2)
+      const sweepMs = sampleIntervalMs * TRACE_LEN
+      ctx.fillText(formatSweep(sweepMs), w - 4, 2)
       ctx.fillText("0s", w - 4, h - 10)
       ctx.textAlign = "left"
       ctx.globalAlpha = 1
@@ -244,6 +250,13 @@ export function Oscilloscope({ steps, bus }: InstrumentProps) {
       </div>
     </div>
   )
+}
+
+function formatSweep(ms: number): string {
+  if (!Number.isFinite(ms) || ms <= 0) return "—"
+  if (ms < 1000) return `${Math.round(ms)}ms`
+  const s = ms / 1000
+  return s < 10 ? `${s.toFixed(1)}s` : `${Math.round(s)}s`
 }
 
 function ScopeLegend({ step }: { step: InstrumentStep }) {

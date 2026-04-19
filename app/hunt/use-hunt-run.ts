@@ -17,11 +17,13 @@ import type {
 } from "@/lib/simplify/types"
 import {
   addRecentResult,
+  getRecentResults,
   getStats,
   previewText,
   updateRecentResultTokens,
   type SimplifyStats,
 } from "@/lib/recent-results"
+import { emitUserRunMetric } from "@/lib/sentry-product-metrics"
 import {
   createThroughputBus,
   type SimplifyProgressSnapshot,
@@ -349,6 +351,17 @@ export function useHuntRun({
       await navigator.clipboard.writeText(outputRef.current)
       setCopied(true)
 
+      const latest = getRecentResults()[0]
+      const estimatedCostUsd = latest?.estimatedCostUsd
+
+      emitUserRunMetric({
+        modelDisplay: outputModelDisplay,
+        feedbackAtCopy: outputFeedbackVote,
+        ...(typeof estimatedCostUsd === "number"
+          ? { estimatedCostUsd }
+          : {}),
+      })
+
       if (copyTimeoutRef.current !== null) {
         window.clearTimeout(copyTimeoutRef.current)
       }
@@ -360,7 +373,7 @@ export function useHuntRun({
     } catch {
       setLastError("Could not copy to clipboard.")
     }
-  }, [resetOutput])
+  }, [outputFeedbackVote, outputModelDisplay, resetOutput])
 
   const discardOutput = useCallback(() => {
     resetOutput()
