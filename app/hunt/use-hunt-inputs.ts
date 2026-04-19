@@ -2,8 +2,10 @@
 
 import { useCallback, useState } from "react"
 
-import { DEFAULT_SIMPLIFY_ENGINE_ID } from "@/lib/simplify/engines/registry"
-import type { SimplifyEngineId } from "@/lib/simplify/engines/types"
+import {
+  DEFAULT_SIMPLIFY_ENGINE_ID,
+  type SimplifyEngineId,
+} from "@/lib/simplify/engines/types"
 
 export type HuntInputState = {
   apiKey: string

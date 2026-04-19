@@ -13,17 +13,21 @@ export function SiteBackgroundLayer() {
       aria-hidden
     >
       <div className="bg-photo-strip-opacity w-full">
-        <div className="bg-photo-strip-inner relative w-full">
+        <div
+          className="bg-photo-strip-inner relative w-full max-w-full"
+          style={{
+            aspectRatio: `${jardenPhoto.width} / ${jardenPhoto.height}`,
+          }}
+        >
           <Image
             src={jardenPhoto}
             alt=""
-            width={jardenPhoto.width}
-            height={jardenPhoto.height}
+            fill
             sizes="100vw"
-            quality={75}
-            loading="lazy"
+            quality={60}
+            loading="eager"
             draggable={false}
-            className="h-auto w-full max-w-full"
+            className="object-cover"
             style={{
               objectPosition: "var(--bg-photo-pos-x) var(--bg-photo-pos-y)",
             }}

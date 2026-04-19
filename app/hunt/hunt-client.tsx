@@ -1,10 +1,10 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { ThumbsDownIcon, ThumbsUpIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
-import { StackTraceExamplesDialog } from "@/components/stack-trace-examples-dialog"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
 import {
@@ -64,8 +64,6 @@ import {
 } from "@/lib/simplify/cost-reference-models"
 import { cn } from "@/lib/utils"
 
-import { ProcessingDag } from "./processing-dag"
-import { ReplayDialog } from "./replay-dialog"
 import { useCostReferenceModel } from "./use-cost-reference-model"
 import { useHuntInputs } from "./use-hunt-inputs"
 import { useHuntRoutingEstimate } from "./use-hunt-routing-estimate"
@@ -73,10 +71,34 @@ import { useHuntRun } from "./use-hunt-run"
 import { useHuntSession } from "./use-hunt-session"
 import { useOpenRouterProviderRouting } from "./use-openrouter-provider-routing"
 
+const loadStackTraceExamplesDialog = () =>
+  import("@/components/stack-trace-examples-dialog").then(
+    (m) => m.StackTraceExamplesDialog
+  )
+
+const StackTraceExamplesDialog = dynamic(loadStackTraceExamplesDialog, {
+  ssr: false,
+})
+
+const loadReplayDialog = () =>
+  import("./replay-dialog").then((m) => m.ReplayDialog)
+
+const ReplayDialog = dynamic(loadReplayDialog, { ssr: false })
+
+const loadProcessingDag = () =>
+  import("./processing-dag").then((m) => m.ProcessingDag)
+
+const ProcessingDag = dynamic(loadProcessingDag, {
+  ssr: false,
+  loading: () => null,
+})
+
 export function HuntClient({
   stackTraceExamples,
+  initialHasOpenRouterKey,
 }: {
   stackTraceExamples: StackTraceExample[]
+  initialHasOpenRouterKey: boolean
 }) {
   // User-editable values stay in one place; hooks own workflow/process state.
   const inputs = useHuntInputs()
@@ -99,6 +121,7 @@ export function HuntClient({
   const selectedModelDisplay = formatResolvedModelDisplay(selectedModelRoute)
   const resolvedEngine = getSimplifyEngine(selectedModelRoute.engineId)
   const session = useHuntSession({
+    initialHasOpenRouterKey,
     apiKey: inputs.input.apiKey,
     hydrateInput: inputs.hydrate,
     setApiKey: inputs.setApiKey,
@@ -164,14 +187,6 @@ export function HuntClient({
     }
   }, [clearKeyCreditsNotice, session.step])
 
-  if (!session.ready) {
-    return (
-      <p className="font-mono text-xs text-muted-foreground">
-        &gt; loading<span className="blink">_</span>
-      </p>
-    )
-  }
-
   return (
     <div className="flex flex-col gap-6">
       <StepIndicator
@@ -180,6 +195,9 @@ export function HuntClient({
         onInputFromOutputClick={run.discardOutput}
         onProcessingStepClick={
           replayAvailable ? () => setReplayOpen(true) : undefined
+        }
+        onProcessingStepPointerEnter={
+          replayAvailable ? () => void loadReplayDialog() : undefined
         }
       />
       {run.replay && (
@@ -241,6 +259,10 @@ export function HuntClient({
               onEditKey={() => session.setStep("key")}
               keyOk={session.keyOk}
               compressBlocked={autoCompressBlocked}
+              onPreloadStackTraceExamples={() =>
+                void loadStackTraceExamplesDialog()
+              }
+              onPreloadProcessingDag={() => void loadProcessingDag()}
             />
           )}
 
@@ -281,11 +303,13 @@ function StepIndicator({
   onKeyStepClick,
   onInputFromOutputClick,
   onProcessingStepClick,
+  onProcessingStepPointerEnter,
 }: {
   current: HuntStep
   onKeyStepClick: () => void
   onInputFromOutputClick: () => void
   onProcessingStepClick?: () => void
+  onProcessingStepPointerEnter?: () => void
 }) {
   const currentIdx = HUNT_STEP_INDEX[current]
   const stepControlClass =
@@ -349,6 +373,7 @@ function StepIndicator({
               <button
                 type="button"
                 onClick={onProcessingStepClick}
+                onPointerEnter={onProcessingStepPointerEnter}
                 className={stepControlClass}
                 aria-label="Replay processing"
                 title="Replay processing"
@@ -506,6 +531,8 @@ function InputStep({
   onEditKey,
   keyOk,
   compressBlocked,
+  onPreloadStackTraceExamples,
+  onPreloadProcessingDag,
 }: {
   rawInput: string
   setRawInput: (v: string) => void
@@ -520,6 +547,8 @@ function InputStep({
   onEditKey: () => void
   keyOk: boolean
   compressBlocked: boolean
+  onPreloadStackTraceExamples: () => void
+  onPreloadProcessingDag: () => void
 }) {
   const canCompress =
     !disabled && rawInput.trim().length > 0 && !compressBlocked
@@ -529,7 +558,10 @@ function InputStep({
         <p className="font-mono text-xs text-foreground">
           <span className="text-primary">&gt;&nbsp;</span>paste stack traces
         </p>
-        <div className="flex shrink-0 items-center gap-2">
+        <div
+          className="flex shrink-0 items-center gap-2"
+          onPointerEnter={onPreloadStackTraceExamples}
+        >
           <StackTraceExamplesDialog
             examples={stackTraceExamples}
             onLoadExample={setRawInput}
@@ -580,7 +612,12 @@ function InputStep({
         )}
       >
         <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
-          <Button type="button" disabled={!canCompress} onClick={onSimplify}>
+          <Button
+            type="button"
+            disabled={!canCompress}
+            onClick={onSimplify}
+            onPointerEnter={onPreloadProcessingDag}
+          >
             [ hunt ]
           </Button>
           <span className="font-mono text-[0.625rem] tracking-wider text-muted-foreground uppercase">

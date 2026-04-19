@@ -1,5 +1,5 @@
-import { DEFAULT_SIMPLIFY_ENGINE_ID } from "@/lib/simplify/engines/registry"
 import {
+  DEFAULT_SIMPLIFY_ENGINE_ID,
   isSimplifyEngineId,
   type SimplifyEngineId,
 } from "@/lib/simplify/engines/types"

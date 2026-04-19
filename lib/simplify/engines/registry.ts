@@ -7,12 +7,12 @@ import {
   type SimplifyEngineId,
 } from "./types"
 
+export { DEFAULT_SIMPLIFY_ENGINE_ID } from "./types"
+
 export const SIMPLIFY_ENGINES: readonly SimplifyEngineDefinition[] = [
   simplifyEngineV1,
   simplifyEngineV1Mini,
 ]
-
-export const DEFAULT_SIMPLIFY_ENGINE_ID: SimplifyEngineId = simplifyEngineV1.id
 
 const ENGINE_BY_ID = new Map(
   SIMPLIFY_ENGINES.map((engine) => [engine.id, engine])

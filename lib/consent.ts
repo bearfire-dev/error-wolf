@@ -4,7 +4,9 @@ export const CONSENT_STORAGE_KEY = "error-wolf:consent-v1"
 export const CONSENT_COOKIE_NAME = "error-wolf-consent-v1"
 
 const LEGACY_CONSENT_STORAGE_KEY = "better-errors:consent-v1"
-const LEGACY_CONSENT_COOKIE_NAME = "better-errors-consent-v1"
+
+/** Legacy consent cookie name; kept for server-side checks and client clears. */
+export const LEGACY_CONSENT_COOKIE_NAME = "better-errors-consent-v1"
 
 function readConsentCookieFromDocument(): boolean {
   if (typeof document === "undefined") return false

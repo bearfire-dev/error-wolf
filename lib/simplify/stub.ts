@@ -15,7 +15,7 @@ export type {
   SimplifyWarning,
 } from "@/lib/simplify/types"
 export type { SimplifyEngineId } from "@/lib/simplify/engines/types"
-export { DEFAULT_SIMPLIFY_ENGINE_ID } from "@/lib/simplify/engines/registry"
+export { DEFAULT_SIMPLIFY_ENGINE_ID } from "@/lib/simplify/engines/types"
 export type { SimplifyPipelineNode } from "@/lib/simplify/pipeline-dag"
 export {
   createThroughputBus,

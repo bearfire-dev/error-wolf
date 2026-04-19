@@ -30,6 +30,8 @@ import type { HuntInputState } from "./use-hunt-inputs"
 type VerifyState = "idle" | "ok" | "bad"
 
 type UseHuntSessionArgs = {
+  /** From server `cookies()` — avoids gating the whole UI on client storage reads. */
+  initialHasOpenRouterKey: boolean
   apiKey: HuntInputState["apiKey"]
   hydrateInput: (
     next: Partial<Pick<HuntInputState, "apiKey" | "engineId" | "modelRouteId">>
@@ -45,6 +47,7 @@ const INITIAL_STATS: SimplifyStats = {
 }
 
 export function useHuntSession({
+  initialHasOpenRouterKey,
   apiKey,
   hydrateInput,
   setApiKey,
@@ -52,10 +55,11 @@ export function useHuntSession({
 }: UseHuntSessionArgs) {
   const router = useRouter()
 
-  const [ready, setReady] = useState(false)
-  const [step, setStep] = useState<HuntStep>("input")
+  const [step, setStep] = useState<HuntStep>(() =>
+    initialHasOpenRouterKey ? "input" : "key"
+  )
   const [stats, setStats] = useState<SimplifyStats>(INITIAL_STATS)
-  const [keyOk, setKeyOk] = useState(false)
+  const [keyOk, setKeyOk] = useState(() => initialHasOpenRouterKey)
   const [verifyState, setVerifyState] = useState<VerifyState>("idle")
   const [verifying, setVerifying] = useState(false)
   const [verifyMessage, setVerifyMessage] = useState<string | null>(null)
@@ -86,7 +90,6 @@ export function useHuntSession({
       setKeyOk(hasKey)
       setStats(getStats(getRecentResults()))
       setStep(hasKey ? "input" : "key")
-      setReady(true)
     })
   }, [hydrateInput, router])
 
@@ -150,7 +153,6 @@ export function useHuntSession({
   }, [clearApiKey])
 
   return {
-    ready,
     step,
     setStep,
     stats,

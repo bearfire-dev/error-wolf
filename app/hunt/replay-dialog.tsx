@@ -29,7 +29,11 @@ import {
 import type { SimplifyProgressSnapshot } from "@/lib/simplify/types"
 import { cn } from "@/lib/utils"
 
-import { ProcessingDag } from "./processing-dag"
+import {
+  PROCESSING_INSTRUMENT_VARIANTS,
+  ProcessingDag,
+  type ProcessingInstrumentVariant,
+} from "./processing-dag"
 import type { SimplifyReplayChunk, SimplifyReplayFrame } from "./use-hunt-run"
 
 type ReplayDialogProps = {
@@ -89,6 +93,8 @@ function ReplayBody({
   const [zoom, setZoom] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
+  const [variant, setVariant] =
+    useState<ProcessingInstrumentVariant>("spectrum")
 
   const dragRef = useRef<{
     x: number
@@ -305,6 +311,7 @@ function ReplayBody({
               disableEnter
               disableZoom
               bus={bus}
+              variant={variant}
             />
           </div>
         </div>
@@ -346,6 +353,26 @@ function ReplayBody({
       </div>
 
       <div className="flex shrink-0 flex-col gap-2">
+        <div className="flex flex-wrap items-center gap-1 font-mono text-[0.625rem] tracking-wider uppercase">
+          <span className="mr-1 text-muted-foreground">instrument</span>
+          {PROCESSING_INSTRUMENT_VARIANTS.map((v) => (
+            <button
+              key={v.id}
+              type="button"
+              onClick={() => setVariant(v.id)}
+              aria-pressed={v.id === variant}
+              className={cn(
+                "cursor-pointer rounded-sm border border-transparent bg-transparent px-2 py-1 font-mono transition-colors outline-none",
+                "focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                v.id === variant
+                  ? "border-primary/40 text-primary"
+                  : "text-muted-foreground/80 hover:border-foreground/15 hover:text-foreground"
+              )}
+            >
+              {v.label}
+            </button>
+          ))}
+        </div>
         <div className="flex items-center gap-2 font-mono text-[0.625rem] tracking-wider text-muted-foreground uppercase tabular-nums">
           <span className="text-foreground">
             {formatDuration(Math.min(currentMs, durationMs))}

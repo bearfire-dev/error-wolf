@@ -8,6 +8,10 @@ export const SIMPLIFY_ENGINE_IDS = ["v1", "v1-mini"] as const
 
 export type SimplifyEngineId = (typeof SIMPLIFY_ENGINE_IDS)[number]
 
+/** Same as `simplifyEngineV1.id`; kept here so callers avoid importing the full engine registry. */
+export const DEFAULT_SIMPLIFY_ENGINE_ID: SimplifyEngineId =
+  SIMPLIFY_ENGINE_IDS[0]
+
 export function isSimplifyEngineId(value: string): value is SimplifyEngineId {
   return (SIMPLIFY_ENGINE_IDS as readonly string[]).includes(value)
 }

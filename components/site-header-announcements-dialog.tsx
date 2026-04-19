@@ -1,10 +1,11 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { useCallback, useEffect, useState } from "react"
 
 import { BubbleChatNotificationIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import ReactMarkdown from "react-markdown"
+import type { Components } from "react-markdown"
 
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -25,6 +26,85 @@ import { getOpenRouterKeyFromCookie } from "@/lib/openrouter-key-cookie"
 import { cn } from "@/lib/utils"
 
 import { SITE_HEADER_UPDATES_HINT } from "./site-header-constants"
+
+const loadReactMarkdown = () => import("react-markdown")
+
+const LazyReactMarkdown = dynamic(loadReactMarkdown, {
+  ssr: false,
+  loading: () => null,
+})
+
+const ANNOUNCEMENTS_MARKDOWN_COMPONENTS: Components = {
+  p: ({ children }) => (
+    <p className="my-3 text-xs/relaxed text-foreground first:mt-0 last:mb-0">
+      {children}
+    </p>
+  ),
+  ul: ({ children }) => (
+    <ul className="my-3 list-disc space-y-2 pl-5 text-xs/relaxed text-foreground marker:text-muted-foreground">
+      {children}
+    </ul>
+  ),
+  ol: ({ children }) => (
+    <ol className="my-3 list-decimal space-y-2 pl-5 text-xs/relaxed text-foreground marker:text-muted-foreground">
+      {children}
+    </ol>
+  ),
+  li: ({ children }) => <li className="pl-0.5">{children}</li>,
+  strong: ({ children }) => (
+    <strong className="font-semibold text-foreground">{children}</strong>
+  ),
+  a: ({ href, children }) => (
+    <a
+      href={href}
+      className="break-words text-primary underline underline-offset-4 hover:text-foreground"
+      rel="noreferrer"
+      target="_blank"
+    >
+      {children}
+    </a>
+  ),
+  pre: ({ children }) => (
+    <pre className="my-3 max-w-full overflow-x-hidden rounded bg-foreground/10 p-3 font-mono text-[0.7rem] break-all whitespace-pre-wrap text-foreground [&_code]:bg-transparent [&_code]:p-0">
+      {children}
+    </pre>
+  ),
+  h1: ({ children }) => (
+    <h2 className="mt-6 mb-2 font-mono text-[0.7rem] font-normal tracking-wider text-foreground uppercase first:mt-0">
+      {children}
+    </h2>
+  ),
+  h2: ({ children }) => (
+    <h2 className="mt-6 mb-2 font-mono text-[0.7rem] font-normal tracking-wider text-foreground uppercase first:mt-0">
+      {children}
+    </h2>
+  ),
+  h3: ({ children }) => (
+    <h3 className="mt-5 mb-1.5 font-mono text-[0.65rem] font-normal tracking-wider text-muted-foreground uppercase">
+      {children}
+    </h3>
+  ),
+  code: ({ className, children }) => {
+    const isBlock = /\blanguage-/.test(String(className ?? ""))
+    if (isBlock) {
+      return (
+        <code
+          className={cn(
+            "block w-full min-w-0 bg-transparent p-0 font-mono text-[0.7rem] break-all text-inherit",
+            className
+          )}
+        >
+          {children}
+        </code>
+      )
+    }
+    return (
+      <code className="rounded bg-foreground/10 px-1 py-px text-[0.7rem] break-words">
+        {children}
+      </code>
+    )
+  },
+}
 
 type SiteHeaderAnnouncementsDialogProps = {
   latestPublishedAtMs: number
@@ -80,6 +160,9 @@ export function SiteHeaderAnnouncementsDialog({
         )}
         aria-label={`Updates. ${SITE_HEADER_UPDATES_HINT}`}
         title={`Updates — ${SITE_HEADER_UPDATES_HINT}`}
+        onPointerEnter={() => {
+          if (markdown.trim()) void loadReactMarkdown()
+        }}
       >
         <HugeiconsIcon icon={BubbleChatNotificationIcon} strokeWidth={2} />
         {unread ? (
@@ -108,83 +191,11 @@ export function SiteHeaderAnnouncementsDialog({
           data-slot="updates-markdown"
         >
           {markdown.trim() ? (
-            <ReactMarkdown
-              components={{
-                p: ({ children }) => (
-                  <p className="my-3 text-xs/relaxed text-foreground first:mt-0 last:mb-0">
-                    {children}
-                  </p>
-                ),
-                ul: ({ children }) => (
-                  <ul className="my-3 list-disc space-y-2 pl-5 text-xs/relaxed text-foreground marker:text-muted-foreground">
-                    {children}
-                  </ul>
-                ),
-                ol: ({ children }) => (
-                  <ol className="my-3 list-decimal space-y-2 pl-5 text-xs/relaxed text-foreground marker:text-muted-foreground">
-                    {children}
-                  </ol>
-                ),
-                li: ({ children }) => <li className="pl-0.5">{children}</li>,
-                strong: ({ children }) => (
-                  <strong className="font-semibold text-foreground">
-                    {children}
-                  </strong>
-                ),
-                a: ({ href, children }) => (
-                  <a
-                    href={href}
-                    className="break-words text-primary underline underline-offset-4 hover:text-foreground"
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    {children}
-                  </a>
-                ),
-                pre: ({ children }) => (
-                  <pre className="my-3 max-w-full overflow-x-hidden rounded bg-foreground/10 p-3 font-mono text-[0.7rem] break-all whitespace-pre-wrap text-foreground [&_code]:bg-transparent [&_code]:p-0">
-                    {children}
-                  </pre>
-                ),
-                h1: ({ children }) => (
-                  <h2 className="mt-6 mb-2 font-mono text-[0.7rem] font-normal tracking-wider text-foreground uppercase first:mt-0">
-                    {children}
-                  </h2>
-                ),
-                h2: ({ children }) => (
-                  <h2 className="mt-6 mb-2 font-mono text-[0.7rem] font-normal tracking-wider text-foreground uppercase first:mt-0">
-                    {children}
-                  </h2>
-                ),
-                h3: ({ children }) => (
-                  <h3 className="mt-5 mb-1.5 font-mono text-[0.65rem] font-normal tracking-wider text-muted-foreground uppercase">
-                    {children}
-                  </h3>
-                ),
-                code: ({ className, children }) => {
-                  const isBlock = /\blanguage-/.test(String(className ?? ""))
-                  if (isBlock) {
-                    return (
-                      <code
-                        className={cn(
-                          "block w-full min-w-0 bg-transparent p-0 font-mono text-[0.7rem] break-all text-inherit",
-                          className
-                        )}
-                      >
-                        {children}
-                      </code>
-                    )
-                  }
-                  return (
-                    <code className="rounded bg-foreground/10 px-1 py-px text-[0.7rem] break-words">
-                      {children}
-                    </code>
-                  )
-                },
-              }}
-            >
-              {markdown}
-            </ReactMarkdown>
+            open ? (
+              <LazyReactMarkdown components={ANNOUNCEMENTS_MARKDOWN_COMPONENTS}>
+                {markdown}
+              </LazyReactMarkdown>
+            ) : null
           ) : (
             <p className="text-xs text-muted-foreground">No updates yet.</p>
           )}

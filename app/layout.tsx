@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Space_Mono } from "next/font/google"
+import Script from "next/script"
 import { ViewTransition } from "react"
 
 import "./globals.css"
@@ -14,7 +15,6 @@ import { cn } from "@/lib/utils"
 const spaceMono = Space_Mono({
   subsets: ["latin"],
   weight: ["400", "700"],
-  style: ["normal", "italic"],
   variable: "--font-space-mono",
 })
 
@@ -98,6 +98,7 @@ export default async function RootLayout({
             <SiteFooter />
           </div>
         </ThemeProvider>
+        <Script src="https://ui.sh/ui-picker.js" strategy="afterInteractive" />
       </body>
     </html>
   )
