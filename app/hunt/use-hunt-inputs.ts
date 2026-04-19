@@ -12,6 +12,7 @@ export type HuntInputState = {
   rawInput: string
   engineId: SimplifyEngineId
   modelRouteId: string
+  smartSubmit: boolean
 }
 
 const INITIAL_INPUT_STATE: HuntInputState = {
@@ -19,6 +20,7 @@ const INITIAL_INPUT_STATE: HuntInputState = {
   rawInput: "",
   engineId: DEFAULT_SIMPLIFY_ENGINE_ID,
   modelRouteId: "auto",
+  smartSubmit: false,
 }
 
 export function useHuntInputs() {
@@ -27,7 +29,10 @@ export function useHuntInputs() {
   const hydrate = useCallback(
     (
       next: Partial<
-        Pick<HuntInputState, "apiKey" | "engineId" | "modelRouteId">
+        Pick<
+          HuntInputState,
+          "apiKey" | "engineId" | "modelRouteId" | "smartSubmit"
+        >
       >
     ) => {
       setInput((current) => ({ ...current, ...next }))
@@ -59,6 +64,10 @@ export function useHuntInputs() {
     setInput((current) => ({ ...current, rawInput: "" }))
   }, [])
 
+  const setSmartSubmit = useCallback((smartSubmit: boolean) => {
+    setInput((current) => ({ ...current, smartSubmit }))
+  }, [])
+
   return {
     input,
     hydrate,
@@ -68,5 +77,6 @@ export function useHuntInputs() {
     clearApiKey,
     setRawInput,
     clearRawInput,
+    setSmartSubmit,
   }
 }

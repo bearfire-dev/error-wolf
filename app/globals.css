@@ -351,14 +351,59 @@
   animation: ew-lane-flash 560ms ease-out;
 }
 
+@keyframes ew-bar-sweep {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+.ew-bar-sweep {
+  animation: ew-bar-sweep 1100ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ew-edge-draw,
   .ew-lane-enter,
-  .ew-lane-flash {
+  .ew-lane-flash,
+  .ew-bar-sweep {
     animation: none !important;
   }
   .ew-edge-draw {
     stroke-dashoffset: 0 !important;
     opacity: 1 !important;
   }
+  .ew-bar-sweep {
+    left: 0 !important;
+    width: 100% !important;
+    transform: none !important;
+    opacity: 0.5;
+  }
+}
+
+/* Sentry User Feedback widget (modal + injected chrome; trigger may be custom). */
+#sentry-feedback {
+  --foreground: #333333;
+  --background: #f7f6f3;
+  --accent-background: #3d6b52;
+  --accent-foreground: #fafaf8;
+  --success-color: #1f8a6a;
+  --error-color: #c9353a;
+  --box-shadow: 0 0 0 1px rgba(51, 51, 51, 0.1), 0 12px 36px rgba(0, 0, 0, 0.1);
+  --outline: 2px solid rgba(61, 107, 82, 0.35);
+}
+
+.dark #sentry-feedback {
+  --foreground: #ebe6ef;
+  --background: #1a1e1c;
+  --accent-background: #5fd49a;
+  --accent-foreground: #0a0d0c;
+  --success-color: #2da98c;
+  --error-color: #f55459;
+  --box-shadow:
+    0 0 0 1px rgba(235, 230, 239, 0.12), 0 12px 40px rgba(0, 0, 0, 0.45);
+  --outline: 2px solid rgba(95, 212, 154, 0.35);
 }

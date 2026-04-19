@@ -27,7 +27,7 @@ type UseOpenRouterProviderRoutingArgs = {
   apiKey: string
   enabled: boolean
   routingModelId: string
-  /** Total token budget for E2E heuristic (prompt + completion). */
+  /** Rough local E2E budget heuristic (prompt + completion), not billed usage. */
   e2eTokenEstimate?: number
 }
 

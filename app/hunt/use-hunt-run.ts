@@ -5,7 +5,7 @@ import type { Dispatch, SetStateAction } from "react"
 
 import type { HuntStep } from "@/lib/hunt-constants"
 import type { OpenRouterPublicEndpoint } from "@/lib/openrouter/endpoints-types"
-import { countTokens } from "@/lib/tokens/client"
+import { estimateTokenCountsFastAsync } from "@/lib/tokens/estimate-token-count-fast"
 import { getSimplifyEngine } from "@/lib/simplify/engines/registry"
 import type {
   SimplifyEngineId,
@@ -248,6 +248,8 @@ export function useHuntRun({
         durationMs: finalDuration,
       })
 
+      // Local token fields below are heuristic estimates; billed prompt usage
+      // stays sourced from OpenRouter cost spans when it is available.
       const compressorPromptTokens = sumCompressorPromptTokens(
         result.cost.spans
       )
@@ -281,10 +283,10 @@ export function useHuntRun({
         tokenCountRunIdRef.current = countingForId
         setTokenStatsPendingForId(countingForId)
 
-        void Promise.all([
-          countTokens(inputText),
-          countTokens(result.cleanedInput),
-          countTokens(text),
+        void estimateTokenCountsFastAsync([
+          inputText,
+          result.cleanedInput,
+          text,
         ])
           .then(([pasteInputTokens, cleanedInputTokens, outputTokens]) => {
             if (tokenCountRunIdRef.current !== countingForId) return
@@ -357,9 +359,7 @@ export function useHuntRun({
       emitUserRunMetric({
         modelDisplay: outputModelDisplay,
         feedbackAtCopy: outputFeedbackVote,
-        ...(typeof estimatedCostUsd === "number"
-          ? { estimatedCostUsd }
-          : {}),
+        ...(typeof estimatedCostUsd === "number" ? { estimatedCostUsd } : {}),
       })
 
       if (copyTimeoutRef.current !== null) {

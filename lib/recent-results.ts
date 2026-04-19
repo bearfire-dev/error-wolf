@@ -28,13 +28,15 @@ export type RecentSimplifyResult = {
   outputChars: number
   durationMs: number
   /**
-   * Tokens in the user's original paste (pre-compression), for reference pricing
-   * comparisons and paste-vs-output shrink metrics.
+   * Fast local estimate of tokens in the user's original paste
+   * (pre-compression), for reference pricing comparisons and paste-vs-output
+   * shrink metrics.
    */
   pasteInputTokens?: number
   /**
-   * Tokenizer count of the normalized trace body sent into the compressor (post-preprocess),
-   * used to approximate billed prompt minus raw paste when splitting IN for display.
+   * Fast local estimate of the normalized trace body sent into the compressor
+   * (post-preprocess), used to approximate billed prompt minus raw paste when
+   * splitting IN for display.
    */
   cleanedInputTokens?: number
   /**
@@ -69,8 +71,9 @@ export type SimplifyStatsRow = {
   inputTokens?: number
   outputTokens?: number
   /**
-   * Paste → output token change (negative = shrank). Based on **user paste** tokenizer
-   * count vs **output** tokens — not compressor/OpenRouter prompt (IN) vs output.
+   * Paste → output token change (negative = shrank). Based on the app's local
+   * estimate for **user paste** vs **output** tokens — not compressor/OpenRouter
+   * prompt (IN) vs output.
    */
   reductionTokensPct?: number
   estimatedCostUsd?: number
@@ -561,6 +564,93 @@ export function getStats(
     costSource: allCostSource,
   }
   return { count: n, current, all }
+}
+
+/** Hunt input UI preference; same localStorage stack as run history (`RECENT_RESULTS_*`). */
+const HUNT_SMART_SUBMIT_STORAGE_KEY = "error-wolf:hunt-smart-submit-v1"
+
+/** @deprecated Migrated to {@link HUNT_SMART_SUBMIT_STORAGE_KEY} on read. */
+const LEGACY_HUNT_PASTE_AUTO_SUBMIT_KEY = "error-wolf:hunt-paste-auto-submit-v1"
+
+type HuntSmartSubmitStored = {
+  v: 1
+  enabled: boolean
+  savedAt: string
+}
+
+function isHuntSmartSubmitStored(
+  value: unknown
+): value is HuntSmartSubmitStored {
+  if (!value || typeof value !== "object") return false
+  const o = value as Record<string, unknown>
+  return (
+    o.v === 1 && typeof o.enabled === "boolean" && typeof o.savedAt === "string"
+  )
+}
+
+export function readHuntSmartSubmitPreference(): boolean {
+  if (typeof window === "undefined") return false
+
+  try {
+    const tryParse = (raw: string | null): boolean | null => {
+      if (!raw) return null
+      const parsed: unknown = JSON.parse(raw)
+      if (!isHuntSmartSubmitStored(parsed)) return null
+      const savedAtMs = Date.parse(parsed.savedAt)
+      if (Number.isNaN(savedAtMs) || Date.now() - savedAtMs > MAX_AGE_MS) {
+        return null
+      }
+      return parsed.enabled
+    }
+
+    const primary = tryParse(
+      window.localStorage.getItem(HUNT_SMART_SUBMIT_STORAGE_KEY)
+    )
+    if (primary !== null) return primary
+
+    const legacyRaw = window.localStorage.getItem(
+      LEGACY_HUNT_PASTE_AUTO_SUBMIT_KEY
+    )
+    const migrated = tryParse(legacyRaw)
+    if (migrated !== null) {
+      persistHuntSmartSubmitPreference(migrated)
+      try {
+        window.localStorage.removeItem(LEGACY_HUNT_PASTE_AUTO_SUBMIT_KEY)
+      } catch {
+        // ignore
+      }
+      return migrated
+    }
+
+    if (legacyRaw) {
+      try {
+        window.localStorage.removeItem(LEGACY_HUNT_PASTE_AUTO_SUBMIT_KEY)
+      } catch {
+        // ignore
+      }
+    }
+    return false
+  } catch {
+    return false
+  }
+}
+
+export function persistHuntSmartSubmitPreference(enabled: boolean): void {
+  if (typeof window === "undefined") return
+
+  try {
+    const payload: HuntSmartSubmitStored = {
+      v: 1,
+      enabled,
+      savedAt: new Date().toISOString(),
+    }
+    window.localStorage.setItem(
+      HUNT_SMART_SUBMIT_STORAGE_KEY,
+      JSON.stringify(payload)
+    )
+  } catch {
+    // ignore quota / private mode
+  }
 }
 
 export function formatChars(n: number): string {

@@ -1,4 +1,13 @@
-import { withSentryConfig } from "@sentry/nextjs";
+import { withBotId } from "botid/next/config"
+import { withSentryConfig } from "@sentry/nextjs"
+
+/**
+ * Deploy (Vercel): enable BotID for the project; keep Deep Analysis off for Basic-only
+ * (no per-checkBotId Deep charges). Optional WAF rule on `/anonymous-tea` for rate limits.
+ * Confirm traffic in Firewall observability (BotID filter). See
+ * https://vercel.com/docs/botid
+ */
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactCompiler: true,
@@ -14,13 +23,17 @@ const nextConfig = {
   },
 }
 
-export default withSentryConfig(nextConfig, {
+const sentryOrg = process.env.SENTRY_ORG?.trim()
+const sentryProject = process.env.SENTRY_PROJECT?.trim()
+
+export default withSentryConfig(withBotId(nextConfig), {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
-  org: "bearfire",
-
-  project: "error-wolf",
+  // Source maps / releases: set in .env together with SENTRY_AUTH_TOKEN (see .env.example)
+  ...(sentryOrg && sentryProject
+    ? { org: sentryOrg, project: sentryProject }
+    : {}),
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
@@ -31,11 +44,9 @@ export default withSentryConfig(nextConfig, {
   // Upload a larger set of source maps for prettier stack traces (increases build time)
   widenClientFileUpload: true,
 
-  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
-  // This can increase your server load as well as your hosting bill.
-  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
-  // side errors will fail.
-  tunnelRoute: "/anonymous-tea",
+  // Sentry tunnel: `tunnelRoute` is omitted so requests hit `app/anonymous-tea/route.ts`
+  // (BotID + DSN allowlist) instead of a direct ingest rewrite. Client uses `tunnel` in
+  // `instrumentation-client.ts`. Exclude `/anonymous-tea` from middleware if you add any.
 
   webpack: {
     // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
@@ -50,4 +61,4 @@ export default withSentryConfig(nextConfig, {
       removeDebugLogging: true,
     },
   },
-});
+})

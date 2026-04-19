@@ -20,6 +20,7 @@ import {
 import { verifyOpenRouterKey } from "@/lib/openrouter/verify"
 import { readHuntComputeVersion } from "@/lib/hunt-compute-version"
 import { readHuntModelRouteId } from "@/lib/hunt-model-route"
+import { readHuntSmartSubmitPreference } from "@/lib/recent-results"
 import {
   getRecentResults,
   getStats,
@@ -35,7 +36,12 @@ type UseHuntSessionArgs = {
   initialHasOpenRouterKey: boolean
   apiKey: HuntInputState["apiKey"]
   hydrateInput: (
-    next: Partial<Pick<HuntInputState, "apiKey" | "engineId" | "modelRouteId">>
+    next: Partial<
+      Pick<
+        HuntInputState,
+        "apiKey" | "engineId" | "modelRouteId" | "smartSubmit"
+      >
+    >
   ) => void
   setApiKey: (value: string) => void
   clearApiKey: () => void
@@ -84,10 +90,11 @@ export function useHuntSession({
     const saved = getOpenRouterKeyFromCookie()
     const engineId = readHuntComputeVersion()
     const modelRouteId = readHuntModelRouteId()
+    const smartSubmit = readHuntSmartSubmitPreference()
     const hasKey = Boolean(saved.trim())
 
     startTransition(() => {
-      hydrateInput({ apiKey: saved, engineId, modelRouteId })
+      hydrateInput({ apiKey: saved, engineId, modelRouteId, smartSubmit })
       setKeyOk(hasKey)
       setStats(getStats(getRecentResults()))
       setStep(hasKey ? "input" : "key")

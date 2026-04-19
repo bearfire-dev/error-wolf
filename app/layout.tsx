@@ -1,6 +1,5 @@
 import type { Metadata } from "next"
 import { Space_Mono } from "next/font/google"
-import Script from "next/script"
 import { ViewTransition } from "react"
 
 import "./globals.css"
@@ -98,7 +97,6 @@ export default async function RootLayout({
             <SiteFooter />
           </div>
         </ThemeProvider>
-        <Script src="https://ui.sh/ui-picker.js" strategy="afterInteractive" />
       </body>
     </html>
   )

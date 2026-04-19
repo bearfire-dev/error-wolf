@@ -21,19 +21,19 @@ alwaysApply: true
 
 ## Stack
 
-| Area                  | Choice                                                                                                                   |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| **Package manager**   | **pnpm** (`pnpm-lock.yaml`)                                                                                              |
-| **Runtime / app**     | **Next.js 16** (App Router: `app/`)                                                                                      |
-| **UI**                | **React 19**                                                                                                             |
-| **React Compiler**    | **Next.js `reactCompiler: true`** + dev **`babel-plugin-react-compiler`** (compile-time memoization; same React runtime) |
-| **Language**          | **TypeScript** (`strict: true` in `tsconfig.json`)                                                                       |
-| **Dev server**        | **Turbopack** (`next dev --turbopack`)                                                                                   |
-| **Styling**           | **Tailwind CSS v4** via `@tailwindcss/postcss` and `postcss.config.mjs`                                                  |
-| **Components**        | **shadcn/ui** (`shadcn`, `components.json`), **@base-ui/react**, **class-variance-authority**                            |
-| **Icons**             | **Hugeicons** (`@hugeicons/react`, `@hugeicons/core-free-icons`; `components.json` → `iconLibrary: "hugeicons"`)         |
-| **Theming**           | **next-themes** (`attribute="class"`, system default; header sun/moon icon toggles light/dark)                           |
-| **Animation helpers** | **tw-animate-css** (imported from `app/globals.css`)                                                                     |
+| Area                  | Choice                                                                                                                                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Package manager**   | **pnpm** (`pnpm-lock.yaml`)                                                                                                                                                                             |
+| **Runtime / app**     | **Next.js 16** (App Router: `app/`)                                                                                                                                                                     |
+| **UI**                | **React 19**                                                                                                                                                                                            |
+| **React Compiler**    | **Next.js `reactCompiler: true`** + dev **`babel-plugin-react-compiler`** (compile-time memoization; same React runtime)                                                                                |
+| **Language**          | **TypeScript** (`strict: true` in `tsconfig.json`)                                                                                                                                                      |
+| **Dev server**        | **Turbopack** (`next dev --turbopack`)                                                                                                                                                                  |
+| **Styling**           | **Tailwind CSS v4** via `@tailwindcss/postcss` and `postcss.config.mjs`                                                                                                                                 |
+| **Components**        | **shadcn/ui** (`shadcn`, `components.json`), **@base-ui/react**, **class-variance-authority**                                                                                                           |
+| **Icons**             | **Hugeicons** (`@hugeicons/react`, `@hugeicons/core-free-icons`; `components.json` → `iconLibrary: "hugeicons"`)                                                                                        |
+| **Theming**           | **next-themes** (`attribute="class"`, system default; header sun/moon icon toggles light/dark)                                                                                                          |
+| **Animation helpers** | **tw-animate-css** (imported from `app/globals.css`)                                                                                                                                                    |
 | **Lint**              | **Oxlint** (`.oxlintrc.json`): Next.js + TypeScript + React rules, **`--type-aware`** via **`oxlint-tsgolint`**, React Compiler checks via **`eslint-plugin-react-compiler`** as an Oxlint **jsPlugin** |
 | **Format**            | **Oxfmt** (`.oxfmtrc.json`): Prettier-compatible options + **`sortTailwindcss`** (`app/globals.css`, `cn` / `cva`)                                                                                      |
 

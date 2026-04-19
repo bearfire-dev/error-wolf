@@ -2,7 +2,11 @@
 
 import dynamic from "next/dynamic"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { ThumbsDownIcon, ThumbsUpIcon } from "@hugeicons/core-free-icons"
+import {
+  ReloadIcon,
+  ThumbsDownIcon,
+  ThumbsUpIcon,
+} from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { Button } from "@/components/ui/button"
@@ -10,7 +14,6 @@ import { ButtonGroup } from "@/components/ui/button-group"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -23,6 +26,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import {
   formatChars,
@@ -30,25 +34,20 @@ import {
   formatDuration,
   formatTokens,
   getRecentResults,
+  persistHuntSmartSubmitPreference,
   type RecentSimplifyResult,
   type SimplifyStats,
   type SimplifyStatsRow,
 } from "@/lib/recent-results"
 import { persistHuntComputeVersion } from "@/lib/hunt-compute-version"
 import { persistHuntModelRouteId } from "@/lib/hunt-model-route"
-import { getProgressElapsedMs } from "@/lib/simplify/progress"
 import { getSimplifyEngine } from "@/lib/simplify/engines/registry"
 import type {
-  SimplifyEngineDefinition,
   SimplifyEngineId,
   SimplifyModelRouteOption,
   SimplifyResolvedModelRoute,
 } from "@/lib/simplify/engines/types"
-import {
-  type SimplifyProgressSnapshot,
-  type SimplifyWarning,
-  type ThroughputBus,
-} from "@/lib/simplify/stub"
+import { type SimplifyWarning } from "@/lib/simplify/stub"
 import {
   HUNT_GITHUB_SOURCE_URL,
   HUNT_SENTRY_URL,
@@ -63,6 +62,7 @@ import {
   type CostReferenceModel,
 } from "@/lib/simplify/cost-reference-models"
 import { cn } from "@/lib/utils"
+import { useSentryFeedbackAttach } from "@/hooks/use-sentry-feedback-attach"
 
 import { useCostReferenceModel } from "./use-cost-reference-model"
 import { useHuntInputs } from "./use-hunt-inputs"
@@ -70,6 +70,7 @@ import { useHuntRoutingEstimate } from "./use-hunt-routing-estimate"
 import { useHuntRun } from "./use-hunt-run"
 import { useHuntSession } from "./use-hunt-session"
 import { useOpenRouterProviderRouting } from "./use-openrouter-provider-routing"
+import { ProcessingStep } from "./processing-step"
 
 const loadStackTraceExamplesDialog = () =>
   import("@/components/stack-trace-examples-dialog").then(
@@ -80,18 +81,16 @@ const StackTraceExamplesDialog = dynamic(loadStackTraceExamplesDialog, {
   ssr: false,
 })
 
-const loadReplayDialog = () =>
-  import("./replay-dialog").then((m) => m.ReplayDialog)
+const loadProcessingReplayPanel = () =>
+  import("./processing-replay-panel").then((m) => m.ProcessingReplayPanel)
 
-const ReplayDialog = dynamic(loadReplayDialog, { ssr: false })
-
-const loadProcessingDag = () =>
-  import("./processing-dag").then((m) => m.ProcessingDag)
-
-const ProcessingDag = dynamic(loadProcessingDag, {
+const ProcessingReplayPanel = dynamic(loadProcessingReplayPanel, {
   ssr: false,
   loading: () => null,
 })
+
+const loadProcessingDag = () =>
+  import("./processing-dag").then((m) => m.ProcessingDag)
 
 export function HuntClient({
   stackTraceExamples,
@@ -102,6 +101,7 @@ export function HuntClient({
 }) {
   // User-editable values stay in one place; hooks own workflow/process state.
   const inputs = useHuntInputs()
+  const setSmartSubmit = inputs.setSmartSubmit
   const routingEngine = getSimplifyEngine(
     getRoutingEngineIdForRoute(inputs.input.modelRouteId)
   )
@@ -127,6 +127,7 @@ export function HuntClient({
     setApiKey: inputs.setApiKey,
     clearApiKey: inputs.clearApiKey,
   })
+  const { setStep } = session
   const openRouterRouting = useOpenRouterProviderRouting({
     apiKey: inputs.input.apiKey,
     enabled: session.keyOk,
@@ -173,10 +174,60 @@ export function HuntClient({
     persistHuntModelRouteId(modelRouteId)
   }
 
-  const [replayOpen, setReplayOpen] = useState(false)
-  const replayAvailable = Boolean(
-    run.replay && run.replay.frames.length > 0 && session.step === "output"
+  const handleSmartSubmitChange = useCallback(
+    (enabled: boolean) => {
+      setSmartSubmit(enabled)
+      persistHuntSmartSubmitPreference(enabled)
+    },
+    [setSmartSubmit]
   )
+
+  const [revisitProcessingFromOutput, setRevisitProcessingFromOutput] =
+    useState(false)
+  const [replayPanelEpoch, setReplayPanelEpoch] = useState(0)
+
+  const replayHasData = Boolean(run.replay && run.replay.frames.length > 0)
+
+  const prevStepRef = useRef(session.step)
+  useEffect(() => {
+    const p = prevStepRef.current
+    if (p === "input" && session.step === "processing") {
+      setRevisitProcessingFromOutput(false)
+    }
+    prevStepRef.current = session.step
+  }, [session.step])
+
+  const goToProcessingReplay = useCallback(() => {
+    setRevisitProcessingFromOutput(true)
+    setStep("processing")
+  }, [setStep])
+
+  const exitProcessingReplay = useCallback(() => {
+    setRevisitProcessingFromOutput(false)
+    setStep("output")
+  }, [setStep])
+
+  const handleProcessingStepIndicatorClick = useCallback(() => {
+    if (session.step === "output" && replayHasData) {
+      goToProcessingReplay()
+    } else if (
+      session.step === "processing" &&
+      revisitProcessingFromOutput &&
+      replayHasData
+    ) {
+      setReplayPanelEpoch((e) => e + 1)
+    }
+  }, [
+    session.step,
+    replayHasData,
+    revisitProcessingFromOutput,
+    goToProcessingReplay,
+  ])
+
+  const processingStepIndicatorClickable =
+    replayHasData &&
+    (session.step === "output" ||
+      (session.step === "processing" && revisitProcessingFromOutput))
 
   const autoCompressBlocked =
     selectedModelRouteId === "auto" && routingEstimate.inputTokens === null
@@ -191,25 +242,19 @@ export function HuntClient({
     <div className="flex flex-col gap-6">
       <StepIndicator
         current={session.step}
-        onKeyStepClick={() => session.setStep("key")}
+        onKeyStepClick={() => setStep("key")}
         onInputFromOutputClick={run.discardOutput}
         onProcessingStepClick={
-          replayAvailable ? () => setReplayOpen(true) : undefined
+          processingStepIndicatorClickable
+            ? handleProcessingStepIndicatorClick
+            : undefined
         }
-        onProcessingStepPointerEnter={
-          replayAvailable ? () => void loadReplayDialog() : undefined
+        onOutputStepClick={
+          session.step === "processing" && revisitProcessingFromOutput
+            ? exitProcessingReplay
+            : undefined
         }
       />
-      {run.replay && (
-        <ReplayDialog
-          open={replayOpen}
-          onOpenChange={setReplayOpen}
-          frames={run.replay.frames}
-          chunks={run.replay.chunks}
-          durationMs={run.replay.durationMs}
-          dag={replayEngine?.dag ?? resolvedEngine.dag}
-        />
-      )}
 
       <div className="relative aspect-[5/7] w-full border border-foreground/15 bg-card dark:bg-card/40">
         <div
@@ -256,23 +301,64 @@ export function HuntClient({
                 error: openRouterRouting.error,
               })}
               onSimplify={() => void run.simplify()}
-              onEditKey={() => session.setStep("key")}
+              onEditKey={() => setStep("key")}
               keyOk={session.keyOk}
               compressBlocked={autoCompressBlocked}
               onPreloadStackTraceExamples={() =>
                 void loadStackTraceExamplesDialog()
               }
               onPreloadProcessingDag={() => void loadProcessingDag()}
+              smartSubmit={inputs.input.smartSubmit}
+              onSmartSubmitChange={handleSmartSubmitChange}
             />
           )}
 
-          {session.step === "processing" && (
-            <ProcessingStep
-              progress={run.progress}
-              dag={run.activeRunDag ?? resolvedEngine.dag}
-              bus={run.throughputBus}
-            />
-          )}
+          {session.step === "processing" &&
+            revisitProcessingFromOutput &&
+            run.replay &&
+            run.replay.frames.length > 0 && (
+              <div className="relative flex h-full min-h-0 flex-1 flex-col pb-16">
+                <ProcessingReplayPanel
+                  key={replayPanelEpoch}
+                  frames={run.replay.frames}
+                  chunks={run.replay.chunks}
+                  durationMs={run.replay.durationMs}
+                  dag={replayEngine?.dag ?? resolvedEngine.dag}
+                />
+                <div className="pointer-events-auto absolute bottom-4 left-4 z-10 flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="default"
+                    onClick={exitProcessingReplay}
+                  >
+                    Continue
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    aria-label="Replay from the start"
+                    title="Replay from the start"
+                    onClick={() => setReplayPanelEpoch((e) => e + 1)}
+                  >
+                    <HugeiconsIcon icon={ReloadIcon} strokeWidth={2} />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+          {session.step === "processing" &&
+            !(
+              revisitProcessingFromOutput &&
+              run.replay &&
+              run.replay.frames.length > 0
+            ) && (
+              <ProcessingStep
+                progress={run.progress}
+                dag={run.activeRunDag ?? resolvedEngine.dag}
+                bus={run.throughputBus}
+              />
+            )}
 
           {session.step === "output" && session.stats.current && (
             <OutputStep
@@ -303,13 +389,13 @@ function StepIndicator({
   onKeyStepClick,
   onInputFromOutputClick,
   onProcessingStepClick,
-  onProcessingStepPointerEnter,
+  onOutputStepClick,
 }: {
   current: HuntStep
   onKeyStepClick: () => void
   onInputFromOutputClick: () => void
   onProcessingStepClick?: () => void
-  onProcessingStepPointerEnter?: () => void
+  onOutputStepClick?: () => void
 }) {
   const currentIdx = HUNT_STEP_INDEX[current]
   const stepControlClass =
@@ -340,10 +426,13 @@ function StepIndicator({
         const isKeyStep = s.id === "key"
         const isInputStep = s.id === "input"
         const isProcessingStep = s.id === "processing"
+        const isOutputStep = s.id === "output"
         const keyClickable = isKeyStep && current !== "processing"
         const inputClickableFromOutput = isInputStep && current === "output"
         const processingClickable =
           isProcessingStep && Boolean(onProcessingStepClick)
+        const outputClickableFromReplay =
+          isOutputStep && current === "processing" && Boolean(onOutputStepClick)
 
         return (
           <li
@@ -373,10 +462,27 @@ function StepIndicator({
               <button
                 type="button"
                 onClick={onProcessingStepClick}
-                onPointerEnter={onProcessingStepPointerEnter}
                 className={stepControlClass}
-                aria-label="Replay processing"
-                title="Replay processing"
+                aria-label={
+                  current === "output"
+                    ? "View processing replay"
+                    : "Restart replay from the beginning"
+                }
+                title={
+                  current === "output"
+                    ? "View processing replay"
+                    : "Restart replay from the beginning"
+                }
+              >
+                {labelParts}
+              </button>
+            ) : outputClickableFromReplay ? (
+              <button
+                type="button"
+                onClick={onOutputStepClick}
+                className={stepControlClass}
+                aria-label="Return to output"
+                title="Return to output"
               >
                 {labelParts}
               </button>
@@ -533,6 +639,8 @@ function InputStep({
   compressBlocked,
   onPreloadStackTraceExamples,
   onPreloadProcessingDag,
+  smartSubmit,
+  onSmartSubmitChange,
 }: {
   rawInput: string
   setRawInput: (v: string) => void
@@ -549,9 +657,30 @@ function InputStep({
   compressBlocked: boolean
   onPreloadStackTraceExamples: () => void
   onPreloadProcessingDag: () => void
+  smartSubmit: boolean
+  onSmartSubmitChange: (enabled: boolean) => void
 }) {
+  const pendingSmartSubmitPasteRef = useRef(false)
+
   const canCompress =
     !disabled && rawInput.trim().length > 0 && !compressBlocked
+
+  useEffect(() => {
+    if (!smartSubmit) {
+      pendingSmartSubmitPasteRef.current = false
+      return
+    }
+    if (!pendingSmartSubmitPasteRef.current) return
+    if (rawInput.trim().length < 10) {
+      pendingSmartSubmitPasteRef.current = false
+      return
+    }
+    // Auto routing estimates tokens async; keep the ref until canCompress is true.
+    if (!canCompress) return
+    pendingSmartSubmitPasteRef.current = false
+    void onSimplify()
+  }, [rawInput, smartSubmit, canCompress, onSimplify])
+
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden">
       <div className="flex shrink-0 items-center justify-between gap-3">
@@ -584,6 +713,11 @@ function InputStep({
           name="error-input"
           value={rawInput}
           onChange={(e) => setRawInput(e.target.value)}
+          onPaste={() => {
+            if (smartSubmit) {
+              pendingSmartSubmitPasteRef.current = true
+            }
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter" && e.shiftKey && canCompress) {
               e.preventDefault()
@@ -605,139 +739,112 @@ function InputStep({
         </p>
       )}
 
-      <div
-        className={cn(
-          "flex w-full min-w-0 shrink-0 flex-wrap items-center gap-x-4 gap-y-2",
-          !lastError && "mt-6"
-        )}
-      >
-        <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
-          <Button
-            type="button"
-            disabled={!canCompress}
-            onClick={onSimplify}
-            onPointerEnter={onPreloadProcessingDag}
-          >
-            [ hunt ]
-          </Button>
-          <span className="font-mono text-[0.625rem] tracking-wider text-muted-foreground uppercase">
-            shift+enter
-          </span>
-        </div>
-        <div className="ml-auto shrink-0">
-          <Select
-            value={selectedModelRouteId}
-            onValueChange={onModelRouteChange}
-          >
-            <SelectTrigger
-              aria-label="Model routing"
-              className="h-7 min-w-[4.75rem] py-0 text-[0.625rem] normal-case"
+      <div className="flex w-full min-w-0 shrink-0 flex-col gap-2">
+        <div className="flex w-full min-w-0 items-center justify-between gap-x-4">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
+            <Button
+              type="button"
+              disabled={!canCompress}
+              onClick={onSimplify}
+              onPointerEnter={onPreloadProcessingDag}
             >
-              {modelRouteOptions.find(
-                (option) => option.id === selectedModelRouteId
-              )?.label ?? selectedModelRouteId}
-            </SelectTrigger>
-            <SelectContent align="end">
-              {modelRouteOptions.map((option) => (
-                <SelectItem
-                  key={option.id}
-                  value={option.id}
-                  className="normal-case"
+              [ hunt ]
+            </Button>
+            <span className="font-mono text-[0.625rem] tracking-wider text-muted-foreground uppercase">
+              shift+enter
+            </span>
+          </div>
+          <div className="shrink-0">
+            <Select
+              value={selectedModelRouteId}
+              onValueChange={onModelRouteChange}
+            >
+              <SelectTrigger
+                aria-label="Model routing"
+                className="h-7 min-w-[4.75rem] py-0 text-[0.625rem] normal-case"
+              >
+                {modelRouteOptions.find(
+                  (option) => option.id === selectedModelRouteId
+                )?.label ?? selectedModelRouteId}
+              </SelectTrigger>
+              <SelectContent align="end">
+                {modelRouteOptions.map((option) => (
+                  <SelectItem
+                    key={option.id}
+                    value={option.id}
+                    className="normal-case"
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="flex w-full min-w-0 items-stretch justify-between gap-x-4">
+          <div className="flex min-w-0 flex-1 items-center">
+            {routingStatus && (
+              <Dialog>
+                <DialogTrigger
+                  className={cn(
+                    "flex min-h-0 w-full items-center border-0 bg-transparent p-0 text-left font-mono text-[0.625rem] leading-none tracking-wider uppercase",
+                    routingStatus.tone === "ok" && "text-primary",
+                    routingStatus.tone === "warn" &&
+                      "text-amber-600 dark:text-amber-400",
+                    routingStatus.tone === "muted" && "text-muted-foreground",
+                    "cursor-pointer underline-offset-4 hover:underline",
+                    "focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+                  )}
+                  aria-label="How provider routing is estimated; opens details"
                 >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                  {routingStatus.text}
+                </DialogTrigger>
+                <DialogContent className="max-w-md sm:max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>Net-fastest providers</DialogTitle>
+                    <div className="pt-1">
+                      <ul className="list-disc space-y-1 pl-4 text-left text-sm leading-snug text-muted-foreground marker:text-muted-foreground/80">
+                        <li>
+                          We call OpenRouter with{" "}
+                          <span className="text-foreground">your API key</span>{" "}
+                          to read current provider stats for this model.
+                        </li>
+                        <li>
+                          We rank by{" "}
+                          <span className="text-foreground">net fastest</span>{" "}
+                          here: <span className="text-foreground">latency</span>{" "}
+                          and{" "}
+                          <span className="text-foreground">throughput</span>{" "}
+                          together, not time-to-first-token alone.
+                        </li>
+                      </ul>
+                    </div>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
+          <div className="flex min-h-0 shrink-0 items-center gap-1.5 font-mono text-[0.625rem] leading-none tracking-wider uppercase">
+            <label
+              id="auto-submit-label"
+              htmlFor="auto-submit"
+              className={cn(
+                "cursor-pointer select-none",
+                smartSubmit ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              auto-submit
+            </label>
+            <Switch
+              id="auto-submit"
+              size="sm"
+              checked={smartSubmit}
+              onCheckedChange={onSmartSubmitChange}
+              aria-label="Auto-submit: run hunt after paste when input is at least 10 characters"
+            />
+          </div>
         </div>
       </div>
-      {routingStatus && (
-        <Dialog>
-          <DialogTrigger
-            className={cn(
-              "w-full border-0 bg-transparent p-0 text-left font-mono text-[0.625rem] tracking-wider uppercase",
-              routingStatus.tone === "ok" && "text-primary",
-              routingStatus.tone === "warn" &&
-                "text-amber-600 dark:text-amber-400",
-              routingStatus.tone === "muted" && "text-muted-foreground",
-              "cursor-pointer underline-offset-4 hover:underline",
-              "focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
-            )}
-            aria-label="How provider routing is estimated; opens details"
-          >
-            {routingStatus.text}
-          </DialogTrigger>
-          <DialogContent className="max-w-md sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Net-fastest providers</DialogTitle>
-              <div className="pt-1">
-                <ul className="list-disc space-y-1 pl-4 text-left text-sm leading-snug text-muted-foreground marker:text-muted-foreground/80">
-                  <li>
-                    We call OpenRouter with{" "}
-                    <span className="text-foreground">your API key</span> to
-                    read current provider stats for this model.
-                  </li>
-                  <li>
-                    We rank by{" "}
-                    <span className="text-foreground">net fastest</span> here:{" "}
-                    <span className="text-foreground">latency</span> and{" "}
-                    <span className="text-foreground">throughput</span>{" "}
-                    together, not time-to-first-token alone.
-                  </li>
-                </ul>
-              </div>
-            </DialogHeader>
-          </DialogContent>
-        </Dialog>
-      )}
-    </div>
-  )
-}
-
-function ProcessingStep({
-  progress,
-  dag,
-  bus,
-}: {
-  progress: SimplifyProgressSnapshot | null
-  dag: SimplifyEngineDefinition["dag"]
-  bus?: ThroughputBus | null
-}) {
-  const [now, setNow] = useState(() =>
-    typeof performance !== "undefined" ? performance.now() : Date.now()
-  )
-
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setNow(
-        typeof performance !== "undefined" ? performance.now() : Date.now()
-      )
-    }, 80)
-    return () => window.clearInterval(id)
-  }, [])
-
-  const elapsed = progress ? getProgressElapsedMs(progress, now) : 0
-  const allSettled =
-    progress !== null &&
-    progress.steps.every(
-      (s) =>
-        s.status === "success" || s.status === "warning" || s.status === "error"
-    )
-
-  return (
-    <div className="flex h-full min-h-0 flex-col gap-4">
-      <div className="flex shrink-0 items-baseline justify-between gap-3">
-        <p className="font-mono text-xs text-foreground">
-          <span className="text-primary">&gt;&nbsp;</span>
-          {allSettled ? "compressed" : "compressing"}
-          {!allSettled && <span className="blink">…</span>}
-        </p>
-        <p className="font-mono text-[0.625rem] tracking-wider text-muted-foreground uppercase tabular-nums">
-          elapsed {formatDuration(elapsed)}
-        </p>
-      </div>
-
-      <ProcessingDag progress={progress} dag={dag} nowMs={now} bus={bus} />
     </div>
   )
 }
@@ -760,7 +867,8 @@ function OutputStep({
   onCopy: () => void
 }) {
   const copyClickTimerRef = useRef<number | null>(null)
-  const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const leaveFeedbackRef = useRef<HTMLButtonElement>(null)
+  useSentryFeedbackAttach(leaveFeedbackRef, feedbackVote === "down")
 
   useEffect(() => {
     return () => {
@@ -853,7 +961,6 @@ function OutputStep({
                 aria-label="This output was helpful"
                 onClick={() => {
                   onFeedbackVote("up")
-                  setFeedbackOpen(false)
                 }}
               >
                 <HugeiconsIcon icon={ThumbsUpIcon} strokeWidth={2} />
@@ -872,10 +979,11 @@ function OutputStep({
           {feedbackVote === "down" && (
             <div className="animate-in duration-200 fade-in-0 slide-in-from-right-2">
               <Button
+                ref={leaveFeedbackRef}
                 type="button"
                 variant="destructive"
                 size="sm"
-                onClick={() => setFeedbackOpen(true)}
+                aria-label="Leave feedback about this output"
               >
                 leave feedback
               </Button>
@@ -883,18 +991,6 @@ function OutputStep({
           )}
         </div>
       </div>
-
-      <Dialog open={feedbackOpen} onOpenChange={setFeedbackOpen}>
-        <DialogContent showCloseButton>
-          <DialogHeader>
-            <DialogTitle>Feedback</DialogTitle>
-            <DialogDescription>
-              Placeholder — this dialog will be replaced with a real feedback
-              flow later.
-            </DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
@@ -1200,7 +1296,7 @@ function StatsStrip({
         <span
           title={
             canSplitIn
-              ? "First number: tokenizer count of your pasted input (raw). After +: max(0, billed prompt − tokenizer count of the normalized trace body sent to the model). That remainder includes system prompts, templates, wrappers, and extra billed prompt from multiple LLM calls (v1); paste + remainder does not always equal billed IN. TOK reduction and savings below compare pasted input vs output."
+              ? "First number: local estimated token count of your pasted input (raw). After +: max(0, billed prompt − local estimated token count of the normalized trace body sent to the model). That remainder includes system prompts, templates, wrappers, and extra billed prompt from multiple LLM calls (v1); paste + remainder does not always equal billed IN. TOK reduction and savings below compare pasted input vs output."
               : billedPromptTok !== undefined
                 ? "IN: OpenRouter billed prompt tokens (Σ LLM calls). TOK reduction and savings below use your original paste vs output token counts."
                 : undefined

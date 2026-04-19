@@ -29,9 +29,29 @@ import { SITE_HEADER_UPDATES_HINT } from "./site-header-constants"
 
 const loadReactMarkdown = () => import("react-markdown")
 
+function AnnouncementsMarkdownLoading() {
+  return (
+    <div className="flex flex-col gap-3 py-1" role="status" aria-live="polite">
+      <p className="font-mono text-[0.65rem] tracking-wider text-muted-foreground uppercase">
+        Loading…
+      </p>
+      <span className="sr-only">Loading updates.</span>
+      <div className="space-y-2.5" aria-hidden>
+        <div className="h-3 w-[72%] animate-pulse rounded-sm bg-muted/55" />
+        <div className="h-3 w-full animate-pulse rounded-sm bg-muted/45" />
+        <div className="h-3 w-[88%] animate-pulse rounded-sm bg-muted/45" />
+        <div className="h-3 w-[64%] animate-pulse rounded-sm bg-muted/45" />
+        <div className="h-3 w-full animate-pulse rounded-sm bg-muted/40" />
+        <div className="h-3 w-[76%] animate-pulse rounded-sm bg-muted/40" />
+        <div className="h-3 w-[56%] animate-pulse rounded-sm bg-muted/35" />
+      </div>
+    </div>
+  )
+}
+
 const LazyReactMarkdown = dynamic(loadReactMarkdown, {
   ssr: false,
-  loading: () => null,
+  loading: () => <AnnouncementsMarkdownLoading />,
 })
 
 const ANNOUNCEMENTS_MARKDOWN_COMPONENTS: Components = {
@@ -175,7 +195,7 @@ export function SiteHeaderAnnouncementsDialog({
       <DialogContent
         showCloseButton
         className={cn(
-          "flex max-h-[min(90vh,32rem)] min-w-0 flex-col gap-4 overflow-x-hidden overflow-y-hidden sm:max-w-lg"
+          "flex h-[min(90vh,32rem)] min-w-0 flex-col gap-4 overflow-x-hidden overflow-y-hidden sm:max-w-lg sm:min-w-lg"
         )}
       >
         <DialogHeader className="shrink-0 space-y-0 border-b border-foreground/15 pr-10 pb-3">

@@ -1,3 +1,5 @@
+import { SiteFooterCrashTestButton } from "@/components/site-footer-crash-test-button"
+
 const linkCreditClass =
   "underline-offset-2 hover:text-foreground hover:underline pointer-events-auto"
 
@@ -27,17 +29,20 @@ export function SiteFooter() {
           Unsplash
         </a>
       </p>
-      <p className="ml-auto shrink-0 text-right font-mono text-[0.625rem] text-muted-foreground sm:text-xs">
-        created by{" "}
-        <a
-          href="https://slaterehm.com"
-          className={linkCreditClass}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Slate
-        </a>
-      </p>
+      <div className="ml-auto flex shrink-0 flex-col items-end gap-2 text-right font-mono text-[0.625rem] text-muted-foreground sm:text-xs">
+        <SiteFooterCrashTestButton />
+        <p>
+          created by{" "}
+          <a
+            href="https://slaterehm.com"
+            className={linkCreditClass}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Slate
+          </a>
+        </p>
+      </div>
     </footer>
   )
 }

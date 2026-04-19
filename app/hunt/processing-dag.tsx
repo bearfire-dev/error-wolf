@@ -2,44 +2,22 @@
 
 import { useMemo } from "react"
 
+import { formatDuration } from "@/lib/recent-results"
 import type { SimplifyPipelineNode } from "@/lib/simplify/pipeline-dag"
 import type { ThroughputBus } from "@/lib/simplify/throughput-bus"
 import type {
   SimplifyPipelineStepId,
+  SimplifyPipelineStepStatus,
   SimplifyProgressSnapshot,
   SimplifyProgressStep,
 } from "@/lib/simplify/types"
 import { cn } from "@/lib/utils"
 
-import { ConsoleStream } from "./processing-instruments/console-stream"
-import { Constellation } from "./processing-instruments/constellation"
-import { Oscilloscope } from "./processing-instruments/oscilloscope"
-import { SpectrumStack } from "./processing-instruments/spectrum-stack"
-import type { InstrumentStep } from "./processing-instruments/types"
-import { Waterfall } from "./processing-instruments/waterfall"
-
 /**
- * Preserved for compatibility with existing call sites during the picker
- * round. The new layout is a single instrument panel + console, so the tier
- * distinctions only affect the container padding/radius — not the contents.
+ * Preserved for compatibility with existing call sites. With the simplified
+ * layout the tier only adjusts outer padding.
  */
 export type DagTier = "roomy" | "compact" | "dense"
-
-export type ProcessingInstrumentVariant =
-  | "spectrum"
-  | "scope"
-  | "waterfall"
-  | "constellation"
-
-export const PROCESSING_INSTRUMENT_VARIANTS: {
-  id: ProcessingInstrumentVariant
-  label: string
-}[] = [
-  { id: "spectrum", label: "Stacked spectrum" },
-  { id: "scope", label: "Oscilloscope" },
-  { id: "waterfall", label: "Waterfall" },
-  { id: "constellation", label: "Constellation" },
-]
 
 type ProcessingDagProps = {
   progress: SimplifyProgressSnapshot | null
@@ -51,14 +29,18 @@ type ProcessingDagProps = {
   tier?: DagTier
   /** Kept for API compatibility with the previous DAG zoom-to-fit. No-op. */
   disableZoom?: boolean
-  /** Throughput source — drives waveforms and the console tail. */
+  /** Unused by the simplified renderer; retained so the throughput bus can
+   * continue to be plumbed without churning call sites. */
   bus?: ThroughputBus | null
-  /**
-   * Pins a specific instrument variant. When omitted, all four variants are
-   * rendered under a `data-uidotsh-pick` wrapper so the ui.sh picker can
-   * cycle through them; one is visible at a time.
-   */
-  variant?: ProcessingInstrumentVariant
+}
+
+type Lane = {
+  id: SimplifyPipelineStepId
+  label: string
+  status: SimplifyPipelineStepStatus
+  startedAtMs: number | null
+  endedAtMs: number | null
+  retries: number
 }
 
 const PENDING_STEP: Omit<SimplifyProgressStep, "id" | "label"> = {
@@ -73,11 +55,9 @@ const PENDING_STEP: Omit<SimplifyProgressStep, "id" | "label"> = {
 }
 
 /**
- * Top-level shell for the 03 COMP state. Renders a single decorative
- * "instrument" panel over a streaming console. The actual instrument is
- * wrapped in a `data-uidotsh-pick` group so the ui-picker can cycle between
- * variants; after finalize, unpicked branches and the wrapper attrs are
- * removed.
+ * Stacked loading bars — one per pipeline step. Steps wait in a queue, fire
+ * an indeterminate sweep while running, and settle into a filled bar with a
+ * final duration when they finish (tinted green/red/amber by status).
  */
 export function ProcessingDag({
   progress,
@@ -85,10 +65,8 @@ export function ProcessingDag({
   nowMs,
   disableEnter,
   tier = "compact",
-  bus,
-  variant,
 }: ProcessingDagProps) {
-  const steps = useMemo<InstrumentStep[]>(() => {
+  const lanes = useMemo<Lane[]>(() => {
     const byId = new Map<string, SimplifyProgressStep>()
     if (progress) {
       for (const step of progress.steps) byId.set(step.id, step)
@@ -106,78 +84,127 @@ export function ProcessingDag({
     })
   }, [dag, progress])
 
-  const instrumentProps = { steps, bus: bus ?? null, nowMs }
-
   return (
     <div
       className={cn(
-        "flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden",
+        "flex h-full min-h-0 w-full flex-col gap-1.5 overflow-hidden",
         tier === "dense" ? "p-1" : tier === "roomy" ? "p-2" : "p-1.5",
         !disableEnter && "ew-lane-enter"
       )}
     >
-      <div className="min-h-0 flex-[7]">
-        {variant ? (
-          renderInstrument(variant, instrumentProps)
-        ) : (
-          <div
-            data-uidotsh-pick="Processing instrument"
-            className="contents"
-          >
-            <div
-              data-uidotsh-option="Stacked spectrum"
-              className="contents"
-            >
-              <SpectrumStack {...instrumentProps} />
-            </div>
-            <div
-              data-uidotsh-option="Oscilloscope"
-              className="contents"
-              hidden
-            >
-              <Oscilloscope {...instrumentProps} />
-            </div>
-            <div
-              data-uidotsh-option="Waterfall"
-              className="contents"
-              hidden
-            >
-              <Waterfall {...instrumentProps} />
-            </div>
-            <div
-              data-uidotsh-option="Constellation"
-              className="contents"
-              hidden
-            >
-              <Constellation {...instrumentProps} />
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="min-h-0 flex-[3]">
-        <ConsoleStream steps={steps} bus={bus ?? null} />
-      </div>
+      {lanes.map((lane) => (
+        <LoadingLane key={lane.id} lane={lane} nowMs={nowMs} />
+      ))}
     </div>
   )
 }
 
-function renderInstrument(
-  variant: ProcessingInstrumentVariant,
-  props: {
-    steps: InstrumentStep[]
-    bus: ThroughputBus | null
-    nowMs: number
+function LoadingLane({ lane, nowMs }: { lane: Lane; nowMs: number }) {
+  const elapsedMs =
+    lane.endedAtMs !== null && lane.startedAtMs !== null
+      ? Math.max(0, lane.endedAtMs - lane.startedAtMs)
+      : lane.startedAtMs !== null
+        ? Math.max(0, nowMs - lane.startedAtMs)
+        : null
+
+  return (
+    <div className="grid grid-cols-[3rem_minmax(0,10rem)_1fr_auto] items-center gap-2 font-mono text-[0.625rem] tracking-wider uppercase">
+      <span className={cn("shrink-0 tabular-nums", statusTone(lane.status))}>
+        {statusLabel(lane.status)}
+      </span>
+      <span
+        className={cn(
+          "min-w-0 truncate",
+          lane.status === "pending"
+            ? "text-muted-foreground/70"
+            : "text-foreground/85"
+        )}
+      >
+        {lane.label}
+        {lane.retries > 0 && (
+          <span className="ml-1 text-muted-foreground">
+            ×{lane.retries + 1}
+          </span>
+        )}
+      </span>
+      <div
+        className="relative h-2 w-full overflow-hidden rounded-full border border-foreground/10 bg-foreground/[0.04]"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={laneProgress(lane.status)}
+      >
+        <LoadingFill status={lane.status} />
+      </div>
+      <span className="shrink-0 text-muted-foreground tabular-nums">
+        {elapsedMs === null ? "—" : formatDuration(elapsedMs)}
+      </span>
+    </div>
+  )
+}
+
+function LoadingFill({ status }: { status: SimplifyPipelineStepStatus }) {
+  if (status === "running") {
+    return (
+      <div
+        className="ew-bar-sweep absolute top-0 bottom-0 w-[35%] rounded-full bg-primary/80"
+        aria-hidden
+      />
+    )
   }
-) {
-  switch (variant) {
-    case "scope":
-      return <Oscilloscope {...props} />
-    case "waterfall":
-      return <Waterfall {...props} />
-    case "constellation":
-      return <Constellation {...props} />
-    case "spectrum":
+  if (status === "success") {
+    return <div className="absolute inset-0 rounded-full bg-primary/80" />
+  }
+  if (status === "error") {
+    return <div className="absolute inset-0 rounded-full bg-destructive/85" />
+  }
+  if (status === "warning") {
+    return (
+      <div className="absolute inset-0 rounded-full bg-amber-500/80 dark:bg-amber-400/80" />
+    )
+  }
+  return null
+}
+
+function laneProgress(status: SimplifyPipelineStepStatus): number {
+  switch (status) {
+    case "pending":
+      return 0
+    case "running":
+      return 50
+    case "success":
+    case "warning":
+    case "error":
+      return 100
+  }
+}
+
+function statusLabel(s: SimplifyPipelineStepStatus): string {
+  switch (s) {
+    case "running":
+      return "[run]"
+    case "success":
+      return "[ok]"
+    case "warning":
+      return "[warn]"
+    case "error":
+      return "[fail]"
     default:
-      return <SpectrumStack {...props} />
+      return "[wait]"
+  }
+}
+
+function statusTone(s: SimplifyPipelineStepStatus): string {
+  switch (s) {
+    case "running":
+      return "text-foreground"
+    case "success":
+      return "text-primary"
+    case "warning":
+      return "text-amber-600 dark:text-amber-400"
+    case "error":
+      return "text-destructive"
+    default:
+      return "text-muted-foreground/60"
   }
 }

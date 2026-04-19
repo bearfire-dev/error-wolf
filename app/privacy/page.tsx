@@ -27,7 +27,8 @@ export default function PrivacyPage() {
           <p className="text-foreground">
             error-wolf runs entirely in your browser. Stack normalization,
             compression, and model calls happen client-side. No accounts. No
-            server-side storage of your input or results. We collect anonymous telemetry to help improve the code.
+            server-side storage of your input or results. We collect anonymous
+            telemetry to help improve the code.
           </p>
 
           <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">
@@ -79,8 +80,8 @@ export default function PrivacyPage() {
             Open source
           </h3>
           <p>
-            The full source is available on GitHub with an O'SaaSy license. You can contribute, audit, or fork and run 
-            it yourself.
+            The full source is available on GitHub with an O{"'"}SaaSy license.
+            You can contribute, audit, or fork and run it yourself.
           </p>
         </div>
 

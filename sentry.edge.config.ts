@@ -3,14 +3,15 @@
 // Note that this config is unrelated to the Vercel Edge Runtime and is also required when running locally.
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
-import * as Sentry from "@sentry/nextjs";
+import * as Sentry from "@sentry/nextjs"
 
-import { getSentryDsn } from "./lib/sentry-dsn";
+import { getSentryDsn, getSentryInitEnvironment } from "./lib/sentry-dsn"
 
-const dsn = getSentryDsn();
+const dsn = getSentryDsn()
 if (dsn) {
   Sentry.init({
     dsn,
+    environment: getSentryInitEnvironment(),
 
     // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
     tracesSampleRate: 1,
@@ -21,5 +22,5 @@ if (dsn) {
     // Anonymous mode: do not send cookies, IP, or other default PII
     // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
     sendDefaultPii: false,
-  });
+  })
 }
