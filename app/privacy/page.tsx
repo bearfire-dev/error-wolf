@@ -1,4 +1,14 @@
+import type { Metadata } from "next"
 import Link from "next/link"
+
+export const metadata: Metadata = {
+  title: "Privacy",
+  description:
+    "How error-wolf handles your data: local-first processing, OpenRouter key in a cookie, recent runs in localStorage, and how to wipe everything.",
+  alternates: {
+    canonical: "/privacy",
+  },
+}
 
 export default function PrivacyPage() {
   return (
@@ -20,15 +30,15 @@ export default function PrivacyPage() {
           />
           <Section
             title="storage"
-            body="Processing happens in your browser. No account, no server-side log retention by this template."
+            body="Normalization and compression happen in your browser. No account, no server-side log retention by this template."
           />
           <Section
             title="key"
-            body="Your OpenRouter key is held in a same-site cookie (Max-Age ~30 days). Used only to talk to OpenRouter."
+            body="Your OpenRouter key is held in a same-site cookie (Max-Age ~30 days). Used only for direct browser-side requests to OpenRouter and its selected providers; this project does not proxy OpenRouter traffic through internal API routes."
           />
           <Section
             title="history"
-            body="Up to 100 recent runs are kept in localStorage for up to 30 days, then pruned automatically."
+            body="Up to 1024 recent runs are kept in localStorage for up to 30 days, then pruned automatically."
           />
           <Section
             title="consent"

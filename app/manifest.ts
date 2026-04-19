@@ -4,7 +4,8 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "error-wolf",
     short_name: "error-wolf",
-    description: "collapse noisy error stacks. save tokens.",
+    description:
+      "Fast and cheap compression of noisy error stacks to save tokens. Free, opensource, and secure.",
     start_url: "/",
     display: "standalone",
     background_color: "#020403",

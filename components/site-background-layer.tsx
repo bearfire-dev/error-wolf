@@ -25,8 +25,7 @@ export function SiteBackgroundLayer() {
             draggable={false}
             className="h-auto w-full max-w-full"
             style={{
-              objectPosition:
-                "var(--bg-photo-pos-x) var(--bg-photo-pos-y)",
+              objectPosition: "var(--bg-photo-pos-x) var(--bg-photo-pos-y)",
             }}
           />
         </div>

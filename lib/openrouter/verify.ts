@@ -1,6 +1,8 @@
+import { createDirectBrowserOpenRouterError } from "@/lib/openrouter/direct-browser-errors"
+
 /**
- * Verifies an OpenRouter API key by calling the models endpoint.
- * Tries the browser first; falls back to the local Next route if the request fails (e.g. CORS).
+ * Verifies an OpenRouter API key by calling the models endpoint directly from the browser.
+ * Network/CORS failures are treated as a hard product constraint and surfaced to the user.
  */
 export async function verifyOpenRouterKey(apiKey: string): Promise<boolean> {
   const key = apiKey.trim()
@@ -14,20 +16,18 @@ export async function verifyOpenRouterKey(apiKey: string): Promise<boolean> {
       headers,
     })
     if (res.ok) return true
-  } catch {
-    // CORS or network error — use same-origin proxy
-  }
-
-  try {
-    const res = await fetch("/api/openrouter/verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ apiKey: key }),
+    if (res.status === 401 || res.status === 403) {
+      console.error("[openrouter] verification rejected API key", {
+        status: res.status,
+      })
+      return false
+    }
+    console.error("[openrouter] verification request failed", {
+      status: res.status,
     })
-    if (!res.ok) return false
-    const data = (await res.json()) as { ok?: boolean }
-    return data.ok === true
-  } catch {
     return false
+  } catch (error) {
+    console.error("[openrouter] verification request failed", error)
+    throw createDirectBrowserOpenRouterError("verification")
   }
 }

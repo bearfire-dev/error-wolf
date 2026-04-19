@@ -8,3 +8,6 @@ export const SITE_HEADER_WIPE_HINT =
 
 export const SITE_HEADER_GITHUB_HINT =
   "Opens the GitHub repository in a new tab."
+
+export const SITE_HEADER_UPDATES_HINT =
+  "Opens product updates. A green dot means there is something new since you last opened this dialog."

@@ -1,8 +1,8 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 
-import { Clock04Icon } from "@hugeicons/core-free-icons"
+import { Clock04Icon, Delete02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -14,8 +14,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import {
+  clearRecentResults,
   formatChars,
+  formatUsdCost,
   formatDuration,
+  formatTokens,
   getRecentResults,
   RECENT_HISTORY_MAX_ITEMS,
   type RecentSimplifyResult,
@@ -24,14 +27,27 @@ import { cn } from "@/lib/utils"
 
 import { SITE_HEADER_HISTORY_HINT } from "./site-header-constants"
 
+function sortNewestFirst(rows: RecentSimplifyResult[]): RecentSimplifyResult[] {
+  return [...rows].sort((a, b) =>
+    a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0
+  )
+}
+
 export function SiteHeaderHistoryDialog() {
   const [open, setOpen] = useState(false)
   const [recent, setRecent] = useState<RecentSimplifyResult[]>([])
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
+  const orderedRecent = useMemo(() => sortNewestFirst(recent), [recent])
+
   const handleOpenChange = useCallback((next: boolean) => {
-    if (next) setRecent(getRecentResults())
+    if (next) setRecent(sortNewestFirst(getRecentResults()))
     setOpen(next)
+  }, [])
+
+  const handleClearHistory = useCallback(() => {
+    clearRecentResults()
+    setRecent([])
   }, [])
 
   const handleCopy = useCallback(async (item: RecentSimplifyResult) => {
@@ -54,23 +70,35 @@ export function SiteHeaderHistoryDialog() {
       >
         <HugeiconsIcon icon={Clock04Icon} strokeWidth={2} />
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>
+      <DialogContent className="flex max-h-[min(90vh,32rem)] flex-col gap-4 overflow-hidden sm:max-w-lg">
+        <DialogHeader className="shrink-0 space-y-0 pr-10 sm:flex sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+          <DialogTitle className="text-left">
             <span className="text-primary">&gt;&nbsp;</span>history
             <span className="ml-2 text-muted-foreground">
               [{recent.length}/{RECENT_HISTORY_MAX_ITEMS}]
             </span>
           </DialogTitle>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-sm"
+            className="mt-2 shrink-0 sm:mt-0"
+            disabled={recent.length === 0}
+            onClick={handleClearHistory}
+            aria-label="Clear recent run history stored in this browser"
+            title="Clear recent runs (this browser only)"
+          >
+            <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />
+          </Button>
         </DialogHeader>
         {recent.length === 0 ? (
-          <p className="font-mono text-xs text-muted-foreground">
+          <p className="shrink-0 font-mono text-xs text-muted-foreground">
             &gt; empty. run a hunt to populate.
           </p>
         ) : (
-          <div className="max-h-[min(60vh,24rem)] overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             <ul className="flex list-none flex-col gap-2" role="list">
-              {recent.map((item) => (
+              {orderedRecent.map((item) => (
                 <li
                   key={item.id}
                   className="flex flex-col gap-1.5 border border-foreground/15 p-2.5"
@@ -85,8 +113,39 @@ export function SiteHeaderHistoryDialog() {
                     </span>
                     <span>
                       {formatDuration(item.durationMs)} &middot;{" "}
-                      {formatChars(item.inputChars)}&rarr;
-                      {formatChars(item.outputChars)}
+                      {(() => {
+                        const pasteTok =
+                          item.pasteInputTokens ?? item.inputTokens
+                        const billedTok = item.compressorPromptTokens
+                        const outTok = item.outputTokens
+                        if (
+                          pasteTok !== undefined &&
+                          billedTok !== undefined &&
+                          outTok !== undefined
+                        ) {
+                          const cleanedTok = item.cleanedInputTokens
+                          const overhead =
+                            cleanedTok !== undefined
+                              ? Math.max(0, billedTok - cleanedTok)
+                              : Math.max(0, billedTok - pasteTok)
+                          return `${formatTokens(pasteTok)}+${formatTokens(overhead)}→${formatTokens(outTok)}`
+                        }
+                        if (billedTok !== undefined && outTok !== undefined) {
+                          return `${formatTokens(billedTok)}→${formatTokens(outTok)}`
+                        }
+                        if (pasteTok !== undefined && outTok !== undefined) {
+                          return `${formatTokens(pasteTok)}→${formatTokens(outTok)}`
+                        }
+                        return `${formatChars(item.inputChars)}→${formatChars(item.outputChars)}`
+                      })()}
+                      {item.displayCostUsd !== undefined &&
+                        ` · ${formatUsdCost(item.displayCostUsd)}${
+                          item.costSource === "estimated"
+                            ? " est"
+                            : item.costSource === "mixed"
+                              ? " mix"
+                              : ""
+                        }`}
                     </span>
                   </div>
                   <p className="font-mono text-xs break-words text-foreground/80 selectable">

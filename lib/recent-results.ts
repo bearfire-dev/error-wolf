@@ -1,21 +1,57 @@
-/** Current persistence: localStorage, up to 100 items, 30-day retention. */
-export const RECENT_RESULTS_STORAGE_KEY = "better-errors:recent-results-v2"
+import type {
+  SimplifyRunCostSource,
+  SimplifyRunCostSpan,
+} from "@/lib/simplify/types"
+import {
+  isSimplifyEngineId,
+  type SimplifyEngineId,
+} from "@/lib/simplify/engines/types"
+
+/** Current persistence: localStorage, up to 1024 items, 30-day retention. */
+export const RECENT_RESULTS_STORAGE_KEY = "error-wolf:recent-results-v2"
+
+/** Pre-rename localStorage key (migrated on read). */
+const LEGACY_LOCAL_V2_KEY = "better-errors:recent-results-v2"
 
 const LEGACY_SESSION_KEY = "better-errors:recent-results-v1"
 
-const MAX_ITEMS = 100
+const MAX_ITEMS = 1024
 const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000
 
 export type RecentSimplifyResult = {
   id: string
   createdAt: string
+  engineId?: SimplifyEngineId
   inputPreview: string
   output: string
   inputChars: number
   outputChars: number
   durationMs: number
+  /**
+   * Tokens in the user's original paste (pre-compression), for reference pricing
+   * comparisons and paste-vs-output shrink metrics.
+   */
+  pasteInputTokens?: number
+  /**
+   * Tokenizer count of the normalized trace body sent into the compressor (post-preprocess),
+   * used to approximate billed prompt minus raw paste when splitting IN for display.
+   */
+  cleanedInputTokens?: number
+  /**
+   * Sum of OpenRouter-reported prompt tokens across compressor LLM calls for this run
+   * (includes system + user messages as billed).
+   */
+  compressorPromptTokens?: number
+  /**
+   * @deprecated Legacy alias for `pasteInputTokens` from older stored rows.
+   */
   inputTokens?: number
   outputTokens?: number
+  estimatedCostUsd?: number
+  reportedCostUsd?: number
+  displayCostUsd?: number
+  costSource?: SimplifyRunCostSource
+  costSpans?: SimplifyRunCostSpan[]
 }
 
 export type SimplifyStatsRow = {
@@ -24,16 +60,34 @@ export type SimplifyStatsRow = {
   outputChars: number
   /** Negative when output shrank vs input (good). Positive when it grew (bad). */
   reductionPct: number
+  pasteInputTokens?: number
+  cleanedInputTokens?: number
+  compressorPromptTokens?: number
+  /**
+   * @deprecated Legacy alias for `pasteInputTokens` (same value in aggregate rows).
+   */
   inputTokens?: number
   outputTokens?: number
-  /** Same sign convention as reductionPct, computed over tokens. */
+  /**
+   * Paste → output token change (negative = shrank). Based on **user paste** tokenizer
+   * count vs **output** tokens — not compressor/OpenRouter prompt (IN) vs output.
+   */
   reductionTokensPct?: number
+  estimatedCostUsd?: number
+  reportedCostUsd?: number
+  displayCostUsd?: number
+  costSource?: SimplifyRunCostSource
 }
 
 export type SimplifyStats = {
   count: number
   current: SimplifyStatsRow | null
-  average: SimplifyStatsRow | null
+  /**
+   * Aggregate across stored runs: duration, chars, and token counts are **sums** (Σ);
+   * `estimatedCostUsd`, `reportedCostUsd`, and `displayCostUsd` are **sums** (Σ).
+   * Token reduction uses paired runs only (paste + output both present per run).
+   */
+  all: SimplifyStatsRow | null
 }
 
 /** @deprecated Use RECENT_RESULTS_STORAGE_KEY. Kept for external references only. */
@@ -49,6 +103,24 @@ function normalize(entries: RecentSimplifyResult[]): RecentSimplifyResult[] {
   })
   filtered.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
   return filtered.slice(0, MAX_ITEMS)
+}
+
+function migrateFromLegacyLocalV2IfNeeded(): void {
+  if (typeof window === "undefined") return
+  if (window.localStorage.getItem(RECENT_RESULTS_STORAGE_KEY)) return
+  const raw = window.localStorage.getItem(LEGACY_LOCAL_V2_KEY)
+  if (!raw) return
+  try {
+    window.localStorage.setItem(RECENT_RESULTS_STORAGE_KEY, raw)
+  } catch {
+    // ignore
+  } finally {
+    try {
+      window.localStorage.removeItem(LEGACY_LOCAL_V2_KEY)
+    } catch {
+      // ignore
+    }
+  }
 }
 
 function migrateFromV1IfNeeded(): void {
@@ -81,6 +153,7 @@ function migrateFromV1IfNeeded(): void {
 function readAll(): RecentSimplifyResult[] {
   if (typeof window === "undefined") return []
   try {
+    migrateFromLegacyLocalV2IfNeeded()
     migrateFromV1IfNeeded()
     const raw = window.localStorage.getItem(RECENT_RESULTS_STORAGE_KEY)
     if (!raw) return []
@@ -110,11 +183,56 @@ function isRecentResult(value: unknown): value is RecentSimplifyResult {
     typeof v.outputChars === "number" &&
     typeof v.durationMs === "number"
   if (!baseOk) return false
+  if (v.engineId !== undefined && !isSimplifyEngineId(v.engineId)) {
+    return false
+  }
   // Tokens are optional; accept missing or numeric.
+  if (
+    v.pasteInputTokens !== undefined &&
+    typeof v.pasteInputTokens !== "number"
+  ) {
+    return false
+  }
+  if (
+    v.cleanedInputTokens !== undefined &&
+    typeof v.cleanedInputTokens !== "number"
+  ) {
+    return false
+  }
+  if (
+    v.compressorPromptTokens !== undefined &&
+    typeof v.compressorPromptTokens !== "number"
+  ) {
+    return false
+  }
   if (v.inputTokens !== undefined && typeof v.inputTokens !== "number") {
     return false
   }
   if (v.outputTokens !== undefined && typeof v.outputTokens !== "number") {
+    return false
+  }
+  if (
+    v.estimatedCostUsd !== undefined &&
+    typeof v.estimatedCostUsd !== "number"
+  ) {
+    return false
+  }
+  if (
+    v.reportedCostUsd !== undefined &&
+    typeof v.reportedCostUsd !== "number"
+  ) {
+    return false
+  }
+  if (v.displayCostUsd !== undefined && typeof v.displayCostUsd !== "number") {
+    return false
+  }
+  if (
+    v.costSource !== undefined &&
+    !["exact", "estimated", "mixed", "unavailable"].includes(v.costSource)
+  ) {
+    return false
+  }
+  if (v.costSpans !== undefined && !Array.isArray(v.costSpans)) {
     return false
   }
   return true
@@ -137,16 +255,30 @@ export function addRecentResult(
       ? crypto.randomUUID()
       : `${Date.now()}-${Math.random().toString(16).slice(2)}`)
   const createdAt = entry.createdAt ?? new Date().toISOString()
+  const pasteInputTokens =
+    entry.pasteInputTokens !== undefined
+      ? entry.pasteInputTokens
+      : entry.inputTokens
   const row: RecentSimplifyResult = {
     id,
     createdAt,
+    engineId: entry.engineId,
     inputPreview: entry.inputPreview,
     output: entry.output,
     inputChars: entry.inputChars,
     outputChars: entry.outputChars,
     durationMs: entry.durationMs,
-    inputTokens: entry.inputTokens,
+    pasteInputTokens,
+    cleanedInputTokens: entry.cleanedInputTokens,
+    compressorPromptTokens: entry.compressorPromptTokens,
+    inputTokens:
+      entry.inputTokens !== undefined ? entry.inputTokens : pasteInputTokens,
     outputTokens: entry.outputTokens,
+    estimatedCostUsd: entry.estimatedCostUsd,
+    reportedCostUsd: entry.reportedCostUsd,
+    displayCostUsd: entry.displayCostUsd,
+    costSource: entry.costSource,
+    costSpans: entry.costSpans,
   }
   const prev = readAll()
   const next = normalize([row, ...prev.filter((r) => r.id !== id)])
@@ -163,7 +295,18 @@ export function addRecentResult(
 
 export function updateRecentResultTokens(
   id: string,
-  tokens: { inputTokens?: number; outputTokens?: number }
+  tokens: {
+    pasteInputTokens?: number
+    cleanedInputTokens?: number
+    compressorPromptTokens?: number
+    inputTokens?: number
+    outputTokens?: number
+    estimatedCostUsd?: number
+    reportedCostUsd?: number
+    displayCostUsd?: number
+    costSource?: SimplifyRunCostSource
+    costSpans?: SimplifyRunCostSpan[]
+  }
 ): RecentSimplifyResult[] {
   if (typeof window === "undefined") return []
   const prev = readAll()
@@ -171,14 +314,46 @@ export function updateRecentResultTokens(
     r.id === id
       ? {
           ...r,
+          pasteInputTokens:
+            tokens.pasteInputTokens !== undefined
+              ? tokens.pasteInputTokens
+              : tokens.inputTokens !== undefined
+                ? tokens.inputTokens
+                : r.pasteInputTokens,
+          cleanedInputTokens:
+            tokens.cleanedInputTokens !== undefined
+              ? tokens.cleanedInputTokens
+              : r.cleanedInputTokens,
+          compressorPromptTokens:
+            tokens.compressorPromptTokens !== undefined
+              ? tokens.compressorPromptTokens
+              : r.compressorPromptTokens,
           inputTokens:
             tokens.inputTokens !== undefined
               ? tokens.inputTokens
-              : r.inputTokens,
+              : tokens.pasteInputTokens !== undefined
+                ? tokens.pasteInputTokens
+                : r.inputTokens,
           outputTokens:
             tokens.outputTokens !== undefined
               ? tokens.outputTokens
               : r.outputTokens,
+          estimatedCostUsd:
+            tokens.estimatedCostUsd !== undefined
+              ? tokens.estimatedCostUsd
+              : r.estimatedCostUsd,
+          reportedCostUsd:
+            tokens.reportedCostUsd !== undefined
+              ? tokens.reportedCostUsd
+              : r.reportedCostUsd,
+          displayCostUsd:
+            tokens.displayCostUsd !== undefined
+              ? tokens.displayCostUsd
+              : r.displayCostUsd,
+          costSource:
+            tokens.costSource !== undefined ? tokens.costSource : r.costSource,
+          costSpans:
+            tokens.costSpans !== undefined ? tokens.costSpans : r.costSpans,
         }
       : r
   )
@@ -197,6 +372,7 @@ export function clearRecentResults(): void {
   if (typeof window === "undefined") return
   try {
     window.localStorage.removeItem(RECENT_RESULTS_STORAGE_KEY)
+    window.localStorage.removeItem(LEGACY_LOCAL_V2_KEY)
     window.sessionStorage.removeItem(LEGACY_SESSION_KEY)
   } catch {
     // ignore
@@ -224,18 +400,24 @@ function reductionFrom(
 
 function toRow(entry: RecentSimplifyResult): SimplifyStatsRow {
   const reductionPct = reductionFrom(entry.inputChars, entry.outputChars) ?? 0
-  const reductionTokensPct = reductionFrom(
-    entry.inputTokens,
-    entry.outputTokens
-  )
+  const pasteTokens = entry.pasteInputTokens ?? entry.inputTokens
+  // TOK % is user paste vs model output size, not billed prompt (compressor) vs out.
+  const reductionTokensPct = reductionFrom(pasteTokens, entry.outputTokens)
   return {
     durationMs: entry.durationMs,
     inputChars: entry.inputChars,
     outputChars: entry.outputChars,
     reductionPct,
-    inputTokens: entry.inputTokens,
+    pasteInputTokens: pasteTokens,
+    cleanedInputTokens: entry.cleanedInputTokens,
+    compressorPromptTokens: entry.compressorPromptTokens,
+    inputTokens: pasteTokens,
     outputTokens: entry.outputTokens,
     reductionTokensPct,
+    estimatedCostUsd: entry.estimatedCostUsd,
+    reportedCostUsd: entry.reportedCostUsd,
+    displayCostUsd: entry.displayCostUsd,
+    costSource: entry.costSource,
   }
 }
 
@@ -243,7 +425,7 @@ export function getStats(
   entries: RecentSimplifyResult[] = readAll()
 ): SimplifyStats {
   if (entries.length === 0) {
-    return { count: 0, current: null, average: null }
+    return { count: 0, current: null, all: null }
   }
   const current = toRow(entries[0]!)
   const n = entries.length
@@ -252,13 +434,44 @@ export function getStats(
       acc.durationMs += entry.durationMs
       acc.inputChars += entry.inputChars
       acc.outputChars += entry.outputChars
-      if (entry.inputTokens !== undefined) {
-        acc.inputTokens += entry.inputTokens
+      const pasteTokens = entry.pasteInputTokens ?? entry.inputTokens
+      if (pasteTokens !== undefined) {
+        acc.pasteInputTokens += pasteTokens
+        acc.pasteInputTokensN += 1
+      }
+      if (entry.cleanedInputTokens !== undefined) {
+        acc.cleanedInputTokens += entry.cleanedInputTokens
+        acc.cleanedInputTokensN += 1
+      }
+      if (entry.compressorPromptTokens !== undefined) {
+        acc.compressorPromptTokens += entry.compressorPromptTokens
+        acc.compressorPromptTokensN += 1
+      }
+      if (pasteTokens !== undefined) {
+        acc.inputTokens += pasteTokens
         acc.inputTokensN += 1
       }
       if (entry.outputTokens !== undefined) {
         acc.outputTokens += entry.outputTokens
         acc.outputTokensN += 1
+      }
+      if (entry.estimatedCostUsd !== undefined) {
+        acc.estimatedCostUsd += entry.estimatedCostUsd
+        acc.estimatedCostUsdN += 1
+      }
+      if (entry.reportedCostUsd !== undefined) {
+        acc.reportedCostUsd += entry.reportedCostUsd
+        acc.reportedCostUsdN += 1
+      }
+      if (entry.displayCostUsd !== undefined) {
+        acc.displayCostUsd += entry.displayCostUsd
+        acc.displayCostUsdN += 1
+        if (entry.costSource === "exact") acc.exactCostRows += 1
+        else if (entry.costSource === "estimated") acc.estimatedCostRows += 1
+        else if (entry.costSource === "mixed") {
+          acc.exactCostRows += 1
+          acc.estimatedCostRows += 1
+        }
       }
       return acc
     },
@@ -266,38 +479,89 @@ export function getStats(
       durationMs: 0,
       inputChars: 0,
       outputChars: 0,
+      pasteInputTokens: 0,
+      pasteInputTokensN: 0,
+      cleanedInputTokens: 0,
+      cleanedInputTokensN: 0,
+      compressorPromptTokens: 0,
+      compressorPromptTokensN: 0,
       inputTokens: 0,
       inputTokensN: 0,
       outputTokens: 0,
       outputTokensN: 0,
+      estimatedCostUsd: 0,
+      estimatedCostUsdN: 0,
+      reportedCostUsd: 0,
+      reportedCostUsdN: 0,
+      displayCostUsd: 0,
+      displayCostUsdN: 0,
+      exactCostRows: 0,
+      estimatedCostRows: 0,
     }
   )
-  const avgInput = total.inputChars / n
-  const avgOutput = total.outputChars / n
-  const avgInputTokens =
-    total.inputTokensN > 0 ? total.inputTokens / total.inputTokensN : undefined
-  const avgOutputTokens =
-    total.outputTokensN > 0
-      ? total.outputTokens / total.outputTokensN
-      : undefined
-  const average: SimplifyStatsRow = {
-    durationMs: Math.round(total.durationMs / n),
-    inputChars: Math.round(avgInput),
-    outputChars: Math.round(avgOutput),
-    reductionPct:
-      avgInput > 0 ? Math.round((avgOutput / avgInput - 1) * 100) : 0,
-    inputTokens:
-      avgInputTokens !== undefined ? Math.round(avgInputTokens) : undefined,
-    outputTokens:
-      avgOutputTokens !== undefined ? Math.round(avgOutputTokens) : undefined,
-    reductionTokensPct:
-      avgInputTokens !== undefined &&
-      avgOutputTokens !== undefined &&
-      avgInputTokens > 0
-        ? Math.round((avgOutputTokens / avgInputTokens - 1) * 100)
-        : undefined,
+  const allCostSource: SimplifyRunCostSource | undefined =
+    total.displayCostUsdN === 0
+      ? undefined
+      : total.exactCostRows === total.displayCostUsdN &&
+          total.estimatedCostRows === 0
+        ? "exact"
+        : total.estimatedCostRows === total.displayCostUsdN &&
+            total.exactCostRows === 0
+          ? "estimated"
+          : "mixed"
+
+  const sumDurationMs = Math.round(total.durationMs)
+  const sumInputChars = total.inputChars
+  const sumOutputChars = total.outputChars
+  const sumPasteInputTokens =
+    total.pasteInputTokensN > 0 ? total.pasteInputTokens : undefined
+  const sumCleanedInputTokens =
+    total.cleanedInputTokensN > 0 ? total.cleanedInputTokens : undefined
+  const sumCompressorPromptTokens =
+    total.compressorPromptTokensN > 0 ? total.compressorPromptTokens : undefined
+  const sumInputTokens =
+    total.inputTokensN > 0 ? total.inputTokens : undefined
+  const sumOutputTokens =
+    total.outputTokensN > 0 ? total.outputTokens : undefined
+
+  // Aggregate TOK %: sum paste and sum output only for runs that have both (user paste vs out, not compressor IN).
+  let pairedPasteTokens = 0
+  let pairedOutputTokens = 0
+  for (const entry of entries) {
+    const paste = entry.pasteInputTokens ?? entry.inputTokens
+    if (paste !== undefined && entry.outputTokens !== undefined) {
+      pairedPasteTokens += paste
+      pairedOutputTokens += entry.outputTokens
+    }
   }
-  return { count: n, current, average }
+  const reductionTokensPctFromPairs =
+    pairedPasteTokens > 0
+      ? Math.round((pairedOutputTokens / pairedPasteTokens - 1) * 100)
+      : undefined
+
+  const all: SimplifyStatsRow = {
+    durationMs: sumDurationMs,
+    inputChars: sumInputChars,
+    outputChars: sumOutputChars,
+    reductionPct:
+      sumInputChars > 0
+        ? Math.round((sumOutputChars / sumInputChars - 1) * 100)
+        : 0,
+    pasteInputTokens: sumPasteInputTokens,
+    cleanedInputTokens: sumCleanedInputTokens,
+    compressorPromptTokens: sumCompressorPromptTokens,
+    inputTokens: sumPasteInputTokens ?? sumInputTokens,
+    outputTokens: sumOutputTokens,
+    reductionTokensPct: reductionTokensPctFromPairs,
+    estimatedCostUsd:
+      total.estimatedCostUsdN > 0 ? total.estimatedCostUsd : undefined,
+    reportedCostUsd:
+      total.reportedCostUsdN > 0 ? total.reportedCostUsd : undefined,
+    displayCostUsd:
+      total.displayCostUsdN > 0 ? total.displayCostUsd : undefined,
+    costSource: allCostSource,
+  }
+  return { count: n, current, all }
 }
 
 export function formatChars(n: number): string {
@@ -315,4 +579,11 @@ export function formatTokens(n: number): string {
 export function formatDuration(ms: number): string {
   if (ms < 1000) return `${Math.round(ms)}ms`
   return `${(ms / 1000).toFixed(1)}s`
+}
+
+export function formatUsdCost(value: number): string {
+  if (value >= 1) return `$${value.toFixed(2)}`
+  if (value >= 0.1) return `$${value.toFixed(3)}`
+  if (value >= 0.01) return `$${value.toFixed(4)}`
+  return `$${value.toFixed(5)}`
 }

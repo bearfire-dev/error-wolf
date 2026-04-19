@@ -57,7 +57,7 @@ function SelectTrigger({
       data-slot="select-trigger"
       disabled={disabled}
       className={cn(
-        "inline-flex h-8 min-w-[6.5rem] shrink-0 items-center justify-between gap-1.5 rounded-[2px] border border-foreground/25 bg-card px-2 py-0.5 font-mono text-[0.6875rem] tracking-wider text-foreground uppercase outline-none transition-colors dark:bg-transparent",
+        "inline-flex h-8 min-w-[6.5rem] shrink-0 items-center justify-between gap-1.5 rounded-[2px] border border-foreground/25 bg-card px-2 py-0.5 font-mono text-[0.6875rem] tracking-wider text-foreground uppercase transition-colors outline-none dark:bg-card",
         "hover:border-foreground/40 data-popup-open:border-primary data-popup-open:ring-2 data-popup-open:ring-primary/20",
         "disabled:pointer-events-none disabled:opacity-50",
         className
@@ -127,7 +127,7 @@ function SelectItem({
       closeOnClick
       data-slot="select-item"
       className={cn(
-        "flex cursor-pointer items-center rounded-[2px] px-2 py-1.5 font-mono text-[0.6875rem] tracking-wider text-foreground uppercase outline-none transition-colors",
+        "flex cursor-pointer items-center rounded-[2px] px-2 py-1.5 font-mono text-[0.6875rem] tracking-wider text-foreground uppercase transition-colors outline-none",
         "data-highlighted:bg-accent data-highlighted:text-accent-foreground",
         "data-checked:bg-primary/15 data-checked:text-primary",
         className

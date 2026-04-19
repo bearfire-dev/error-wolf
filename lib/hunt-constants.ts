@@ -2,9 +2,9 @@ export type HuntStep = "key" | "input" | "processing" | "output"
 
 export const HUNT_STEPS: { id: HuntStep; label: string }[] = [
   { id: "key", label: "01 KEY" },
-  { id: "input", label: "02 input" },
-  { id: "processing", label: "03 proc" },
-  { id: "output", label: "04 output" },
+  { id: "input", label: "02 INPUT" },
+  { id: "processing", label: "03 COMP" },
+  { id: "output", label: "04 OUTPUT" },
 ]
 
 export const HUNT_STEP_INDEX: Record<HuntStep, number> = {

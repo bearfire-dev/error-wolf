@@ -1,6 +1,8 @@
 /** Stored in localStorage with 30-day retention (aligned with recent-results). */
 
-export const HUNT_MODE_STORAGE_KEY = "better-errors:hunt-mode-v1"
+export const HUNT_MODE_STORAGE_KEY = "error-wolf:hunt-mode-v1"
+
+const LEGACY_HUNT_MODE_STORAGE_KEY = "better-errors:hunt-mode-v1"
 
 const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000
 
@@ -31,7 +33,15 @@ function isStored(value: unknown): value is Stored {
 export function readHuntMode(): HuntMode {
   if (typeof window === "undefined") return "auto"
   try {
-    const raw = window.localStorage.getItem(HUNT_MODE_STORAGE_KEY)
+    let raw = window.localStorage.getItem(HUNT_MODE_STORAGE_KEY)
+    if (!raw) {
+      const legacy = window.localStorage.getItem(LEGACY_HUNT_MODE_STORAGE_KEY)
+      if (legacy) {
+        window.localStorage.removeItem(LEGACY_HUNT_MODE_STORAGE_KEY)
+        raw = legacy
+        window.localStorage.setItem(HUNT_MODE_STORAGE_KEY, raw)
+      }
+    }
     if (!raw) return "auto"
     const parsed: unknown = JSON.parse(raw)
     if (!isStored(parsed)) {
@@ -67,6 +77,7 @@ export function clearHuntMode(): void {
   if (typeof window === "undefined") return
   try {
     window.localStorage.removeItem(HUNT_MODE_STORAGE_KEY)
+    window.localStorage.removeItem(LEGACY_HUNT_MODE_STORAGE_KEY)
   } catch {
     // ignore
   }

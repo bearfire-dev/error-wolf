@@ -1,6 +1,7 @@
 ---
 
 ## description:
+
 alwaysApply: true
 
 # Agent Guidelines
@@ -31,7 +32,7 @@ alwaysApply: true
 | **Styling**           | **Tailwind CSS v4** via `@tailwindcss/postcss` and `postcss.config.mjs`                                          |
 | **Components**        | **shadcn/ui** (`shadcn`, `components.json`), **@base-ui/react**, **class-variance-authority**                    |
 | **Icons**             | **Hugeicons** (`@hugeicons/react`, `@hugeicons/core-free-icons`; `components.json` → `iconLibrary: "hugeicons"`) |
-| **Theming**           | **next-themes** (`attribute="class"`, system default; header sun/moon icon toggles light/dark)                    |
+| **Theming**           | **next-themes** (`attribute="class"`, system default; header sun/moon icon toggles light/dark)                   |
 | **Animation helpers** | **tw-animate-css** (imported from `app/globals.css`)                                                             |
 | **Lint**              | **ESLint 9** flat config: `eslint-config-next` (core-web-vitals + typescript)                                    |
 | **Format**            | **Prettier** + **prettier-plugin-tailwindcss** (see `.prettierrc`)                                               |
@@ -42,7 +43,7 @@ alwaysApply: true
 ## Layout
 
 - `**app/`** — Next App Router: `layout.tsx` (root shell, fonts, `ThemeProvider`), `page.tsx`, `globals.css` (Tailwind entry, design tokens, shadcn theme imports).
-- `**components/**` — Shared UI: `theme-provider.tsx`, `ui/` (e.g. shadcn-style primitives).
+- `**components/`** — Shared UI: `theme-provider.tsx`, `ui/` (e.g. shadcn-style primitives).
 - `**lib/**` — Cross-cutting helpers (e.g. `cn()` in `lib/utils.ts`).
 - `**hooks/**` — Reserved alias in `components.json`; add hooks here when needed.
 

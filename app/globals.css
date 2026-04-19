@@ -199,6 +199,15 @@
     * {
         @apply border-border outline-ring/50;
     }
+    /* UA styles often leave buttons/links at default arrow; match clickable affordance. */
+    button:enabled,
+    a[href],
+    summary {
+        cursor: pointer;
+    }
+    [role="button"]:not([aria-disabled="true"]) {
+        cursor: pointer;
+    }
     body {
         @apply bg-background text-foreground;
         user-select: none;
@@ -283,5 +292,83 @@
     ::view-transition-group(*) {
         animation-duration: 0s !important;
         animation-delay: 0s !important;
+    }
+}
+
+/* Hunt 03 COMP: DAG waveform choreography */
+@keyframes ew-edge-draw {
+    from {
+        stroke-dashoffset: var(--ew-edge-len, 400);
+        opacity: 0;
+    }
+    20% {
+        opacity: 1;
+    }
+    to {
+        stroke-dashoffset: 0;
+        opacity: 1;
+    }
+}
+
+@keyframes ew-edge-pulse {
+    from {
+        offset-distance: 0%;
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    to {
+        offset-distance: 100%;
+        opacity: 0;
+    }
+}
+
+@keyframes ew-lane-enter {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes ew-lane-flash {
+    0% {
+        box-shadow: 0 0 0 0 color-mix(in oklch, var(--primary) 35%, transparent);
+    }
+    60% {
+        box-shadow: 0 0 0 4px color-mix(in oklch, var(--primary) 12%, transparent);
+    }
+    100% {
+        box-shadow: 0 0 0 0 color-mix(in oklch, var(--primary) 0%, transparent);
+    }
+}
+
+.ew-edge-draw {
+    animation-name: ew-edge-draw;
+    animation-timing-function: ease-out;
+    animation-fill-mode: both;
+}
+
+.ew-lane-enter {
+    animation: ew-lane-enter 440ms ease-out both;
+}
+
+.ew-lane-flash {
+    animation: ew-lane-flash 560ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ew-edge-draw,
+    .ew-lane-enter,
+    .ew-lane-flash {
+        animation: none !important;
+    }
+    .ew-edge-draw {
+        stroke-dashoffset: 0 !important;
+        opacity: 1 !important;
     }
 }

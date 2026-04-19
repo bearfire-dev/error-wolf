@@ -1,8 +1,15 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 
 import { acceptConsentAndStart } from "@/app/actions/consent"
 import { ErrorWolfMark } from "@/components/error-wolf-mark"
 import { Button } from "@/components/ui/button"
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "/",
+  },
+}
 
 export default function Page() {
   return (
@@ -22,7 +29,14 @@ export default function Page() {
             </h1>
 
             <p className="font-mono text-sm text-muted-foreground">
-              collapse noisy error stacks. save tokens.
+              fast compression of noisy error stacks
+            </p>
+            <p className="font-mono text-sm text-muted-foreground">
+              spend tokens on fixing errors{" "}
+              <span className="underline">not</span> reading traces
+            </p>
+            <p className="font-mono text-sm text-muted-foreground">
+              requires OpenRouter key
             </p>
 
             <div className="pt-2">

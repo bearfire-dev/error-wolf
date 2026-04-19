@@ -52,7 +52,11 @@ export function SiteHeaderWipeDialog() {
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setOpen(false)}
+          >
             cancel
           </Button>
           <Button type="button" variant="destructive" onClick={performWipe}>

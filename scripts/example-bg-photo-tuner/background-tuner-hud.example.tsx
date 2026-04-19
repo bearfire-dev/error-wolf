@@ -165,9 +165,7 @@ export function BackgroundTunerHud() {
             <select
               id="bg-tuner-quality"
               value={tune.quality}
-              onChange={(e) =>
-                patchTune({ quality: Number(e.target.value) })
-              }
+              onChange={(e) => patchTune({ quality: Number(e.target.value) })}
               className="border border-foreground/20 bg-background px-2 py-1.5 font-mono text-[0.6875rem] text-foreground"
             >
               {BG_PHOTO_QUALITY_OPTIONS.map((q) => (
