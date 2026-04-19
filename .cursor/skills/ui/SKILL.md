@@ -1,6 +1,6 @@
 ---
 name: ui
-description: 'Explore, build, and refine UI.'
+description: "Explore, build, and refine UI."
 url: https://ui.sh/
 ---
 

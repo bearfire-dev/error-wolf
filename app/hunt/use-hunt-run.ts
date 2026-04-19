@@ -34,7 +34,9 @@ import type { SimplifyPipelineStepId } from "@/lib/simplify/types"
 const KEY_CREDITS_NOTICE =
   "OpenRouter reported insufficient credits. Add credits to your account or use a different API key."
 
-function billingPromptTokensFromSpan(span: SimplifyRunCostSpan): number | undefined {
+function billingPromptTokensFromSpan(
+  span: SimplifyRunCostSpan
+): number | undefined {
   if (span.promptTokens !== undefined) return span.promptTokens
   const total = span.totalTokens
   const completion = span.completionTokens
@@ -48,7 +50,9 @@ function billingPromptTokensFromSpan(span: SimplifyRunCostSpan): number | undefi
   return undefined
 }
 
-function sumCompressorPromptTokens(spans: SimplifyRunCostSpan[]): number | undefined {
+function sumCompressorPromptTokens(
+  spans: SimplifyRunCostSpan[]
+): number | undefined {
   let total = 0
   let has = false
   for (const span of spans) {
@@ -242,7 +246,9 @@ export function useHuntRun({
         durationMs: finalDuration,
       })
 
-      const compressorPromptTokens = sumCompressorPromptTokens(result.cost.spans)
+      const compressorPromptTokens = sumCompressorPromptTokens(
+        result.cost.spans
+      )
 
       const next = addRecentResult({
         engineId: engine.id,

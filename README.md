@@ -27,11 +27,11 @@ All OpenRouter traffic is browser-direct only. If verification, provider ranking
 
 ## Routes
 
-| Path | Description |
-|------|-------------|
-| `/` | Landing and consent |
-| `/hunt` | Main tool |
-| `/privacy` | Privacy policy |
+| Path       | Description         |
+| ---------- | ------------------- |
+| `/`        | Landing and consent |
+| `/hunt`    | Main tool           |
+| `/privacy` | Privacy policy      |
 
 ## Development
 
@@ -42,9 +42,8 @@ pnpm install
 pnpm dev
 ```
 
-Other scripts: `pnpm build`, `pnpm start`, `pnpm lint`, `pnpm typecheck`, `pnpm format`.
+Other scripts: `pnpm build`, `pnpm start`, `pnpm lint` (oxlint), `pnpm lint:fix`, `pnpm typecheck` (tsgo), `pnpm typecheck:tsc`, `pnpm format` / `pnpm format:check` (oxfmt).
 
 ## License
 
 This project is licensed under the [O'Saasy License](./LICENSE.md). You may use, modify, and distribute the software broadly, but you may not offer it to third parties as a hosted SaaS or cloud service whose primary value is the software itself (see the license for the exact terms).
-

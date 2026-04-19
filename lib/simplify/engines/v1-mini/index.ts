@@ -15,7 +15,8 @@ import type { SimplifyEngineDefinition } from "../types"
 export const simplifyEngineV1Mini: SimplifyEngineDefinition = {
   id: "v1-mini",
   label: "v1-mini",
-  description: "Single-pass OpenRouter compression pipeline for smaller inputs.",
+  description:
+    "Single-pass OpenRouter compression pipeline for smaller inputs.",
   dag: V1_MINI_PIPELINE_DAG,
   defaultModelRouteId: V1_MINI_DEFAULT_MODEL_ROUTE_ID,
   modelRouteOptions: V1_MINI_MODEL_ROUTE_OPTIONS,

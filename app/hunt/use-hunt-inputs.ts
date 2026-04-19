@@ -24,7 +24,9 @@ export function useHuntInputs() {
 
   const hydrate = useCallback(
     (
-      next: Partial<Pick<HuntInputState, "apiKey" | "engineId" | "modelRouteId">>
+      next: Partial<
+        Pick<HuntInputState, "apiKey" | "engineId" | "modelRouteId">
+      >
     ) => {
       setInput((current) => ({ ...current, ...next }))
     },

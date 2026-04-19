@@ -6,11 +6,11 @@ This folder keeps **reference snapshots** if you want the same tuning workflow i
 
 ## Snapshot files
 
-| File | Notes |
-|------|--------|
-| [`background-tuner-hud.example.tsx`](background-tuner-hud.example.tsx) | HUD UI: sliders, sessionStorage, copy-css. |
+| File                                                                       | Notes                                                                     |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| [`background-tuner-hud.example.tsx`](background-tuner-hud.example.tsx)     | HUD UI: sliders, sessionStorage, copy-css.                                |
 | [`bg-photo-tune-provider.example.tsx`](bg-photo-tune-provider.example.tsx) | React context + `useTheme` + applying vars to `document.documentElement`. |
-| [`bg-photo-tune.example.ts`](bg-photo-tune.example.ts) | Types, defaults, clamping, storage keys, `formatTuneAsCssBlock`. |
+| [`bg-photo-tune.example.ts`](bg-photo-tune.example.ts)                     | Types, defaults, clamping, storage keys, `formatTuneAsCssBlock`.          |
 
 ## What the tuner did (when wired)
 

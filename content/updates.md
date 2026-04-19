@@ -3,9 +3,11 @@
 lastUpdatedMs: 1776571801
 ---
 
-# April 18, 2026
-- Add *Auto* router
-- Add *v1-mini* modal
+# v0.2
 
-# April 17, 2026
-- Add *v1* model.
+- Add _Auto_ router
+- Add _v1-mini_ modal
+
+# v0.1
+
+- Add _v1_ model.

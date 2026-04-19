@@ -519,8 +519,7 @@ export function getStats(
     total.cleanedInputTokensN > 0 ? total.cleanedInputTokens : undefined
   const sumCompressorPromptTokens =
     total.compressorPromptTokensN > 0 ? total.compressorPromptTokens : undefined
-  const sumInputTokens =
-    total.inputTokensN > 0 ? total.inputTokens : undefined
+  const sumInputTokens = total.inputTokensN > 0 ? total.inputTokens : undefined
   const sumOutputTokens =
     total.outputTokensN > 0 ? total.outputTokens : undefined
 

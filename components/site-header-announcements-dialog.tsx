@@ -92,7 +92,7 @@ export function SiteHeaderAnnouncementsDialog({
       <DialogContent
         showCloseButton
         className={cn(
-          "flex min-w-0 max-h-[min(90vh,32rem)] flex-col gap-4 overflow-x-hidden overflow-y-hidden sm:max-w-lg"
+          "flex max-h-[min(90vh,32rem)] min-w-0 flex-col gap-4 overflow-x-hidden overflow-y-hidden sm:max-w-lg"
         )}
       >
         <DialogHeader className="shrink-0 space-y-0 border-b border-foreground/15 pr-10 pb-3">
@@ -104,7 +104,7 @@ export function SiteHeaderAnnouncementsDialog({
           </DialogDescription>
         </DialogHeader>
         <div
-          className="min-h-0 min-w-0 max-w-full flex-1 overflow-y-auto overflow-x-hidden break-words text-pretty"
+          className="min-h-0 max-w-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto text-pretty break-words"
           data-slot="updates-markdown"
         >
           {markdown.trim() ? (
@@ -142,7 +142,7 @@ export function SiteHeaderAnnouncementsDialog({
                   </a>
                 ),
                 pre: ({ children }) => (
-                  <pre className="my-3 max-w-full overflow-x-hidden whitespace-pre-wrap break-all rounded bg-foreground/10 p-3 font-mono text-[0.7rem] text-foreground [&_code]:bg-transparent [&_code]:p-0">
+                  <pre className="my-3 max-w-full overflow-x-hidden rounded bg-foreground/10 p-3 font-mono text-[0.7rem] break-all whitespace-pre-wrap text-foreground [&_code]:bg-transparent [&_code]:p-0">
                     {children}
                   </pre>
                 ),
@@ -167,7 +167,7 @@ export function SiteHeaderAnnouncementsDialog({
                     return (
                       <code
                         className={cn(
-                          "block w-full min-w-0 break-all bg-transparent p-0 font-mono text-[0.7rem] text-inherit",
+                          "block w-full min-w-0 bg-transparent p-0 font-mono text-[0.7rem] break-all text-inherit",
                           className
                         )}
                       >
@@ -176,7 +176,7 @@ export function SiteHeaderAnnouncementsDialog({
                     )
                   }
                   return (
-                    <code className="break-words rounded bg-foreground/10 px-1 py-px text-[0.7rem]">
+                    <code className="rounded bg-foreground/10 px-1 py-px text-[0.7rem] break-words">
                       {children}
                     </code>
                   )
@@ -186,9 +186,7 @@ export function SiteHeaderAnnouncementsDialog({
               {markdown}
             </ReactMarkdown>
           ) : (
-            <p className="text-xs text-muted-foreground">
-              No updates yet.
-            </p>
+            <p className="text-xs text-muted-foreground">No updates yet.</p>
           )}
         </div>
       </DialogContent>

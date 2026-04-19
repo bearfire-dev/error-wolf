@@ -4,9 +4,9 @@ import { cache } from "react"
 
 import { parseAnnouncementsFile } from "@/lib/announcements/parse"
 
-const FILE = join(process.cwd(), "content", "announcements.md")
+const FILE = join(process.cwd(), "content", "updates.md")
 
-/** Server-only: reads `content/announcements.md` once per request (deduped via `cache`). */
+/** Server-only: reads `content/updates.md` once per request (deduped via `cache`). */
 export const getAnnouncementsFeed = cache(() => {
   try {
     const raw = readFileSync(FILE, "utf8")

@@ -389,7 +389,7 @@ function KeyStep({
       {creditsNotice && (
         <div
           role="alert"
-          className="shrink-0 rounded-sm border border-destructive/35 bg-destructive/5 p-3 text-pretty font-mono text-[0.6875rem] leading-relaxed text-foreground normal-case"
+          className="shrink-0 rounded-sm border border-destructive/35 bg-destructive/5 p-3 font-mono text-[0.6875rem] leading-relaxed text-pretty text-foreground normal-case"
         >
           {creditsNotice}
         </div>
@@ -580,11 +580,7 @@ function InputStep({
         )}
       >
         <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
-          <Button
-            type="button"
-            disabled={!canCompress}
-            onClick={onSimplify}
-          >
+          <Button type="button" disabled={!canCompress} onClick={onSimplify}>
             [ hunt ]
           </Button>
           <span className="font-mono text-[0.625rem] tracking-wider text-muted-foreground uppercase">
@@ -600,8 +596,9 @@ function InputStep({
               aria-label="Model routing"
               className="h-7 min-w-[4.75rem] py-0 text-[0.625rem] normal-case"
             >
-              {modelRouteOptions.find((option) => option.id === selectedModelRouteId)
-                ?.label ?? selectedModelRouteId}
+              {modelRouteOptions.find(
+                (option) => option.id === selectedModelRouteId
+              )?.label ?? selectedModelRouteId}
             </SelectTrigger>
             <SelectContent align="end">
               {modelRouteOptions.map((option) => (
@@ -640,15 +637,15 @@ function InputStep({
                 <ul className="list-disc space-y-1 pl-4 text-left text-sm leading-snug text-muted-foreground marker:text-muted-foreground/80">
                   <li>
                     We call OpenRouter with{" "}
-                    <span className="text-foreground">your API key</span> to read
-                    current provider stats for this model.
+                    <span className="text-foreground">your API key</span> to
+                    read current provider stats for this model.
                   </li>
                   <li>
                     We rank by{" "}
                     <span className="text-foreground">net fastest</span> here:{" "}
                     <span className="text-foreground">latency</span> and{" "}
-                    <span className="text-foreground">throughput</span> together,
-                    not time-to-first-token alone.
+                    <span className="text-foreground">throughput</span>{" "}
+                    together, not time-to-first-token alone.
                   </li>
                 </ul>
               </div>
@@ -740,8 +737,7 @@ function OutputStep({
     modelDisplay &&
     (modelDisplay.endsWith(RESOLVED_MODEL_AUTO_DISPLAY_SUFFIX) ? (
       <>
-        {` model: ${modelDisplay.slice(0, -RESOLVED_MODEL_AUTO_DISPLAY_SUFFIX.length)}`}
-        {" "}
+        {` model: ${modelDisplay.slice(0, -RESOLVED_MODEL_AUTO_DISPLAY_SUFFIX.length)}`}{" "}
         <span className="text-primary">(</span>
         {RESOLVED_MODEL_AUTO_INNER}
         <span className="text-primary">)</span>
@@ -920,7 +916,9 @@ function getRoutingEngineIdForRoute(modelRouteId: string): SimplifyEngineId {
 const RESOLVED_MODEL_AUTO_INNER = "auto"
 const RESOLVED_MODEL_AUTO_DISPLAY_SUFFIX = ` (${RESOLVED_MODEL_AUTO_INNER})`
 
-function formatResolvedModelDisplay(modelRoute: SimplifyResolvedModelRoute): string {
+function formatResolvedModelDisplay(
+  modelRoute: SimplifyResolvedModelRoute
+): string {
   return modelRoute.routeId === "auto"
     ? `${modelRoute.modelLabel}${RESOLVED_MODEL_AUTO_DISPLAY_SUFFIX}`
     : modelRoute.modelLabel
@@ -1293,16 +1291,21 @@ function StatsStrip({
               <div className="pt-1">
                 <ul className="list-disc space-y-1 pl-4 text-left text-sm leading-snug text-muted-foreground marker:text-muted-foreground/80">
                   <li>
-                    For this error stack, you paid more than you would have without error-wolf (openrouter cost + cost of error-wolf output is greater then the estimated original cost)
+                    For this error stack, you paid more than you would have
+                    without error-wolf (openrouter cost + cost of error-wolf
+                    output is greater then the estimated original cost)
                   </li>
                   <li>
-                    For small error stacks, it is often cheaper to pass them in directly to the model.
+                    For small error stacks, it is often cheaper to pass them in
+                    directly to the model.
                   </li>
                   <li>
-                    error-wolf still cleans up the stack and simplifies the model context... so its not a total loss.
+                    error-wolf still cleans up the stack and simplifies the
+                    model context... so its not a total loss.
                   </li>
                   <li>
-                    We recommend you use the Auto mode or a smaller version of error-wolf for similar prompts in the future.
+                    We recommend you use the Auto mode or a smaller version of
+                    error-wolf for similar prompts in the future.
                   </li>
                 </ul>
               </div>

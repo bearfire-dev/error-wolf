@@ -18,7 +18,9 @@ export function prepareV1MiniRoutingEstimate(input: string): {
 
   return {
     inputText,
-    prompts: [[V1_MINI_SYSTEM_PROMPT, buildV1MiniPrompt(inputText)].join("\n\n")],
+    prompts: [
+      [V1_MINI_SYSTEM_PROMPT, buildV1MiniPrompt(inputText)].join("\n\n"),
+    ],
   }
 }
 

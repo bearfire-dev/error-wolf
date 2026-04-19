@@ -76,7 +76,7 @@ export function StackTraceExamplesDialog({
         </DialogHeader>
 
         {examples.length > 0 ? (
-          <p className="font-mono text-xs uppercase tracking-wider text-foreground">
+          <p className="font-mono text-xs tracking-wider text-foreground uppercase">
             <span className="text-primary">&gt;&nbsp;</span>
             example traces
           </p>
