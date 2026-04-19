@@ -4,6 +4,7 @@ enum MetricName {
   UserInitialize = "user-initialize",
   UserSetup = "user-setup",
   UserRun = "user-run",
+  UserRunDownvote = "user-run-downvote",
 }
 
 enum Attr {
@@ -56,4 +57,25 @@ export function emitUserRunMetric(input: UserRunMetricInput): void {
   }
 
   Sentry.metrics.count(MetricName.UserRun, 1, { attributes })
+}
+
+export type UserRunDownvoteMetricInput = {
+  modelDisplay: string
+  /** OpenRouter estimated cost for this run only; omit when unknown. */
+  estimatedCostUsd?: number
+}
+
+/** Hunt 04 OUTPUT: user downvoted simplified output (not tied to copy). */
+export function emitUserRunDownvoteMetric(
+  input: UserRunDownvoteMetricInput
+): void {
+  const attributes: Record<string, string | number> = {
+    [Attr.OccurredAt]: nowIso(),
+    [Attr.ModelDisplay]: input.modelDisplay,
+  }
+  if (typeof input.estimatedCostUsd === "number") {
+    attributes[Attr.EstimatedCostUsd] = input.estimatedCostUsd
+  }
+
+  Sentry.metrics.count(MetricName.UserRunDownvote, 1, { attributes })
 }

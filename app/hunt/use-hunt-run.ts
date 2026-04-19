@@ -23,7 +23,10 @@ import {
   updateRecentResultTokens,
   type SimplifyStats,
 } from "@/lib/recent-results"
-import { emitUserRunMetric } from "@/lib/sentry-product-metrics"
+import {
+  emitUserRunDownvoteMetric,
+  emitUserRunMetric,
+} from "@/lib/sentry-product-metrics"
 import {
   createThroughputBus,
   type SimplifyProgressSnapshot,
@@ -379,12 +382,23 @@ export function useHuntRun({
     resetOutput()
   }, [resetOutput])
 
-  const submitOutputFeedback = useCallback((vote: "up" | "down") => {
-    if (outputFeedbackLockedRef.current) return
-    outputFeedbackLockedRef.current = true
-    console.log("[hunt] output feedback", { sentiment: vote })
-    setOutputFeedbackVote(vote)
-  }, [])
+  const submitOutputFeedback = useCallback(
+    (vote: "up" | "down") => {
+      if (outputFeedbackLockedRef.current) return
+      outputFeedbackLockedRef.current = true
+      console.log("[hunt] output feedback", { sentiment: vote })
+      if (vote === "down") {
+        const latest = getRecentResults()[0]
+        const estimatedCostUsd = latest?.estimatedCostUsd
+        emitUserRunDownvoteMetric({
+          modelDisplay: outputModelDisplay,
+          ...(typeof estimatedCostUsd === "number" ? { estimatedCostUsd } : {}),
+        })
+      }
+      setOutputFeedbackVote(vote)
+    },
+    [outputModelDisplay]
+  )
 
   const clearKeyCreditsNotice = useCallback(() => {
     setKeyCreditsNotice(null)
