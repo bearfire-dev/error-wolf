@@ -2,7 +2,8 @@ import { Geist, Geist_Mono, Lora } from "next/font/google"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
+import { Analytics } from "@vercel/analytics/next"
 
 const lora = Lora({subsets:['latin'],variable:'--font-serif'});
 
@@ -29,6 +30,7 @@ export default function RootLayout({
     >
       <body>
         <ThemeProvider>{children}</ThemeProvider>
+        <Analytics />
       </body>
     </html>
   )
