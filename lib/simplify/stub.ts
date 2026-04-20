@@ -2,6 +2,7 @@ import type { OpenRouterPublicEndpoint } from "@/lib/openrouter/endpoints-types"
 import { getSimplifyEngine } from "@/lib/simplify/engines/registry"
 import type { SimplifyEngineId } from "@/lib/simplify/engines/types"
 import type {
+  OpenRouterLatencyPolicy,
   OpenRouterProviderPreferences,
   SimplifyPipelineResult,
   SimplifyProgressSnapshot,
@@ -32,6 +33,7 @@ export async function simplifyErrorText(
     onChunk?: SimplifyThroughputReporter
     provider?: OpenRouterProviderPreferences
     providerEndpoints?: OpenRouterPublicEndpoint[]
+    providerLatencyPolicy?: OpenRouterLatencyPolicy
     engineId?: SimplifyEngineId
   }
 ): Promise<SimplifyPipelineResult> {
@@ -54,5 +56,6 @@ export async function simplifyErrorText(
     onChunk: options.onChunk,
     provider: options.provider,
     providerEndpoints: options.providerEndpoints,
+    providerLatencyPolicy: options.providerLatencyPolicy,
   })
 }

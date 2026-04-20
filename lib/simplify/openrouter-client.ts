@@ -1,5 +1,7 @@
 import type {
   OpenRouterChatMessage,
+  OpenRouterLatencyPolicy,
+  OpenRouterProviderPreferences,
   OpenRouterTextRequest,
   OpenRouterTextResponse,
   OpenRouterTextStream,
@@ -24,6 +26,54 @@ const OPENROUTER_CHAT_COMPLETIONS_URL =
 function nowMs(): number {
   if (typeof performance !== "undefined") return performance.now()
   return Date.now()
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof Error && error.name === "AbortError"
+}
+
+function cloneProviderPreferences(
+  provider: OpenRouterProviderPreferences | undefined
+): OpenRouterProviderPreferences | undefined {
+  if (!provider) return undefined
+  return {
+    ...provider,
+    order: provider.order ? [...provider.order] : undefined,
+    only: provider.only ? [...provider.only] : undefined,
+    ignore: provider.ignore ? [...provider.ignore] : undefined,
+    sort:
+      typeof provider.sort === "object" && provider.sort !== null
+        ? { ...provider.sort }
+        : provider.sort,
+  }
+}
+
+function normalizeLatencyPolicy(
+  policy: OpenRouterLatencyPolicy | undefined,
+  primaryProvider: OpenRouterProviderPreferences | undefined
+): OpenRouterLatencyPolicy | null {
+  if (!policy) return null
+
+  const hedgeAfterMs = Math.round(policy.hedgeAfterMs)
+  if (!Number.isFinite(hedgeAfterMs) || hedgeAfterMs <= 0) return null
+
+  const secondaryProvider = cloneProviderPreferences(policy.secondaryProvider)
+  if (!secondaryProvider) return null
+  const secondarySlug = secondaryProvider?.order?.[0]?.trim().toLowerCase()
+  const primarySlug = primaryProvider?.order?.[0]?.trim().toLowerCase()
+  if (!secondarySlug || secondarySlug === primarySlug) return null
+
+  const cancelAfterMs =
+    typeof policy.cancelAfterMs === "number" &&
+    Number.isFinite(policy.cancelAfterMs)
+      ? Math.max(Math.round(policy.cancelAfterMs), hedgeAfterMs + 1)
+      : undefined
+
+  return {
+    hedgeAfterMs,
+    cancelAfterMs,
+    secondaryProvider,
+  }
 }
 
 function buildMessages(
@@ -57,6 +107,30 @@ function buildHeaders(apiKey: string): HeadersInit {
   }
 
   return headers
+}
+
+function buildCompletionBody(
+  request: OpenRouterTextRequest,
+  stream: boolean
+): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    model: request.model,
+    messages: buildMessages(request),
+    temperature: request.temperature,
+    stream,
+  }
+
+  if (stream) {
+    body.stream_options = { include_usage: true }
+  }
+  if (typeof request.maxOutputTokens === "number") {
+    body.max_tokens = request.maxOutputTokens
+  }
+  if (request.provider) {
+    body.provider = request.provider
+  }
+
+  return body
 }
 
 function readContentText(value: unknown): string {
@@ -199,13 +273,15 @@ function extractUsage(payload: unknown): OpenRouterTextResponse["usage"] {
 }
 
 function requestDebugMeta(
-  request: OpenRouterTextRequest
+  request: OpenRouterTextRequest,
+  extra?: Record<string, unknown>
 ): Record<string, unknown> {
   return {
     model: request.model,
     maxOutputTokens: request.maxOutputTokens ?? null,
     providerOrder: request.provider?.order ?? null,
     allowFallbacks: request.provider?.allow_fallbacks ?? null,
+    ...extra,
   }
 }
 
@@ -280,22 +356,17 @@ async function* parseServerSentEvents(
   }
 }
 
-export async function generateOpenRouterText(
+async function fetchOpenRouterResponse(params: {
   request: OpenRouterTextRequest
-): Promise<OpenRouterTextResponse> {
-  const startedAtMs = nowMs()
-  const body: Record<string, unknown> = {
-    model: request.model,
-    messages: buildMessages(request),
-    temperature: request.temperature,
-    stream: false,
-  }
-  if (typeof request.maxOutputTokens === "number") {
-    body.max_tokens = request.maxOutputTokens
-  }
-  if (request.provider) {
-    body.provider = request.provider
-  }
+  body: Record<string, unknown>
+  signal?: AbortSignal
+  mode: "completion" | "streaming"
+}): Promise<Response> {
+  const { request, body, signal, mode } = params
+  const logPrefix =
+    mode === "completion"
+      ? "completion request failed"
+      : "stream request failed"
 
   let response: Response
   try {
@@ -303,16 +374,12 @@ export async function generateOpenRouterText(
       method: "POST",
       headers: buildHeaders(request.apiKey),
       body: JSON.stringify(body),
-      signal: request.signal,
+      signal,
     })
   } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") throw error
-    console.error(
-      "[openrouter] completion request failed",
-      error,
-      requestDebugMeta(request)
-    )
-    throw createDirectBrowserOpenRouterError("completion")
+    if (isAbortError(error)) throw error
+    console.error(`[openrouter] ${logPrefix}`, error, requestDebugMeta(request))
+    throw createDirectBrowserOpenRouterError(mode)
   }
 
   if (!response.ok) {
@@ -321,12 +388,84 @@ export async function generateOpenRouterText(
     const requestError = insufficientCredits
       ? new OpenRouterInsufficientCreditsError(message)
       : new Error(message)
-    console.error("[openrouter] completion request failed", requestError, {
+    console.error(`[openrouter] ${logPrefix}`, requestError, {
       ...requestDebugMeta(request),
       status: response.status,
     })
     throw requestError
   }
+
+  return response
+}
+
+async function fetchOpenRouterCompletionResponse(
+  request: OpenRouterTextRequest,
+  signal = request.signal
+): Promise<{ response: Response; startedAtMs: number }> {
+  const startedAtMs = nowMs()
+  const response = await fetchOpenRouterResponse({
+    request,
+    body: buildCompletionBody(request, false),
+    signal,
+    mode: "completion",
+  })
+  return { response, startedAtMs }
+}
+
+async function fetchOpenRouterStreamResponse(
+  request: OpenRouterTextRequest,
+  signal = request.signal
+): Promise<{ response: Response; startedAtMs: number }> {
+  const startedAtMs = nowMs()
+  const response = await fetchOpenRouterResponse({
+    request,
+    body: buildCompletionBody(request, true),
+    signal,
+    mode: "streaming",
+  })
+
+  if (!response.body) {
+    const missingBodyError = new Error(
+      "OpenRouter stream response did not include a readable body."
+    )
+    console.error(
+      "[openrouter] stream response missing body",
+      missingBodyError,
+      requestDebugMeta(request)
+    )
+    throw missingBodyError
+  }
+
+  return { response, startedAtMs }
+}
+
+function createLinkedAbortController(signal?: AbortSignal): {
+  controller: AbortController
+  detach: () => void
+} {
+  const controller = new AbortController()
+  if (!signal) {
+    return { controller, detach: () => {} }
+  }
+
+  if (signal.aborted) {
+    controller.abort()
+    return { controller, detach: () => {} }
+  }
+
+  const onAbort = () => controller.abort()
+  signal.addEventListener("abort", onAbort, { once: true })
+  return {
+    controller,
+    detach: () => signal.removeEventListener("abort", onAbort),
+  }
+}
+
+export async function generateOpenRouterText(
+  request: OpenRouterTextRequest
+): Promise<OpenRouterTextResponse> {
+  const { response, startedAtMs } =
+    await fetchOpenRouterCompletionResponse(request)
 
   const payload = (await response.json()) as unknown
   const text = extractCompletionText(payload).trim()
@@ -355,72 +494,17 @@ export async function generateOpenRouterText(
         ? ((payload as Record<string, unknown>).model as string)
         : request.model,
     usage: extractUsage(payload),
+    resolvedProvider: cloneProviderPreferences(request.provider),
   }
 }
 
 export async function streamOpenRouterText(
   request: OpenRouterTextRequest
 ): Promise<OpenRouterTextStream> {
-  const startedAtMs = nowMs()
-  const streamBody: Record<string, unknown> = {
-    model: request.model,
-    messages: buildMessages(request),
-    temperature: request.temperature,
-    stream: true,
-    stream_options: { include_usage: true },
-  }
-  if (typeof request.maxOutputTokens === "number") {
-    streamBody.max_tokens = request.maxOutputTokens
-  }
-  if (request.provider) {
-    streamBody.provider = request.provider
-  }
-
-  let response: Response
-  try {
-    response = await fetch(OPENROUTER_CHAT_COMPLETIONS_URL, {
-      method: "POST",
-      headers: buildHeaders(request.apiKey),
-      body: JSON.stringify(streamBody),
-      signal: request.signal,
-    })
-  } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") throw error
-    console.error(
-      "[openrouter] stream request failed",
-      error,
-      requestDebugMeta(request)
-    )
-    throw createDirectBrowserOpenRouterError("streaming")
-  }
-
-  if (!response.ok) {
-    const { message, insufficientCredits } =
-      await parseOpenRouterFailure(response)
-    const requestError = insufficientCredits
-      ? new OpenRouterInsufficientCreditsError(message)
-      : new Error(message)
-    console.error("[openrouter] stream request failed", requestError, {
-      ...requestDebugMeta(request),
-      status: response.status,
-    })
-    throw requestError
-  }
-
-  if (!response.body) {
-    const missingBodyError = new Error(
-      "OpenRouter stream response did not include a readable body."
-    )
-    console.error(
-      "[openrouter] stream response missing body",
-      missingBodyError,
-      requestDebugMeta(request)
-    )
-    throw missingBodyError
-  }
+  const { response, startedAtMs } = await fetchOpenRouterStreamResponse(request)
 
   return {
-    stream: parseServerSentEvents(response.body),
+    stream: parseServerSentEvents(response.body!),
     response,
     startedAtMs,
   }
@@ -428,16 +512,61 @@ export async function streamOpenRouterText(
 
 export type RunStreamingCompletionOptions = {
   onChunk?: (delta: string) => void
+  latencyPolicy?: OpenRouterLatencyPolicy
 }
 
-/**
- * Drives `streamOpenRouterText` to completion while surfacing incremental
- * deltas via `onChunk`. Returns the same shape as `generateOpenRouterText`
- * so call sites can swap implementations without other changes.
- */
-export async function runStreamingCompletion(
+type StreamingLegName = "primary" | "secondary"
+
+type StreamingLeg = {
+  name: StreamingLegName
+  request: OpenRouterTextRequest
+  resolvedProvider?: OpenRouterProviderPreferences
+  controller: AbortController
+  detachAbort: () => void
+  cancelTimer: ReturnType<typeof setTimeout> | null
+  cancelTriggered: boolean
+  startedAtMs: number
+  response: Response | null
+  requestId: string | null
+  modelId: string
+  text: string
+  usage: OpenRouterUsage | null
+  sawDelta: boolean
+}
+
+function createStreamingLeg(
+  name: StreamingLegName,
+  request: OpenRouterTextRequest
+): StreamingLeg {
+  const { controller, detach } = createLinkedAbortController(request.signal)
+  return {
+    name,
+    request,
+    resolvedProvider: cloneProviderPreferences(request.provider),
+    controller,
+    detachAbort: detach,
+    cancelTimer: null,
+    cancelTriggered: false,
+    startedAtMs: 0,
+    response: null,
+    requestId: null,
+    modelId: request.model,
+    text: "",
+    usage: null,
+    sawDelta: false,
+  }
+}
+
+function clearStreamingLegTimer(leg: StreamingLeg): void {
+  if (leg.cancelTimer !== null) {
+    clearTimeout(leg.cancelTimer)
+    leg.cancelTimer = null
+  }
+}
+
+async function runSingleStreamingCompletion(
   request: OpenRouterTextRequest,
-  options: RunStreamingCompletionOptions = {}
+  options: RunStreamingCompletionOptions
 ): Promise<OpenRouterTextResponse> {
   const { stream, response, startedAtMs } = await streamOpenRouterText(request)
 
@@ -453,7 +582,7 @@ export async function runStreamingCompletion(
       }
     }
   } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") throw error
+    if (isAbortError(error)) throw error
     console.error(
       "[openrouter] stream read failed",
       error,
@@ -483,5 +612,260 @@ export async function runStreamingCompletion(
     requestId,
     modelId: request.model,
     usage,
+    resolvedProvider: cloneProviderPreferences(request.provider),
   }
+}
+
+async function runHedgedStreamingCompletion(
+  request: OpenRouterTextRequest,
+  options: RunStreamingCompletionOptions,
+  latencyPolicy: OpenRouterLatencyPolicy
+): Promise<OpenRouterTextResponse> {
+  const primary = createStreamingLeg("primary", request)
+  const secondary = createStreamingLeg("secondary", {
+    ...request,
+    provider: cloneProviderPreferences(latencyPolicy.secondaryProvider),
+  })
+
+  let winner: StreamingLeg | null = null
+  let settled = false
+  let activeLegs = 0
+  let secondaryStarted = false
+  let secondaryLaunchTimer: ReturnType<typeof setTimeout> | null = null
+  let bestError: Error | null = null
+
+  const emptyResponseError = () =>
+    new Error("OpenRouter returned an empty response.")
+  const latencyTimeoutError = () =>
+    new Error("OpenRouter request exceeded latency policy before first token.")
+
+  return new Promise<OpenRouterTextResponse>((resolve, reject) => {
+    const cleanup = (abortInFlight: boolean) => {
+      if (secondaryLaunchTimer !== null) {
+        clearTimeout(secondaryLaunchTimer)
+        secondaryLaunchTimer = null
+      }
+      clearStreamingLegTimer(primary)
+      clearStreamingLegTimer(secondary)
+      primary.detachAbort()
+      secondary.detachAbort()
+      if (abortInFlight) {
+        primary.controller.abort()
+        secondary.controller.abort()
+      }
+    }
+
+    const settleSuccess = (result: OpenRouterTextResponse) => {
+      if (settled) return
+      settled = true
+      cleanup(false)
+      resolve(result)
+    }
+
+    const settleFailure = (error: unknown) => {
+      if (settled) return
+      settled = true
+      cleanup(true)
+      reject(
+        error instanceof Error ? error : new Error("Unknown request failure.")
+      )
+    }
+
+    const rememberFailure = (error: unknown) => {
+      if (settled) return
+      if (error instanceof OpenRouterInsufficientCreditsError) {
+        settleFailure(error)
+        return
+      }
+      bestError =
+        error instanceof Error ? error : new Error("Unknown request failure.")
+    }
+
+    const maybeStartSecondary = () => {
+      if (settled || winner || secondaryStarted) return
+      secondaryStarted = true
+      if (secondaryLaunchTimer !== null) {
+        clearTimeout(secondaryLaunchTimer)
+        secondaryLaunchTimer = null
+      }
+      void runLeg(secondary)
+    }
+
+    const chooseWinner = (leg: StreamingLeg) => {
+      if (winner || settled) return
+      winner = leg
+      if (secondaryLaunchTimer !== null) {
+        clearTimeout(secondaryLaunchTimer)
+        secondaryLaunchTimer = null
+      }
+      if (leg !== primary) primary.controller.abort()
+      if (leg !== secondary) secondary.controller.abort()
+    }
+
+    const finishWinner = (leg: StreamingLeg) => {
+      const trimmed = leg.text.trim()
+      if (!trimmed) {
+        const error = emptyResponseError()
+        console.error(
+          "[openrouter] stream returned empty response",
+          error,
+          requestDebugMeta(leg.request, { leg: leg.name })
+        )
+        settleFailure(error)
+        return
+      }
+
+      settleSuccess({
+        text: trimmed,
+        durationMs: nowMs() - leg.startedAtMs,
+        raw: null,
+        requestId: leg.requestId,
+        modelId: leg.modelId,
+        usage: leg.usage,
+        resolvedProvider: cloneProviderPreferences(leg.resolvedProvider),
+      })
+    }
+
+    const runLeg = async (leg: StreamingLeg) => {
+      activeLegs += 1
+      leg.startedAtMs = nowMs()
+
+      if (latencyPolicy.cancelAfterMs !== undefined) {
+        leg.cancelTimer = setTimeout(() => {
+          if (settled || winner === leg || leg.sawDelta) return
+          leg.cancelTriggered = true
+          leg.controller.abort()
+        }, latencyPolicy.cancelAfterMs)
+      }
+
+      try {
+        const { response, startedAtMs } = await fetchOpenRouterStreamResponse(
+          leg.request,
+          leg.controller.signal
+        )
+        leg.startedAtMs = startedAtMs
+        leg.response = response
+        leg.requestId = response.headers.get("x-request-id")
+
+        for await (const event of parseServerSentEvents(response.body!)) {
+          if (event.type === "usage") {
+            leg.usage = event.usage
+            continue
+          }
+
+          leg.sawDelta = true
+          clearStreamingLegTimer(leg)
+          chooseWinner(leg)
+          if (winner !== leg) continue
+
+          leg.text += event.text
+          options.onChunk?.(event.text)
+        }
+
+        if (winner === leg) {
+          finishWinner(leg)
+          return
+        }
+
+        if (!winner && leg === primary) {
+          maybeStartSecondary()
+        }
+        if (!winner) {
+          rememberFailure(emptyResponseError())
+        }
+      } catch (error) {
+        if (isAbortError(error)) {
+          if (request.signal?.aborted) {
+            settleFailure(error)
+            return
+          }
+          if (winner && winner !== leg) {
+            return
+          }
+          if (winner === leg) {
+            settleFailure(
+              leg.cancelTriggered
+                ? latencyTimeoutError()
+                : new Error("OpenRouter streaming request was aborted.")
+            )
+            return
+          }
+
+          if (leg.cancelTriggered) {
+            const timeoutError = latencyTimeoutError()
+            console.error(
+              "[openrouter] stream request exceeded latency policy",
+              timeoutError,
+              requestDebugMeta(leg.request, { leg: leg.name })
+            )
+            if (leg === primary) {
+              maybeStartSecondary()
+            }
+            rememberFailure(timeoutError)
+            return
+          }
+
+          if (leg === primary) {
+            maybeStartSecondary()
+          }
+          rememberFailure(
+            new Error("OpenRouter streaming request was aborted.")
+          )
+          return
+        }
+
+        console.error(
+          "[openrouter] stream read failed",
+          error,
+          requestDebugMeta(leg.request, { leg: leg.name })
+        )
+        if (winner === leg) {
+          settleFailure(error)
+          return
+        }
+        if (!winner && leg === primary) {
+          maybeStartSecondary()
+        }
+        rememberFailure(error)
+      } finally {
+        clearStreamingLegTimer(leg)
+        leg.detachAbort()
+        activeLegs -= 1
+      }
+
+      if (settled || winner || activeLegs > 0) {
+        return
+      }
+      if (!secondaryStarted) {
+        maybeStartSecondary()
+        return
+      }
+      settleFailure(bestError ?? emptyResponseError())
+    }
+
+    secondaryLaunchTimer = setTimeout(() => {
+      if (!winner) maybeStartSecondary()
+    }, latencyPolicy.hedgeAfterMs)
+
+    void runLeg(primary)
+  })
+}
+
+/**
+ * Drives `streamOpenRouterText` to completion while surfacing incremental
+ * deltas via `onChunk`. Returns the same shape as `generateOpenRouterText`
+ * so call sites can swap implementations without other changes.
+ */
+export async function runStreamingCompletion(
+  request: OpenRouterTextRequest,
+  options: RunStreamingCompletionOptions = {}
+): Promise<OpenRouterTextResponse> {
+  const latencyPolicy = normalizeLatencyPolicy(
+    options.latencyPolicy,
+    request.provider
+  )
+  if (!latencyPolicy) {
+    return runSingleStreamingCompletion(request, options)
+  }
+  return runHedgedStreamingCompletion(request, options, latencyPolicy)
 }

@@ -65,6 +65,7 @@ async function runV1AnalysisBranch(params: {
   progress: ReturnType<typeof createV1ProgressTracker>
   variant: (typeof V1_ANALYSIS_PROMPT_VARIANTS)[number]
   provider?: SimplifyRunOptions["provider"]
+  providerLatencyPolicy?: SimplifyRunOptions["providerLatencyPolicy"]
   providerEndpoints?: OpenRouterPublicEndpoint[]
   onChunk?: SimplifyThroughputReporter
 }): Promise<V1AnalysisBranchResult | null> {
@@ -77,6 +78,7 @@ async function runV1AnalysisBranch(params: {
     progress,
     variant,
     provider,
+    providerLatencyPolicy,
     onChunk,
   } = params
   const attemptDurationsMs: number[] = []
@@ -100,6 +102,7 @@ async function runV1AnalysisBranch(params: {
         },
         {
           onChunk: (delta) => onChunk?.(variant.id, delta.length, nowMs()),
+          latencyPolicy: providerLatencyPolicy,
         }
       )
       const costSpan = buildOpenRouterCostSpan({
@@ -107,7 +110,7 @@ async function runV1AnalysisBranch(params: {
         requestId: result.requestId,
         modelId: result.modelId,
         usage: result.usage,
-        provider,
+        provider: result.resolvedProvider ?? provider,
         endpoints: params.providerEndpoints,
       })
 
@@ -156,6 +159,7 @@ async function runV1Synthesis(params: {
   signal?: AbortSignal
   progress: ReturnType<typeof createV1ProgressTracker>
   provider?: SimplifyRunOptions["provider"]
+  providerLatencyPolicy?: SimplifyRunOptions["providerLatencyPolicy"]
   providerEndpoints?: OpenRouterPublicEndpoint[]
   onChunk?: SimplifyThroughputReporter
 }): Promise<V1SynthesisResult> {
@@ -167,6 +171,7 @@ async function runV1Synthesis(params: {
     signal,
     progress,
     provider,
+    providerLatencyPolicy,
     onChunk,
   } = params
   const attemptDurationsMs: number[] = []
@@ -191,6 +196,7 @@ async function runV1Synthesis(params: {
         },
         {
           onChunk: (delta) => onChunk?.("synthesis", delta.length, nowMs()),
+          latencyPolicy: providerLatencyPolicy,
         }
       )
       const costSpan = buildOpenRouterCostSpan({
@@ -198,7 +204,7 @@ async function runV1Synthesis(params: {
         requestId: result.requestId,
         modelId: result.modelId,
         usage: result.usage,
-        provider,
+        provider: result.resolvedProvider ?? provider,
         endpoints: params.providerEndpoints,
       })
 
@@ -248,6 +254,7 @@ export async function runV1Pipeline(
     onChunk,
     signal,
     provider,
+    providerLatencyPolicy,
     providerEndpoints,
   } = options
   const startedAtMs = nowMs()
@@ -282,6 +289,7 @@ export async function runV1Pipeline(
           progress,
           variant,
           provider,
+          providerLatencyPolicy,
           providerEndpoints,
           onChunk,
         })
@@ -303,6 +311,7 @@ export async function runV1Pipeline(
     signal,
     progress,
     provider,
+    providerLatencyPolicy,
     providerEndpoints,
     onChunk,
   })

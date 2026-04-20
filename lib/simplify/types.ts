@@ -53,6 +53,12 @@ export type OpenRouterProviderPreferences = {
   ignore?: string[]
 }
 
+export type OpenRouterLatencyPolicy = {
+  hedgeAfterMs: number
+  cancelAfterMs?: number
+  secondaryProvider: OpenRouterProviderPreferences
+}
+
 export type OpenRouterTextRequest = {
   apiKey: string
   model: string
@@ -113,6 +119,7 @@ export type OpenRouterTextResponse = {
   requestId: string | null
   modelId: string
   usage: OpenRouterUsage | null
+  resolvedProvider?: OpenRouterProviderPreferences
 }
 
 export type OpenRouterTextStreamEvent =
@@ -152,4 +159,5 @@ export type SimplifyRunOptions = {
   onChunk?: SimplifyThroughputReporter
   provider?: OpenRouterProviderPreferences
   providerEndpoints?: OpenRouterPublicEndpoint[]
+  providerLatencyPolicy?: OpenRouterLatencyPolicy
 }

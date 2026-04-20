@@ -59,6 +59,7 @@ async function runV1MiniCompression(params: {
   signal?: AbortSignal
   progress: ReturnType<typeof createV1MiniProgressTracker>
   provider?: SimplifyRunOptions["provider"]
+  providerLatencyPolicy?: SimplifyRunOptions["providerLatencyPolicy"]
   providerEndpoints?: OpenRouterPublicEndpoint[]
   onChunk?: SimplifyThroughputReporter
 }): Promise<V1MiniCompressionResult> {
@@ -69,6 +70,7 @@ async function runV1MiniCompression(params: {
     signal,
     progress,
     provider,
+    providerLatencyPolicy,
     providerEndpoints,
     onChunk,
   } = params
@@ -93,6 +95,7 @@ async function runV1MiniCompression(params: {
         },
         {
           onChunk: (delta) => onChunk?.("compress", delta.length, nowMs()),
+          latencyPolicy: providerLatencyPolicy,
         }
       )
       const costSpan = buildOpenRouterCostSpan({
@@ -100,7 +103,7 @@ async function runV1MiniCompression(params: {
         requestId: result.requestId,
         modelId: result.modelId,
         usage: result.usage,
-        provider,
+        provider: result.resolvedProvider ?? provider,
         endpoints: providerEndpoints,
       })
 
@@ -150,6 +153,7 @@ export async function runV1MiniPipeline(
     onChunk,
     signal,
     provider,
+    providerLatencyPolicy,
     providerEndpoints,
   } = options
   const startedAtMs = nowMs()
@@ -179,6 +183,7 @@ export async function runV1MiniPipeline(
     signal,
     progress,
     provider,
+    providerLatencyPolicy,
     providerEndpoints,
     onChunk,
   })
