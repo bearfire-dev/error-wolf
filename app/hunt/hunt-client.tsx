@@ -560,32 +560,31 @@ function KeyStep({
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-4">
-        <div className="min-h-0 flex-1 overflow-y-auto border-t border-b border-foreground/10 py-4">
-          <p className="font-mono text-[0.625rem] leading-relaxed text-pretty text-muted-foreground normal-case">
-            Your key and processing data is sent directly from your browser to
-            OpenRouter (and their providers), including multiple compression
-            passes per run. We do not collect it.
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto rounded-[2px] border border-foreground/25 bg-card px-2 py-2 dark:bg-card">
+          <p className="max-sm:text-base font-mono text-sm leading-snug text-pretty text-foreground md:text-xs">
+            Your key and input is sent directly from your browser to
+            OpenRouter (and their providers). We do not collect your key, input, or output.
           </p>
-          <p className="mt-3 font-mono text-[0.625rem] leading-relaxed text-pretty text-muted-foreground normal-case">
+          <p className="max-sm:text-base font-mono text-sm leading-snug text-pretty text-foreground md:text-xs">
             We use{" "}
             <a
               href={HUNT_SENTRY_URL}
               target="_blank"
               rel="noreferrer"
-              className="text-foreground/85 underline underline-offset-2 hover:text-primary"
+              className="underline underline-offset-2 hover:text-primary"
             >
               Sentry
             </a>{" "}
-            in privacy mode for basic usage, performance, and error collection.
+            in privacy mode for basic usage, performance, and error collection. If you choose to submit an error report with a screenshot then we see that too.
           </p>
-          <p className="mt-3 font-mono text-[0.625rem] leading-relaxed text-pretty text-muted-foreground normal-case">
+          <p className="max-sm:text-base font-mono text-sm leading-snug text-pretty text-foreground md:text-xs">
             This site is open source under the O&apos;Saasy License. You can
-            audit/run the code for yourself by visiting our{" "}
+            audit/easily run the code for yourself by visiting our{" "}
             <a
               href={HUNT_GITHUB_SOURCE_URL}
               target="_blank"
               rel="noreferrer"
-              className="text-foreground/85 underline underline-offset-2 hover:text-primary"
+              className="underline underline-offset-2 hover:text-primary"
             >
               GitHub
             </a>

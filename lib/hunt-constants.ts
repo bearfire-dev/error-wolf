@@ -26,5 +26,6 @@ export const STACK_TRACE_PLACEHOLDER = `Error: Invalid document id: root.
     at beginWork (react-dom_client.js?v=3ce1c50a:6204:21)
     …`
 
-export const HUNT_GITHUB_SOURCE_URL = "https://github.com/"
+export const HUNT_GITHUB_SOURCE_URL =
+  "https://github.com/slate-rehm/error-wolf/"
 export const HUNT_SENTRY_URL = "https://sentry.io/"

@@ -222,6 +222,23 @@ export function useHuntRun({
       const text = result.text
       const durationMs = performance.now() - startedAt
 
+      console.info("[hunt] simplify run completed", {
+        engineId: engine.id,
+        resolvedModelId,
+        inputChars: inputText.length,
+        durationMs: Math.round(durationMs),
+        providerOrder: openRouterProvider?.order ?? null,
+        allowFallbacks: openRouterProvider?.allow_fallbacks ?? null,
+        preferredMaxLatency: openRouterProvider?.preferred_max_latency ?? null,
+        preferredMinThroughput:
+          openRouterProvider?.preferred_min_throughput ?? null,
+        hedgeAfterMs: openRouterLatencyPolicy?.hedgeAfterMs ?? null,
+        cancelAfterMs: openRouterLatencyPolicy?.cancelAfterMs ?? null,
+        endpointCount: openRouterEndpoints?.length ?? 0,
+        warningCount: result.warnings.length,
+        costSpanCount: result.cost.spans.length,
+      })
+
       outputRef.current = text
       setOutputText(text)
       setOutputModelDisplay(resolvedModelDisplay)
@@ -315,8 +332,12 @@ export function useHuntRun({
         inputChars: inputText.length,
         providerOrder: openRouterProvider?.order ?? null,
         allowFallbacks: openRouterProvider?.allow_fallbacks ?? null,
+        preferredMaxLatency: openRouterProvider?.preferred_max_latency ?? null,
+        preferredMinThroughput:
+          openRouterProvider?.preferred_min_throughput ?? null,
         hedgeAfterMs: openRouterLatencyPolicy?.hedgeAfterMs ?? null,
         cancelAfterMs: openRouterLatencyPolicy?.cancelAfterMs ?? null,
+        endpointCount: openRouterEndpoints?.length ?? 0,
       })
       setActiveRunDag(null)
       if (e instanceof OpenRouterInsufficientCreditsError) {

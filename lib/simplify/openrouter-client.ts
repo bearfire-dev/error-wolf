@@ -20,6 +20,15 @@ export class OpenRouterInsufficientCreditsError extends Error {
   }
 }
 
+export class OpenRouterLatencyTimeoutError extends Error {
+  override readonly name = "OpenRouterLatencyTimeoutError"
+
+  constructor(message: string) {
+    super(message)
+    Object.setPrototypeOf(this, new.target.prototype)
+  }
+}
+
 const OPENROUTER_CHAT_COMPLETIONS_URL =
   "https://openrouter.ai/api/v1/chat/completions"
 
@@ -36,11 +45,20 @@ function cloneProviderPreferences(
   provider: OpenRouterProviderPreferences | undefined
 ): OpenRouterProviderPreferences | undefined {
   if (!provider) return undefined
+
+  const cloneThresholds = (
+    value: OpenRouterProviderPreferences["preferred_max_latency"]
+  ) => (typeof value === "object" && value !== null ? { ...value } : value)
+
   return {
     ...provider,
     order: provider.order ? [...provider.order] : undefined,
     only: provider.only ? [...provider.only] : undefined,
     ignore: provider.ignore ? [...provider.ignore] : undefined,
+    preferred_max_latency: cloneThresholds(provider.preferred_max_latency),
+    preferred_min_throughput: cloneThresholds(
+      provider.preferred_min_throughput
+    ),
     sort:
       typeof provider.sort === "object" && provider.sort !== null
         ? { ...provider.sort }
@@ -281,8 +299,23 @@ function requestDebugMeta(
     maxOutputTokens: request.maxOutputTokens ?? null,
     providerOrder: request.provider?.order ?? null,
     allowFallbacks: request.provider?.allow_fallbacks ?? null,
+    providerSort: request.provider?.sort ?? null,
+    preferredMaxLatency: request.provider?.preferred_max_latency ?? null,
+    preferredMinThroughput: request.provider?.preferred_min_throughput ?? null,
     ...extra,
   }
+}
+
+function roundDurationMs(value: number): number {
+  return Math.max(0, Math.round(value))
+}
+
+function firstTokenDurationMs(
+  startedAtMs: number,
+  firstDeltaAtMs: number | null
+): number | null {
+  if (firstDeltaAtMs === null) return null
+  return roundDurationMs(firstDeltaAtMs - startedAtMs)
 }
 
 async function parseOpenRouterFailure(response: Response): Promise<{
@@ -516,6 +549,13 @@ export type RunStreamingCompletionOptions = {
 }
 
 type StreamingLegName = "primary" | "secondary"
+type SecondaryLaunchReason =
+  | "hedge_timer"
+  | "primary_empty"
+  | "primary_abort"
+  | "primary_latency_timeout"
+  | "primary_error"
+  | "all_legs_failed"
 
 type StreamingLeg = {
   name: StreamingLegName
@@ -532,6 +572,7 @@ type StreamingLeg = {
   text: string
   usage: OpenRouterUsage | null
   sawDelta: boolean
+  firstDeltaAtMs: number | null
 }
 
 function createStreamingLeg(
@@ -554,6 +595,7 @@ function createStreamingLeg(
     text: "",
     usage: null,
     sawDelta: false,
+    firstDeltaAtMs: null,
   }
 }
 
@@ -569,12 +611,24 @@ async function runSingleStreamingCompletion(
   options: RunStreamingCompletionOptions
 ): Promise<OpenRouterTextResponse> {
   const { stream, response, startedAtMs } = await streamOpenRouterText(request)
+  const requestId = response.headers.get("x-request-id")
 
   let text = ""
   let usage: OpenRouterUsage | null = null
+  let firstDeltaAtMs: number | null = null
   try {
     for await (const event of stream) {
       if (event.type === "delta") {
+        if (firstDeltaAtMs === null) {
+          firstDeltaAtMs = nowMs()
+          console.info(
+            "[openrouter] stream first token",
+            requestDebugMeta(request, {
+              requestId,
+              firstTokenMs: firstTokenDurationMs(startedAtMs, firstDeltaAtMs),
+            })
+          )
+        }
         text += event.text
         options.onChunk?.(event.text)
       } else if (event.type === "usage") {
@@ -604,7 +658,14 @@ async function runSingleStreamingCompletion(
     throw emptyResponseError
   }
 
-  const requestId = response.headers.get("x-request-id")
+  console.info(
+    "[openrouter] stream completed",
+    requestDebugMeta(request, {
+      requestId,
+      durationMs: roundDurationMs(nowMs() - startedAtMs),
+      firstTokenMs: firstTokenDurationMs(startedAtMs, firstDeltaAtMs),
+    })
+  )
   return {
     text: trimmed,
     durationMs: nowMs() - startedAtMs,
@@ -633,11 +694,14 @@ async function runHedgedStreamingCompletion(
   let secondaryStarted = false
   let secondaryLaunchTimer: ReturnType<typeof setTimeout> | null = null
   let bestError: Error | null = null
+  let secondaryStartReason: SecondaryLaunchReason | null = null
 
   const emptyResponseError = () =>
     new Error("OpenRouter returned an empty response.")
   const latencyTimeoutError = () =>
-    new Error("OpenRouter request exceeded latency policy before first token.")
+    new OpenRouterLatencyTimeoutError(
+      "OpenRouter request exceeded latency policy before first token."
+    )
 
   return new Promise<OpenRouterTextResponse>((resolve, reject) => {
     const cleanup = (abortInFlight: boolean) => {
@@ -681,13 +745,27 @@ async function runHedgedStreamingCompletion(
         error instanceof Error ? error : new Error("Unknown request failure.")
     }
 
-    const maybeStartSecondary = () => {
+    const maybeStartSecondary = (reason: SecondaryLaunchReason) => {
       if (settled || winner || secondaryStarted) return
       secondaryStarted = true
+      secondaryStartReason = reason
       if (secondaryLaunchTimer !== null) {
         clearTimeout(secondaryLaunchTimer)
         secondaryLaunchTimer = null
       }
+      console.info(
+        "[openrouter] starting hedged fallback leg",
+        requestDebugMeta(secondary.request, {
+          reason,
+          primaryProviderOrder: primary.request.provider?.order ?? null,
+          primaryRunningMs:
+            primary.startedAtMs > 0
+              ? roundDurationMs(nowMs() - primary.startedAtMs)
+              : null,
+          hedgeAfterMs: latencyPolicy.hedgeAfterMs,
+          cancelAfterMs: latencyPolicy.cancelAfterMs ?? null,
+        })
+      )
       void runLeg(secondary)
     }
 
@@ -714,6 +792,24 @@ async function runHedgedStreamingCompletion(
         settleFailure(error)
         return
       }
+
+      console.info(
+        "[openrouter] hedged stream completed",
+        requestDebugMeta(leg.request, {
+          leg: leg.name,
+          winner: leg.name,
+          requestId: leg.requestId,
+          durationMs: roundDurationMs(nowMs() - leg.startedAtMs),
+          firstTokenMs: firstTokenDurationMs(
+            leg.startedAtMs,
+            leg.firstDeltaAtMs
+          ),
+          secondaryStarted,
+          secondaryStartReason,
+          primaryRequestId: primary.requestId,
+          secondaryRequestId: secondary.requestId,
+        })
+      )
 
       settleSuccess({
         text: trimmed,
@@ -753,9 +849,27 @@ async function runHedgedStreamingCompletion(
             continue
           }
 
-          leg.sawDelta = true
-          clearStreamingLegTimer(leg)
-          chooseWinner(leg)
+          if (!leg.sawDelta) {
+            leg.sawDelta = true
+            leg.firstDeltaAtMs = nowMs()
+            clearStreamingLegTimer(leg)
+            chooseWinner(leg)
+            console.info(
+              "[openrouter] stream first token",
+              requestDebugMeta(leg.request, {
+                leg: leg.name,
+                requestId: leg.requestId,
+                firstTokenMs: firstTokenDurationMs(
+                  leg.startedAtMs,
+                  leg.firstDeltaAtMs
+                ),
+                secondaryStarted,
+                secondaryStartReason,
+                hedgeAfterMs: latencyPolicy.hedgeAfterMs,
+                cancelAfterMs: latencyPolicy.cancelAfterMs ?? null,
+              })
+            )
+          }
           if (winner !== leg) continue
 
           leg.text += event.text
@@ -768,7 +882,7 @@ async function runHedgedStreamingCompletion(
         }
 
         if (!winner && leg === primary) {
-          maybeStartSecondary()
+          maybeStartSecondary("primary_empty")
         }
         if (!winner) {
           rememberFailure(emptyResponseError())
@@ -796,17 +910,27 @@ async function runHedgedStreamingCompletion(
             console.error(
               "[openrouter] stream request exceeded latency policy",
               timeoutError,
-              requestDebugMeta(leg.request, { leg: leg.name })
+              requestDebugMeta(leg.request, {
+                leg: leg.name,
+                firstTokenMs: firstTokenDurationMs(
+                  leg.startedAtMs,
+                  leg.firstDeltaAtMs
+                ),
+                secondaryStarted,
+                secondaryStartReason,
+                hedgeAfterMs: latencyPolicy.hedgeAfterMs,
+                cancelAfterMs: latencyPolicy.cancelAfterMs ?? null,
+              })
             )
             if (leg === primary) {
-              maybeStartSecondary()
+              maybeStartSecondary("primary_latency_timeout")
             }
             rememberFailure(timeoutError)
             return
           }
 
           if (leg === primary) {
-            maybeStartSecondary()
+            maybeStartSecondary("primary_abort")
           }
           rememberFailure(
             new Error("OpenRouter streaming request was aborted.")
@@ -817,14 +941,22 @@ async function runHedgedStreamingCompletion(
         console.error(
           "[openrouter] stream read failed",
           error,
-          requestDebugMeta(leg.request, { leg: leg.name })
+          requestDebugMeta(leg.request, {
+            leg: leg.name,
+            firstTokenMs: firstTokenDurationMs(
+              leg.startedAtMs,
+              leg.firstDeltaAtMs
+            ),
+            secondaryStarted,
+            secondaryStartReason,
+          })
         )
         if (winner === leg) {
           settleFailure(error)
           return
         }
         if (!winner && leg === primary) {
-          maybeStartSecondary()
+          maybeStartSecondary("primary_error")
         }
         rememberFailure(error)
       } finally {
@@ -837,14 +969,14 @@ async function runHedgedStreamingCompletion(
         return
       }
       if (!secondaryStarted) {
-        maybeStartSecondary()
+        maybeStartSecondary("all_legs_failed")
         return
       }
       settleFailure(bestError ?? emptyResponseError())
     }
 
     secondaryLaunchTimer = setTimeout(() => {
-      if (!winner) maybeStartSecondary()
+      if (!winner) maybeStartSecondary("hedge_timer")
     }, latencyPolicy.hedgeAfterMs)
 
     void runLeg(primary)

@@ -4,7 +4,10 @@ import {
 } from "@/lib/openrouter/costs"
 import type { OpenRouterPublicEndpoint } from "@/lib/openrouter/endpoints-types"
 import { preprocessV1Input } from "@/lib/simplify/engines/v1/preprocess"
-import { runStreamingCompletion } from "@/lib/simplify/openrouter-client"
+import {
+  OpenRouterLatencyTimeoutError,
+  runStreamingCompletion,
+} from "@/lib/simplify/openrouter-client"
 import type {
   SimplifyRunOptions,
   SimplifyThroughputReporter,
@@ -124,12 +127,22 @@ async function runV1MiniCompression(params: {
       if (isAbortError(error)) throw error
 
       const message = errorMessage(error)
-      if (attempt <= maxRetries) {
+      const retryable = !(error instanceof OpenRouterLatencyTimeoutError)
+      if (retryable && attempt <= maxRetries) {
         progress.retry(
           "compress",
           `single-pass compact rewrite / retry ${attempt}/${maxRetries}`
         )
         continue
+      }
+
+      if (!retryable) {
+        console.warn("[hunt] skipping retry after OpenRouter latency timeout", {
+          stepId: "compress",
+          attempt,
+          modelId,
+          providerOrder: provider?.order ?? null,
+        })
       }
 
       progress.fail("compress", message)

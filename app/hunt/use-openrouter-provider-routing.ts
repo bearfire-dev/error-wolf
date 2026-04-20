@@ -8,21 +8,38 @@ import { fetchModelEndpointsDirect } from "@/lib/openrouter/endpoints-client"
 import type { OpenRouterPublicEndpoint } from "@/lib/openrouter/endpoints-types"
 import {
   HUNT_OPENROUTER_LATENCY_CANCEL_FALLBACK_MS,
+  HUNT_OPENROUTER_LATENCY_CANCEL_MAX_MS,
   HUNT_OPENROUTER_LATENCY_HEDGE_FALLBACK_MS,
+  HUNT_OPENROUTER_LATENCY_HEDGE_MAX_MS,
   HUNT_ROUTING_E2E_TOKEN_ESTIMATE,
 } from "@/lib/openrouter/hunt-routing-config"
 import {
   endpointProviderSlug,
   rankProvidersByLatency,
   rankProvidersByThroughput,
+  type PercentileKey,
   type RankedProvider,
 } from "@/lib/openrouter/rank-providers"
 import type {
   OpenRouterLatencyPolicy,
+  OpenRouterPercentilePreferenceMap,
   OpenRouterProviderPreferences,
 } from "@/lib/simplify/types"
 
-const REFRESH_MS = 5 * 60 * 1000
+// Keep provider metadata fresh enough for interactive sessions without
+// hammering the public endpoints API on every keystroke.
+const REFRESH_MS = 90 * 1000
+const ROUTING_PERCENTILE: PercentileKey = "p90"
+const MAX_PROVIDER_ORDER = 4
+const PROVIDER_PREFERRED_MAX_LATENCY: OpenRouterPercentilePreferenceMap = {
+  p50: 1.5,
+  p90: 3,
+  p99: 6,
+}
+const PROVIDER_PREFERRED_MIN_THROUGHPUT: OpenRouterPercentilePreferenceMap = {
+  p50: 12,
+  p90: 6,
+}
 
 const EMPTY_ENDPOINTS: OpenRouterPublicEndpoint[] = []
 
@@ -31,26 +48,46 @@ export type OpenRouterProviderRankings = {
   byLatency: RankedProvider[]
 }
 
-function singleProviderPreferences(
-  slug: string,
-  allowFallbacks: boolean
+function clampMs(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max)
+}
+
+function uniqueProviderOrder(slugs: readonly string[]): string[] {
+  const seen = new Set<string>()
+  const order: string[] = []
+
+  for (const slug of slugs) {
+    const normalized = slug.trim().toLowerCase()
+    if (!normalized || seen.has(normalized)) continue
+    seen.add(normalized)
+    order.push(normalized)
+  }
+
+  return order
+}
+
+function buildProviderPreferences(
+  order: readonly string[]
 ): OpenRouterProviderPreferences {
   return {
-    order: [slug],
-    allow_fallbacks: allowFallbacks,
+    order: uniqueProviderOrder(order).slice(0, MAX_PROVIDER_ORDER),
+    allow_fallbacks: true,
+    preferred_max_latency: PROVIDER_PREFERRED_MAX_LATENCY,
+    preferred_min_throughput: PROVIDER_PREFERRED_MIN_THROUGHPUT,
   }
 }
 
-function primaryLatencyMs(
-  provider: OpenRouterProviderPreferences | undefined,
-  endpoints: OpenRouterPublicEndpoint[]
+function providerLatencyMs(
+  slug: string | null | undefined,
+  endpoints: OpenRouterPublicEndpoint[],
+  percentile: PercentileKey
 ): number | null {
-  const slug = provider?.order?.[0]?.trim().toLowerCase()
-  if (!slug) return null
+  const normalizedSlug = slug?.trim().toLowerCase()
+  if (!normalizedSlug) return null
 
   for (const endpoint of endpoints) {
-    if (endpointProviderSlug(endpoint) !== slug) continue
-    const latencyMs = endpoint.latency_last_30m?.p50
+    if (endpointProviderSlug(endpoint) !== normalizedSlug) continue
+    const latencyMs = endpoint.latency_last_30m?.[percentile]
     if (typeof latencyMs === "number" && Number.isFinite(latencyMs)) {
       return latencyMs
     }
@@ -59,43 +96,58 @@ function primaryLatencyMs(
   return null
 }
 
+function buildProviderOrder(params: {
+  primarySlug: string
+  rankings: OpenRouterProviderRankings
+}): string[] {
+  return uniqueProviderOrder([
+    params.primarySlug,
+    ...params.rankings.byLatency.map((row) => row.slug),
+    ...params.rankings.byThroughput.map((row) => row.slug),
+  ]).slice(0, MAX_PROVIDER_ORDER)
+}
+
 function deriveLatencyPolicy(params: {
   provider: OpenRouterProviderPreferences | undefined
   endpoints: OpenRouterPublicEndpoint[]
-  rankings: OpenRouterProviderRankings
 }): OpenRouterLatencyPolicy | undefined {
-  const primarySlug = params.provider?.order?.[0]?.trim().toLowerCase()
+  const providerOrder = params.provider?.order
+  const primarySlug = providerOrder?.[0]?.trim().toLowerCase()
   if (!primarySlug) return undefined
 
-  const secondary = params.rankings.byLatency.find(
-    (row) => row.slug !== primarySlug
-  )
-  if (!secondary?.slug) return undefined
+  const secondaryOrder = providerOrder
+    ?.map((slug) => slug.trim().toLowerCase())
+    .filter((slug) => slug && slug !== primarySlug)
+  if (!secondaryOrder?.length) return undefined
 
-  // The endpoints payload exposes percentile TTFT stats, not a true average.
-  // Approximate from p50 and keep conservative floors so we do not hedge on
-  // normal sub-second variance.
-  const baselineLatencyMs = primaryLatencyMs(params.provider, params.endpoints)
+  // Use a stricter percentile than p50 so interactive traffic responds to
+  // tail latency instead of inheriting long waits from median-only stats.
+  const baselineLatencyMs = providerLatencyMs(
+    primarySlug,
+    params.endpoints,
+    ROUTING_PERCENTILE
+  )
   const hedgeAfterMs =
     baselineLatencyMs !== null
-      ? Math.max(
+      ? clampMs(
+          Math.round(baselineLatencyMs * 0.8),
           HUNT_OPENROUTER_LATENCY_HEDGE_FALLBACK_MS,
-          Math.round(baselineLatencyMs * 2)
+          HUNT_OPENROUTER_LATENCY_HEDGE_MAX_MS
         )
       : HUNT_OPENROUTER_LATENCY_HEDGE_FALLBACK_MS
   const cancelAfterMs =
     baselineLatencyMs !== null
-      ? Math.max(
+      ? clampMs(
+          Math.max(Math.round(baselineLatencyMs * 1.4), hedgeAfterMs + 1200),
           HUNT_OPENROUTER_LATENCY_CANCEL_FALLBACK_MS,
-          hedgeAfterMs + 250,
-          Math.round(baselineLatencyMs * 4)
+          HUNT_OPENROUTER_LATENCY_CANCEL_MAX_MS
         )
       : HUNT_OPENROUTER_LATENCY_CANCEL_FALLBACK_MS
 
   return {
     hedgeAfterMs,
     cancelAfterMs,
-    secondaryProvider: singleProviderPreferences(secondary.slug, false),
+    secondaryProvider: buildProviderPreferences(secondaryOrder),
   }
 }
 
@@ -143,6 +195,10 @@ export function useOpenRouterProviderRouting({
     setEndpoints(result.data.endpoints)
     setLastUpdated(Date.now())
     setError(null)
+    console.info("[hunt] OpenRouter provider rankings refreshed", {
+      model,
+      endpointCount: result.data.endpoints.length,
+    })
   }, [apiKey, enabled, routingModelId])
 
   const endpointsView = useMemo(
@@ -154,14 +210,19 @@ export function useOpenRouterProviderRouting({
 
   const rankings = useMemo((): OpenRouterProviderRankings => {
     return {
-      byThroughput: rankProvidersByThroughput(endpointsView),
-      byLatency: rankProvidersByLatency(endpointsView),
+      byThroughput: rankProvidersByThroughput(
+        endpointsView,
+        ROUTING_PERCENTILE
+      ),
+      byLatency: rankProvidersByLatency(endpointsView, ROUTING_PERCENTILE),
     }
   }, [endpointsView])
 
   const fastestEstimate = useMemo(
     (): FastestProviderEstimate | null =>
-      estimateFastestProvider(endpointsView, e2eTokenEstimate),
+      estimateFastestProvider(endpointsView, e2eTokenEstimate, {
+        percentile: ROUTING_PERCENTILE,
+      }),
     [endpointsView, e2eTokenEstimate]
   )
 
@@ -169,17 +230,21 @@ export function useOpenRouterProviderRouting({
     | OpenRouterProviderPreferences
     | undefined => {
     if (!fastestEstimate?.slug) return undefined
-    return singleProviderPreferences(fastestEstimate.slug, true)
-  }, [fastestEstimate])
+    return buildProviderPreferences(
+      buildProviderOrder({
+        primarySlug: fastestEstimate.slug,
+        rankings,
+      })
+    )
+  }, [fastestEstimate, rankings])
 
   const providerLatencyPolicy = useMemo(
     (): OpenRouterLatencyPolicy | undefined =>
       deriveLatencyPolicy({
         provider: providerPreferences,
         endpoints: endpointsView,
-        rankings,
       }),
-    [endpointsView, providerPreferences, rankings]
+    [endpointsView, providerPreferences]
   )
 
   useEffect(() => {
@@ -212,6 +277,37 @@ export function useOpenRouterProviderRouting({
     document.addEventListener("visibilitychange", onVis)
     return () => document.removeEventListener("visibilitychange", onVis)
   }, [active, refresh])
+
+  useEffect(() => {
+    if (!active || !providerPreferences?.order?.length) return
+
+    console.info("[hunt] OpenRouter provider routing updated", {
+      model: routingModelId.trim(),
+      percentile: ROUTING_PERCENTILE,
+      primaryProvider: providerPreferences.order[0] ?? null,
+      fallbackProviders: providerPreferences.order.slice(1),
+      allowFallbacks: providerPreferences.allow_fallbacks ?? null,
+      preferredMaxLatency: providerPreferences.preferred_max_latency ?? null,
+      preferredMinThroughput:
+        providerPreferences.preferred_min_throughput ?? null,
+      hedgeAfterMs: providerLatencyPolicy?.hedgeAfterMs ?? null,
+      cancelAfterMs: providerLatencyPolicy?.cancelAfterMs ?? null,
+      rankingLastUpdatedAt: lastUpdatedView,
+      topLatencyProviders: rankings.byLatency
+        .slice(0, 3)
+        .map((row) => row.slug),
+      topThroughputProviders: rankings.byThroughput
+        .slice(0, 3)
+        .map((row) => row.slug),
+    })
+  }, [
+    active,
+    lastUpdatedView,
+    providerLatencyPolicy,
+    providerPreferences,
+    rankings,
+    routingModelId,
+  ])
 
   return {
     endpoints: endpointsView,

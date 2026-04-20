@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 
+import { SITE_HEADER_GITHUB_URL } from "@/components/site-header-constants"
+
 export const metadata: Metadata = {
   title: "Privacy",
   description:
@@ -80,8 +82,17 @@ export default function PrivacyPage() {
             Open source
           </h3>
           <p>
-            The full source is available on GitHub with an O{"'"}SaaSy license.
-            You can contribute, audit, or fork and run it yourself.
+            The full source is available on{" "}
+            <a
+              href={SITE_HEADER_GITHUB_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="text-foreground/85 underline underline-offset-2 hover:text-primary"
+            >
+              GitHub
+            </a>{" "}
+            with an O{"'"}SaaSy license. You can contribute, audit, or fork and
+            run it yourself.
           </p>
         </div>
 

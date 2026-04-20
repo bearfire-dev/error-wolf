@@ -45,12 +45,21 @@ export type OpenRouterChatMessage = {
 }
 
 /** Subset of OpenRouter `provider` request body (snake_case per API). */
+export type OpenRouterPercentilePreferenceMap = Partial<{
+  p50: number
+  p75: number
+  p90: number
+  p99: number
+}>
+
 export type OpenRouterProviderPreferences = {
   order?: string[]
   allow_fallbacks?: boolean
   sort?: string | { by: string; partition?: string }
   only?: string[]
   ignore?: string[]
+  preferred_min_throughput?: number | OpenRouterPercentilePreferenceMap
+  preferred_max_latency?: number | OpenRouterPercentilePreferenceMap
 }
 
 export type OpenRouterLatencyPolicy = {
