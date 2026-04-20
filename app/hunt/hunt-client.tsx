@@ -141,6 +141,7 @@ export function HuntClient({
     resolvedModelId: selectedModelRoute.modelId,
     resolvedModelDisplay: selectedModelDisplay,
     openRouterProvider: openRouterRouting.providerPreferences,
+    openRouterLatencyPolicy: openRouterRouting.providerLatencyPolicy,
     openRouterEndpoints: openRouterRouting.endpoints,
     clearRawInput: inputs.clearRawInput,
     setStep: session.setStep,

@@ -12,6 +12,7 @@ import type {
   SimplifyEngineDefinition,
 } from "@/lib/simplify/engines/types"
 import type {
+  OpenRouterLatencyPolicy,
   OpenRouterProviderPreferences,
   SimplifyRunCostSpan,
 } from "@/lib/simplify/types"
@@ -94,6 +95,7 @@ type UseHuntRunArgs = {
   resolvedModelId: string
   resolvedModelDisplay: string
   openRouterProvider?: OpenRouterProviderPreferences
+  openRouterLatencyPolicy?: OpenRouterLatencyPolicy
   openRouterEndpoints?: OpenRouterPublicEndpoint[]
   clearRawInput: () => void
   setStep: Dispatch<SetStateAction<HuntStep>>
@@ -107,6 +109,7 @@ export function useHuntRun({
   resolvedModelId,
   resolvedModelDisplay,
   openRouterProvider,
+  openRouterLatencyPolicy,
   openRouterEndpoints,
   clearRawInput,
   setStep,
@@ -213,6 +216,7 @@ export function useHuntRun({
         onProgress: captureProgress,
         onChunk: captureChunk,
         provider: openRouterProvider,
+        providerLatencyPolicy: openRouterLatencyPolicy,
         providerEndpoints: openRouterEndpoints,
       })
       const text = result.text
@@ -311,6 +315,8 @@ export function useHuntRun({
         inputChars: inputText.length,
         providerOrder: openRouterProvider?.order ?? null,
         allowFallbacks: openRouterProvider?.allow_fallbacks ?? null,
+        hedgeAfterMs: openRouterLatencyPolicy?.hedgeAfterMs ?? null,
+        cancelAfterMs: openRouterLatencyPolicy?.cancelAfterMs ?? null,
       })
       setActiveRunDag(null)
       if (e instanceof OpenRouterInsufficientCreditsError) {
@@ -326,6 +332,7 @@ export function useHuntRun({
     clearRawInput,
     engine,
     openRouterEndpoints,
+    openRouterLatencyPolicy,
     openRouterProvider,
     rawInput,
     resolvedModelId,
