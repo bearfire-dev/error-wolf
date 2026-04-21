@@ -1,0 +1,538 @@
+
+fictional-process3 main  ? ❯ vp run dev
+VITE+ - The Unified Toolchain for the Web
+
+$ concurrently -k -n vite,convex -c blue,green "vp dev --port 3000" "convex dev" ⊘ cache disabled
+[vite] 
+[vite]   VITE+ v0.1.18  
+[vite] 
+[vite]   ➜  Local:   http://localhost:3000/
+[vite]   ➜  Network: use --host to expose
+[vite] Debugger listening on ws://127.0.0.1:38017/bd923165-e2d9-4872-9171-c41516a5bc26
+[vite] For help, see: https://nodejs.org/en/docs/inspector
+[convex] - Preparing Convex functions...
+[convex] 
+[convex] ✔ 17:04:40 Convex functions ready! (5.97s)
+[convex] 4/18/2026, 5:38:33 PM [CONVEX M(auth:store)] [INFO] '`auth:store` type: refreshSession'
+[vite] 5:40:07 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/landing/landing-waitlist.tsx
+[vite] 5:40:09 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/landing/landing-hero.tsx
+[vite] 5:40:11 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/landing/landing-page.tsx
+[vite] 5:40:11 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/landing/landing-preview-controls.tsx
+[vite] 5:40:11 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/landing/landing-page.tsx
+[convex] 4/18/2026, 5:40:13 PM [CONVEX M(auth:store)] [INFO] '`auth:store` type: refreshSession'
+[vite] 5:40:16 PM [vite+] changed tsconfig file detected: /home/bear/Repositories/fictional-process3/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[vite] 5:40:16 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/chrome/global-app-hotkeys.tsx
+[vite] 5:40:16 PM [vite+] (ssr) page reload src/features/workspace/write-layout-prefs.ts
+[vite] 5:40:16 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/landing/landing-waitlist.tsx
+[vite] 5:40:16 PM [vite+] (client) page reload src/router.tsx
+[vite] 5:40:16 PM [vite+] (ssr) page reload src/router.tsx
+[vite] 5:40:16 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/ui/spinner.tsx
+[vite] 5:40:16 PM [vite+] (ssr) page reload src/components/ui/spinner.tsx
+[vite] 5:40:16 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/landing/landing-waitlist.tsx
+[vite] 5:40:16 PM [vite+] vite.config.ts changed, restarting server...
+[vite] 5:40:16 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/landing-branded-header.tsx
+[vite] 5:40:16 PM [vite+] (ssr) page reload src/components/landing-branded-header.tsx
+[vite] 5:40:16 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/landing/landing-hero.tsx
+[vite] 5:40:16 PM [vite+] changed tsconfig file detected: /home/bear/Repositories/fictional-process3/convex/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[vite] 5:40:16 PM [vite+] vite.config.ts changed, restarting server...
+[vite] 5:40:16 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/landing-branded-header.tsx
+[vite] 5:40:16 PM [vite+] (ssr) page reload src/components/landing-branded-header.tsx
+[vite] 5:40:16 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/landing/landing-hero.tsx
+[vite] 5:40:16 PM [vite+] (client) hmr update /src/styles/globals.css?direct
+[vite] 5:40:16 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/chrome/route-error.tsx
+[vite] 5:40:16 PM [vite+] (ssr) page reload src/components/chrome/route-error.tsx
+[vite] 5:40:16 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/app.$workspaceSlug.write.book.$bookId.tsx
+[vite] 5:40:16 PM [vite+] (ssr) page reload src/lib/editor/types.ts
+[vite] 5:40:16 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/ui/icon-placeholder.tsx
+[vite] 5:40:16 PM [vite+] (ssr) page reload src/components/ui/icon-placeholder.tsx
+[vite] 5:40:16 PM [vite+] (client) hmr update /src/styles/globals.css?direct
+[vite] 5:40:16 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/RootChrome.tsx
+[vite] 5:40:16 PM [vite+] (ssr) page reload src/components/RootChrome.tsx
+[vite] 5:40:16 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/landing/landing-waitlist.tsx
+[vite] 5:40:16 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/ui/sonner.tsx
+[vite] 5:40:16 PM [vite+] (ssr) page reload src/components/ui/sonner.tsx
+[vite] 5:40:16 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/chrome/route-not-found.tsx
+[vite] 5:40:16 PM [vite+] (ssr) page reload src/components/chrome/route-not-found.tsx
+[vite] 5:40:16 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/landing/landing-shared.tsx
+[vite] 5:40:16 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/chrome/global-app-hotkeys.tsx
+[vite] 5:40:16 PM [vite+] (ssr) page reload src/components/chrome/global-app-hotkeys.tsx
+[vite] 5:40:16 PM [vite+] (client) page reload src/sentry-init-browser.ts
+[vite] 5:40:16 PM [vite+] (client) page reload src/lib/sentry-env.ts
+[vite] 5:40:16 PM [vite+] (ssr) page reload src/lib/sentry-env.ts
+[vite] 5:40:16 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/components/chrome/status-bar.tsx
+[vite] 5:40:16 PM [vite+] (ssr) page reload src/components/chrome/status-bar.tsx
+[convex] - Preparing Convex functions...
+[convex] 
+[vite] 5:40:17 PM [vite+] (client) page reload src/routes/__root.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/__root.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/app.$workspaceSlug.settings.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/app.$workspaceSlug.settings.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/app.$workspaceSlug.write._library.index.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/app.$workspaceSlug.write._library.index.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/app.$workspaceSlug.write._library.index.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/app.$workspaceSlug.write._library.index.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/app.$workspaceSlug.write._library.folder.$folderId.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/app.$workspaceSlug.write._library.folder.$folderId.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/write.$.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/write.$.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/logout.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/logout.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/app.$workspaceSlug.settings.danger.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/app.$workspaceSlug.settings.danger.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/app.$workspaceSlug.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/app.$workspaceSlug.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/app.$workspaceSlug.write._library.trash.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/app.$workspaceSlug.write._library.trash.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/app.$workspaceSlug.settings.general.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/app.$workspaceSlug.settings.general.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/write.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/write.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/signup.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/signup.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/app.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/app.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/app.$workspaceSlug.home.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/app.$workspaceSlug.home.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/account.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/account.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/onboarding.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/onboarding.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/app.$workspaceSlug.settings.index.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/app.$workspaceSlug.settings.index.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/login.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/login.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/app.$workspaceSlug.settings.members.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/app.$workspaceSlug.settings.members.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/app.index.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/app.index.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/app.$workspaceSlug.write._library.series.$seriesId.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/app.$workspaceSlug.write._library.series.$seriesId.tsx
+[vite] 5:40:17 PM [vite+] (client) hmr update /src/styles/globals.css?direct, /src/routes/app.$workspaceSlug.index.tsx
+[vite] 5:40:17 PM [vite+] (ssr) page reload src/routes/app.$workspaceSlug.index.tsx
+[vite] 5:40:17 PM [vite+] server restarted.
+[vite] Debugger listening on ws://127.0.0.1:40715/fad20daa-d236-45cf-89a1-cafa7c0585fd
+[vite] For help, see: https://nodejs.org/en/docs/inspector
+[convex] ✔ 17:40:25 Convex functions ready! (8.75s)
+[vite] 5:40:41 PM [vite+] changed tsconfig file detected: /home/bear/Repositories/fictional-process3/shadcn-new-style/start-monorepo/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[vite] 5:40:41 PM [vite+] changed tsconfig file detected: /home/bear/Repositories/fictional-process3/shadcn-new-style/start-monorepo/apps/web/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[vite] 5:40:41 PM [vite+] changed tsconfig file detected: /home/bear/Repositories/fictional-process3/shadcn-new-style/start-monorepo/packages/ui/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[vite] 5:40:49 PM [vite+] changed tsconfig file detected: /home/bear/Repositories/fictional-process3/example-code/desktop/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[vite] 5:40:49 PM [vite+] changed tsconfig file detected: /home/bear/Repositories/fictional-process3/example-code/packages/auth/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[vite] 5:40:49 PM [vite+] changed tsconfig file detected: /home/bear/Repositories/fictional-process3/example-code/packages/brand/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[vite] 5:40:49 PM [vite+] changed tsconfig file detected: /home/bear/Repositories/fictional-process3/example-code/packages/ui/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[vite] 5:40:49 PM [vite+] (client) page reload example-code/desktop/out/renderer/index.html
+[vite] 5:40:49 PM [vite+] (client) page reload example-code/desktop/src/renderer/index.html
+[vite] 5:42:28 PM [vite+] changed tsconfig file detected: /home/bear/Repositories/fictional-process3/convex/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[vite] 5:42:28 PM [vite+] changed tsconfig file detected: /home/bear/Repositories/fictional-process3/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[vite] 5:42:28 PM [vite+] vite.config.ts changed, restarting server...
+[convex] - Preparing Convex functions...
+[convex] 
+[vite] 5:42:28 PM [vite+] changed tsconfig file detected: /home/bear/Repositories/fictional-process3/convex/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[vite] 5:42:28 PM [vite+] changed tsconfig file detected: /home/bear/Repositories/fictional-process3/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[vite] 5:42:28 PM [vite+] vite.config.ts changed, restarting server...
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] File /home/bear/Repositories/fictional-process3/src/routeTree.gen.ts was modified by another process during processing.
+[vite] 5:42:28 PM [vite+] server restarted.
+[vite] Debugger listening on ws://127.0.0.1:41693/b86ac983-0f00-4212-9480-0cf3d3b98167
+[vite] For help, see: https://nodejs.org/en/docs/inspector
+[convex] ✔ 17:42:34 Convex functions ready! (6.03s)
+[convex] Filesystem changed during push, retrying...
+[convex] - Preparing Convex functions...
+[convex] 
+[convex] ✔ 17:42:39 Convex functions ready! (5.41s)
+[vite] 5:54:55 PM [vite+] changed tsconfig file detected: /home/bear/Repositories/fictional-process3/convex/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[vite] 5:54:55 PM [vite+] changed tsconfig file detected: /home/bear/Repositories/fictional-process3/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[vite] 5:54:55 PM [vite+] vite.config.ts changed, restarting server...
+[vite] 5:54:55 PM [vite+] changed tsconfig file detected: /home/bear/Repositories/fictional-process3/convex/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[vite] 5:54:55 PM [vite+] changed tsconfig file detected: /home/bear/Repositories/fictional-process3/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[vite] 5:54:55 PM [vite+] vite.config.ts changed, restarting server...
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[convex] - Preparing Convex functions...
+[convex] 
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] Error: Failed to load url ../instrument.server.mjs (resolved id: ../instrument.server.mjs) in /home/bear/Repositories/fictional-process3/src/server.ts. Does the file exist?
+[vite]     at loadAndTransform (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js:30018:31) {
+[vite]   code: 'ERR_LOAD_URL',
+[vite]   runnerError: Error: RunnerError
+[vite]       at reviveInvokeError (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:539:64)
+[vite]       at Object.invoke (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:612:11)
+[vite]       at ModuleRunner.getModuleInformation (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1187:7)
+[vite]       at request (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1204:83)
+[vite]       at /home/bear/Repositories/fictional-process3/src/server.ts:1:1
+[vite]       at ESModulesEvaluator.runInlinedModule (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:992:3)
+[vite]       at ModuleRunner.directRequest (file:///home/bear/Repositories/fictional-process3/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.18_@types+node@24.12.2_esbuild@0.27.7_jiti@2.6.1_tsx@4.21.0_typescript@6.0.3_yaml@2.8.3/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/module-runner.js:1247:59)
+[vite] }
+[vite] File /home/bear/Repositories/fictional-process3/src/routeTree.gen.ts was modified by another process during processing.
+[vite] 5:54:56 PM [vite+] server restarted.
+[vite] Debugger listening on ws://127.0.0.1:37183/41644539-0a2f-47cd-8bb7-a3db649de743
+[vite] For help, see: https://nodejs.org/en/docs/inspector
+[convex] ✔ 17:55:01 Convex functions ready! (5.71s)

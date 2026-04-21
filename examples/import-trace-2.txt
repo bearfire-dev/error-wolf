@@ -1,0 +1,225 @@
+pnpm dev
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v25.2.1","pnpm":"10.33.0"})
+
+> error-wolf@0.0.1 dev /home/bear/Repositories/better-errors
+> next dev --turbopack
+
+⚠ Port 3000 is in use by process 164619, using available port 3001 instead.
+▲ Next.js 16.1.7 (Turbopack, Cache Components)
+- Local:         http://localhost:3001
+- Network:       http://192.168.1.186:3001
+- Experiments (use with caution):
+  · clientTraceMetadata
+  ✓ viewTransition
+
+✓ Starting...
+✓ Ready in 2.6s
+○ Compiling /privacy ...
+ GET /privacy 200 in 4.8s (compile: 4.4s, render: 398ms)
+ GET / 200 in 51ms (compile: 24ms, render: 27ms)
+ GET /hunt 200 in 1771ms (compile: 1718ms, render: 53ms)
+ POST / 303 in 1787ms (compile: 2ms, render: 1785ms)
+ GET / 200 in 166ms (compile: 5ms, render: 161ms)
+ GET /manifest.webmanifest 200 in 491ms (compile: 483ms, render: 8ms)
+ GET /manifest.webmanifest 200 in 4ms (compile: 1558µs, render: 2ms)
+Route / is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+ GET / 200 in 56ms (compile: 2ms, render: 54ms)
+ GET /manifest.webmanifest 200 in 6ms (compile: 2ms, render: 4ms)
+ GET /hunt 200 in 37ms (compile: 2ms, render: 34ms)
+ POST / 303 in 53ms (compile: 3ms, render: 51ms)
+ GET /manifest.webmanifest 200 in 4ms (compile: 1582µs, render: 2ms)
+✓ Compiled in 28ms
+✓ Compiled in 228ms
+✓ Compiled in 173ms
+✓ Compiled in 147ms
+✓ Compiled in 63ms
+✓ Compiled in 117ms
+✓ Compiled in 113ms
+✓ Compiled in 221ms
+✓ Compiled in 187ms
+✓ Compiled in 182ms
+⨯ ./app/hunt/processing-instruments/constellation.tsx:7:1
+Export RATE_WINDOW_MS doesn't exist in target module
+   5 | import { cn } from "@/lib/utils"
+   6 |
+>  7 | import {
+     | ^^^^^^^^
+>  8 |   normalizeRate,
+     | ^^^^^^^^^^^^^^^^
+>  9 |   readCssVar,
+     | ^^^^^^^^^^^^^^^^
+> 10 |   RATE_WINDOW_MS,
+     | ^^^^^^^^^^^^^^^^
+> 11 |   statusLabel,
+     | ^^^^^^^^^^^^^^^^
+> 12 |   statusTone,
+     | ^^^^^^^^^^^^^^^^
+> 13 |   type InstrumentProps,
+     | ^^^^^^^^^^^^^^^^
+> 14 |   type InstrumentStep,
+     | ^^^^^^^^^^^^^^^^
+> 15 | } from "./types"
+     | ^^^^^^^^^^^^^^^^^
+  16 |
+  17 | type Comet = {
+  18 |   /** 0 = fresh arrival, increases each frame. */
+
+The export RATE_WINDOW_MS was not found in module [project]/app/hunt/processing-instruments/types.ts [app-client] (ecmascript).
+Did you mean to import RATE_KNEE?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/hunt/processing-instruments/constellation.tsx [Client Component Browser]
+    ./app/hunt/processing-dag.tsx [Client Component Browser]
+    ./app/hunt/hunt-client.tsx [Client Component Browser]
+    ./app/hunt/hunt-client.tsx [Server Component]
+    ./app/hunt/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/hunt/processing-instruments/constellation.tsx [Client Component SSR]
+    ./app/hunt/processing-dag.tsx [Client Component SSR]
+    ./app/hunt/hunt-client.tsx [Client Component SSR]
+    ./app/hunt/hunt-client.tsx [Server Component]
+    ./app/hunt/page.tsx [Server Component]
+
+
+
+./app/hunt/processing-instruments/constellation.tsx:7:1
+Export RATE_WINDOW_MS doesn't exist in target module
+   5 | import { cn } from "@/lib/utils"
+   6 |
+>  7 | import {
+     | ^^^^^^^^
+>  8 |   normalizeRate,
+     | ^^^^^^^^^^^^^^^^
+>  9 |   readCssVar,
+     | ^^^^^^^^^^^^^^^^
+> 10 |   RATE_WINDOW_MS,
+     | ^^^^^^^^^^^^^^^^
+> 11 |   statusLabel,
+     | ^^^^^^^^^^^^^^^^
+> 12 |   statusTone,
+     | ^^^^^^^^^^^^^^^^
+> 13 |   type InstrumentProps,
+     | ^^^^^^^^^^^^^^^^
+> 14 |   type InstrumentStep,
+     | ^^^^^^^^^^^^^^^^
+> 15 | } from "./types"
+     | ^^^^^^^^^^^^^^^^^
+  16 |
+  17 | type Comet = {
+  18 |   /** 0 = fresh arrival, increases each frame. */
+
+The export RATE_WINDOW_MS was not found in module [project]/app/hunt/processing-instruments/types.ts [app-ssr] (ecmascript).
+Did you mean to import RATE_KNEE?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/hunt/processing-instruments/constellation.tsx [Client Component Browser]
+    ./app/hunt/processing-dag.tsx [Client Component Browser]
+    ./app/hunt/hunt-client.tsx [Client Component Browser]
+    ./app/hunt/hunt-client.tsx [Server Component]
+    ./app/hunt/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/hunt/processing-instruments/constellation.tsx [Client Component SSR]
+    ./app/hunt/processing-dag.tsx [Client Component SSR]
+    ./app/hunt/hunt-client.tsx [Client Component SSR]
+    ./app/hunt/hunt-client.tsx [Server Component]
+    ./app/hunt/page.tsx [Server Component]
+
+
+
+./app/hunt/processing-instruments/waterfall.tsx:7:1
+Export RATE_WINDOW_MS doesn't exist in target module
+   5 | import { cn } from "@/lib/utils"
+   6 |
+>  7 | import {
+     | ^^^^^^^^
+>  8 |   normalizeRate,
+     | ^^^^^^^^^^^^^^^^
+>  9 |   readCssVar,
+     | ^^^^^^^^^^^^^^^^
+> 10 |   RATE_WINDOW_MS,
+     | ^^^^^^^^^^^^^^^^
+> 11 |   statusLabel,
+     | ^^^^^^^^^^^^^^^^
+> 12 |   statusTone,
+     | ^^^^^^^^^^^^^^^^
+> 13 |   type InstrumentProps,
+     | ^^^^^^^^^^^^^^^^
+> 14 |   type InstrumentStep,
+     | ^^^^^^^^^^^^^^^^
+> 15 | } from "./types"
+     | ^^^^^^^^^^^^^^^^^
+  16 |
+  17 | const ROW_INTERVAL_MS = 80
+  18 | const MAX_ROWS = 140
+
+The export RATE_WINDOW_MS was not found in module [project]/app/hunt/processing-instruments/types.ts [app-client] (ecmascript).
+Did you mean to import RATE_KNEE?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/hunt/processing-instruments/waterfall.tsx [Client Component Browser]
+    ./app/hunt/processing-dag.tsx [Client Component Browser]
+    ./app/hunt/hunt-client.tsx [Client Component Browser]
+    ./app/hunt/hunt-client.tsx [Server Component]
+    ./app/hunt/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/hunt/processing-instruments/waterfall.tsx [Client Component SSR]
+    ./app/hunt/processing-dag.tsx [Client Component SSR]
+    ./app/hunt/hunt-client.tsx [Client Component SSR]
+    ./app/hunt/hunt-client.tsx [Server Component]
+    ./app/hunt/page.tsx [Server Component]
+
+
+
+./app/hunt/processing-instruments/waterfall.tsx:7:1
+Export RATE_WINDOW_MS doesn't exist in target module
+   5 | import { cn } from "@/lib/utils"
+   6 |
+>  7 | import {
+     | ^^^^^^^^
+>  8 |   normalizeRate,
+     | ^^^^^^^^^^^^^^^^
+>  9 |   readCssVar,
+     | ^^^^^^^^^^^^^^^^
+> 10 |   RATE_WINDOW_MS,
+     | ^^^^^^^^^^^^^^^^
+> 11 |   statusLabel,
+     | ^^^^^^^^^^^^^^^^
+> 12 |   statusTone,
+     | ^^^^^^^^^^^^^^^^
+> 13 |   type InstrumentProps,
+     | ^^^^^^^^^^^^^^^^
+> 14 |   type InstrumentStep,
+     | ^^^^^^^^^^^^^^^^
+> 15 | } from "./types"
+     | ^^^^^^^^^^^^^^^^^
+  16 |
+  17 | const ROW_INTERVAL_MS = 80
+  18 | const MAX_ROWS = 140
+
+The export RATE_WINDOW_MS was not found in module [project]/app/hunt/processing-instruments/types.ts [app-ssr] (ecmascript).
+Did you mean to import RATE_KNEE?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/hunt/processing-instruments/waterfall.tsx [Client Component Browser]
+    ./app/hunt/processing-dag.tsx [Client Component Browser]
+    ./app/hunt/hunt-client.tsx [Client Component Browser]
+    ./app/hunt/hunt-client.tsx [Server Component]
+    ./app/hunt/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/hunt/processing-instruments/waterfall.tsx [Client Component SSR]
+    ./app/hunt/processing-dag.tsx [Client Component SSR]
+    ./app/hunt/hunt-client.tsx [Client Component SSR]
+    ./app/hunt/hunt-client.tsx [Server Component]
+    ./app/hunt/page.tsx [Server Component]

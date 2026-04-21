@@ -1,0 +1,38 @@
+> git -c user.useConfigOnly=true commit --quiet --allow-empty-message --file -
+[STARTED] Backing up original state...
+[COMPLETED] Backed up original state in git stash (6f68566)
+[STARTED] Running tasks for staged files...
+[STARTED] Config object — 246 files
+[STARTED] * — 246 files
+[STARTED] *.{ts,tsx,md,mdx} — 224 files
+[STARTED] vp check --fix
+[STARTED] cspell lint --no-progress --config .cspell/cspell.json
+[FAILED] cspell lint --no-progress --config .cspell/cspell.json [FAILED]
+[FAILED] cspell lint --no-progress --config .cspell/cspell.json [FAILED]
+[COMPLETED] Running tasks for staged files...
+[STARTED] Applying modifications from tasks...
+[SKIPPED] Skipped because of errors from tasks.
+[STARTED] Reverting to original state because of errors...
+[FAILED] vp check --fix [SIGKILL]
+[FAILED] vp check --fix [SIGKILL]
+[COMPLETED] Reverting to original state because of errors...
+[STARTED] Cleaning up temporary files...
+[COMPLETED] Cleaning up temporary files...
+
+✖ cspell lint --no-progress --config .cspell/cspell.json:
+AGENTS.md:11:64 - Unknown word (scifi)
+src/env/sentry-server.ts:31:40 - Unknown word (Dsns)
+src/features/preferences/editor-typography.ts:58:36 - Unknown word (behaviour)
+src/features/workspace/workspace-library-grid.tsx:381:8 - Unknown word (Organise)
+src/routes/wugtdwtcfy.ts:3:33 - Unknown word (Dsns)
+src/routes/wugtdwtcfy.ts:23:22 - Unknown word (Dsns)
+src/routes/wugtdwtcfy.ts:23:52 - Unknown word (Dsns)
+src/routes/wugtdwtcfy.ts:24:20 - Unknown word (Dsns)
+src/routes/wugtdwtcfy.ts:27:74 - Unknown word (Dsns)
+src/server/sentry-tunnel.ts:9:10 - Unknown word (Dsns)
+src/server/sentry-tunnel.ts:13:12 - Unknown word (Dsns)
+src/server/sentry-tunnel.ts:13:29 - Unknown word (Dsns)
+CSpell: Files checked: 199, Issues found: 12 in 6 files.
+
+✖ Task killed: vp check --fix
+VITE+ - pre-commit script failed (code 1)

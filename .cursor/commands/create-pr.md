@@ -36,9 +36,9 @@ Update only `/version.ts` - the `APP_VERSION` constant:
 
 ```typescript
 // Before
-export const APP_VERSION = "0.1.1";
+export const APP_VERSION = "0.1.1"
 // After
-export const APP_VERSION = "0.1.2";
+export const APP_VERSION = "0.1.2"
 ```
 
 If `/version.ts` does not exist, skip this step and continue.

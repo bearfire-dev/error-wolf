@@ -1,13 +1,14 @@
 ---
 
 ## description:
+
 alwaysApply: true
 
 # Agent Guidelines
 
 ## About
 
-**better-errors** is a small Next.js application template using the App Router, TypeScript, Tailwind CSS v4, and shadcn/ui (Base UI primitives, Hugeicons). It is a starter-style layout: root shell in `app/layout.tsx`, shared UI under `components/`, and utilities in `lib/`.
+**error wolf** is a small Next.js application template using the App Router, TypeScript, Tailwind CSS v4, and shadcn/ui (Base UI primitives, Hugeicons). It is a starter-style layout: root shell in `app/layout.tsx`, shared UI under `components/`, and utilities in `lib/`.
 
 ## Core
 
@@ -20,29 +21,28 @@ alwaysApply: true
 
 ## Stack
 
+| Area                  | Choice                                                                                                                                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Package manager**   | **pnpm** (`pnpm-lock.yaml`)                                                                                                                                                                             |
+| **Runtime / app**     | **Next.js 16** (App Router: `app/`)                                                                                                                                                                     |
+| **UI**                | **React 19**                                                                                                                                                                                            |
+| **React Compiler**    | **Next.js `reactCompiler: true`** + dev **`babel-plugin-react-compiler`** (compile-time memoization; same React runtime)                                                                                |
+| **Language**          | **TypeScript** (`strict: true` in `tsconfig.json`)                                                                                                                                                      |
+| **Dev server**        | **Turbopack** (`next dev --turbopack`)                                                                                                                                                                  |
+| **Styling**           | **Tailwind CSS v4** via `@tailwindcss/postcss` and `postcss.config.mjs`                                                                                                                                 |
+| **Components**        | **shadcn/ui** (`shadcn`, `components.json`), **@base-ui/react**, **class-variance-authority**                                                                                                           |
+| **Icons**             | **Hugeicons** (`@hugeicons/react`, `@hugeicons/core-free-icons`; `components.json` → `iconLibrary: "hugeicons"`)                                                                                        |
+| **Theming**           | **next-themes** (`attribute="class"`, system default; header sun/moon icon toggles light/dark)                                                                                                          |
+| **Animation helpers** | **tw-animate-css** (imported from `app/globals.css`)                                                                                                                                                    |
+| **Lint**              | **Oxlint** (`.oxlintrc.json`): Next.js + TypeScript + React rules, **`--type-aware`** via **`oxlint-tsgolint`**, React Compiler checks via **`eslint-plugin-react-compiler`** as an Oxlint **jsPlugin** |
+| **Format**            | **Oxfmt** (`.oxfmtrc.json`): Prettier-compatible options + **`sortTailwindcss`** (`app/globals.css`, `cn` / `cva`)                                                                                      |
 
-| Area                  | Choice                                                                                                           |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| **Package manager**   | **pnpm** (`pnpm-lock.yaml`)                                                                                      |
-| **Runtime / app**     | **Next.js 16** (App Router: `app/`)                                                                              |
-| **UI**                | **React 19**                                                                                                     |
-| **Language**          | **TypeScript** (`strict: true` in `tsconfig.json`)                                                               |
-| **Dev server**        | **Turbopack** (`next dev --turbopack`)                                                                           |
-| **Styling**           | **Tailwind CSS v4** via `@tailwindcss/postcss` and `postcss.config.mjs`                                          |
-| **Components**        | **shadcn/ui** (`shadcn`, `components.json`), **@base-ui/react**, **class-variance-authority**                    |
-| **Icons**             | **Hugeicons** (`@hugeicons/react`, `@hugeicons/core-free-icons`; `components.json` → `iconLibrary: "hugeicons"`) |
-| **Theming**           | **next-themes** (`attribute="class"`, system default, `**d`** toggles light/dark when not typing in inputs)      |
-| **Animation helpers** | **tw-animate-css** (imported from `app/globals.css`)                                                             |
-| **Lint**              | **ESLint 9** flat config: `eslint-config-next` (core-web-vitals + typescript)                                    |
-| **Format**            | **Prettier** + **prettier-plugin-tailwindcss** (see `.prettierrc`)                                               |
-
-
-**Module system:** ESM — `package.json` has `"type": "module"`; config files use `.mjs` where applicable (`next.config.mjs`, `eslint.config.mjs`, `postcss.config.mjs`).
+**Module system:** ESM — `package.json` has `"type": "module"`; config files use `.mjs` where applicable (`next.config.mjs`, `postcss.config.mjs`).
 
 ## Layout
 
-- `**app/`** — Next App Router: `layout.tsx` (root shell, fonts, `ThemeProvider`), `page.tsx`, `globals.css` (Tailwind entry, design tokens, shadcn theme imports).
-- `**components/**` — Shared UI: `theme-provider.tsx`, `ui/` (e.g. shadcn-style primitives).
+- **`app/`** — Next App Router: `layout.tsx` (root shell, fonts, `ThemeProvider`), `page.tsx`, `globals.css` (Tailwind entry, design tokens, shadcn theme imports).
+- **`components/`** — Shared UI: `theme-provider.tsx`, `ui/` (e.g. shadcn-style primitives).
 - `**lib/**` — Cross-cutting helpers (e.g. `cn()` in `lib/utils.ts`).
 - `**hooks/**` — Reserved alias in `components.json`; add hooks here when needed.
 
@@ -61,26 +61,27 @@ Colocate by feature as the app grows; keep routes and route-local UI under `app/
 
 Use **pnpm** (lockfile present).
 
+| Command              | Purpose                                        |
+| -------------------- | ---------------------------------------------- |
+| `pnpm dev`           | Dev server (`next dev --turbopack`)            |
+| `pnpm build`         | Production build (`next build`)                |
+| `pnpm start`         | Production server (`next start`)               |
+| `pnpm lint`          | Oxlint (`--type-aware`)                        |
+| `pnpm lint:fix`      | Oxlint with safe fixes                         |
+| `pnpm format`        | Oxfmt (write)                                  |
+| `pnpm format:check`  | Oxfmt check-only                               |
+| `pnpm typecheck`     | `tsgo --noEmit` (`@typescript/native-preview`) |
+| `pnpm typecheck:tsc` | Classic `tsc --noEmit` (parity / escape hatch) |
 
-| Command          | Purpose                             |
-| ---------------- | ----------------------------------- |
-| `pnpm dev`       | Dev server (`next dev --turbopack`) |
-| `pnpm build`     | Production build (`next build`)     |
-| `pnpm start`     | Production server (`next start`)    |
-| `pnpm lint`      | ESLint                              |
-| `pnpm format`    | Prettier write on `**/*.{ts,tsx}`   |
-| `pnpm typecheck` | `tsc --noEmit`                      |
-
-
-There is **no** combined `check` script; run `pnpm format`, `pnpm lint`, and `pnpm typecheck` as needed after substantive edits.
+There is **no** combined `check` script; run `pnpm format` (or `pnpm format:check`), `pnpm lint`, and `pnpm typecheck` as needed after substantive edits.
 
 **Node version:** not pinned in-repo; use a current LTS compatible with Next 16 if you need a local baseline.
 
 ## Code style
 
-- **TypeScript:** strict mode; path alias `@/`* → repo root (matches `baseUrl: "."` and `components.json` aliases).
-- **Prettier** (`.prettierrc`): LF, **no semicolons**, double quotes, 2 spaces, print width 80, trailing commas `es5`; Tailwind class sorting via `prettier-plugin-tailwindcss` with `tailwindStylesheet: app/globals.css` and `tailwindFunctions: ["cn", "cva"]`.
-- **ESLint:** `eslint.config.mjs` composes Next presets; ignores `.next/`, `out/`, `build/`, `next-env.d.ts`.
+- **TypeScript:** strict mode; path alias `@/*` → repo root (matches `tsconfig.json` `paths` and `components.json` aliases). Primary typecheck uses **tsgo**; the `typescript` package remains for `pnpm typecheck:tsc` and editor tooling.
+- **Oxfmt** (`.oxfmtrc.json`): LF, **no semicolons**, double quotes, 2 spaces, print width 80, trailing commas `es5`; Tailwind class sorting via **`sortTailwindcss`** (`stylesheet: app/globals.css`, `functions: ["cn", "cva"]`); `sortPackageJson` is off (see config).
+- **Oxlint** (`.oxlintrc.json`): migrated from the former Next ESLint presets; **`eslint-plugin-react-compiler`** is loaded as a jsPlugin; ignores include `node_modules`, build outputs, `.next/`, `next-env.d.ts`, and `scripts/example-bg-photo-tuner/**`.
 - **React:** use `"use client"` only where client APIs are required (e.g. theme provider). Prefer server components by default in `app/` where practical.
 - **Utilities:** merge Tailwind classes with `cn()` from `@/lib/utils` (`clsx` + `tailwind-merge`).
 
