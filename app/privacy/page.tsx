@@ -29,10 +29,27 @@ export default function PrivacyPage() {
           <p className="text-foreground">
             error-wolf runs entirely in your browser. Stack normalization,
             compression, and model calls happen client-side. No accounts. No
-            server-side storage of your input or results. Basic traffic is
-            measured site-wide with Vercel Web Analytics (see below). After you
-            initialize from the home page, we also use Sentry for anonymous
-            product telemetry (see Consent and telemetry).
+            server-side storage of your input or results. We collect anonymous
+            telemetry to help improve the code:{" "}
+            <a
+              href="https://vercel.com/docs/analytics/privacy-policy"
+              target="_blank"
+              rel="noreferrer"
+              className="text-foreground/85 underline underline-offset-2 hover:text-primary"
+            >
+              Vercel Web Analytics
+            </a>{" "}
+            for site-wide aggregated page views (see Web analytics) and{" "}
+            <a
+              href="https://sentry.io/"
+              target="_blank"
+              rel="noreferrer"
+              className="text-foreground/85 underline underline-offset-2 hover:text-primary"
+            >
+              Sentry
+            </a>{" "}
+            in privacy mode for errors, performance, and product usage after you
+            initialize from the home page (see Consent and telemetry).
           </p>
 
           <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">
@@ -77,18 +94,26 @@ export default function PrivacyPage() {
               Vercel Web Analytics
             </a>{" "}
             for site-wide aggregated page views and traffic. It is not tied to
-            the initialize consent cookie on the home page. Before events are
-            sent, we strip query strings from the reported URL in your browser
-            so tokens and other sensitive query data are not included.
+            the initialize consent cookie on the home page. Error and usage
+            telemetry uses{" "}
+            <a
+              href="https://sentry.io/"
+              target="_blank"
+              rel="noreferrer"
+              className="text-foreground/85 underline underline-offset-2 hover:text-primary"
+            >
+              Sentry
+            </a>{" "}
+            as described below. Before analytics events are sent, we strip query
+            strings from the reported URL in your browser so tokens and other
+            sensitive query data are not included.
           </p>
 
           <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">
             Consent and telemetry
           </h3>
           <p>
-            When you use the initialize flow on the home page, consent is stored
-            as a first-party cookie. That choice does not turn Vercel Web
-            Analytics off. We use{" "}
+            We use{" "}
             <a
               href="https://sentry.io/"
               target="_blank"
@@ -98,7 +123,11 @@ export default function PrivacyPage() {
               Sentry
             </a>{" "}
             in privacy mode for basic error, performance, and usage data only.
-            No personal data or stack traces are sent.
+            No personal data or stack traces are sent. When you use the
+            initialize flow on the home page, consent is stored as a first-party
+            cookie for that experience. That cookie does not disable Vercel Web
+            Analytics (traffic still uses the section above). Optional feedback
+            you submit with a screenshot is visible to us in Sentry.
           </p>
 
           <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">

@@ -590,8 +590,7 @@ function KeyStep({
             >
               Vercel Web Analytics
             </a>{" "}
-            for basic page-view and traffic stats site-wide; that is not tied to
-            the initialize consent on the home page.
+            for basic page-view and traffic stats site-wide.
           </p>
           <p className="font-mono text-sm leading-snug text-pretty text-foreground max-sm:text-base md:text-xs">
             This site is open source under the O&apos;Saasy License. You can
