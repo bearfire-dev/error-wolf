@@ -1,0 +1,3 @@
+# All paths: pull requests require review from this owner when branch
+# protection has "Require review from Code Owners" enabled.
+* @slate-rehm
