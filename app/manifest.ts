@@ -8,7 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
       "Fast and cheap compression of noisy error stacks to save tokens. Free, opensource, and secure.",
     start_url: "/",
     display: "standalone",
-    background_color: "#020403",
+    background_color: "#000000",
     theme_color: "#60e56b",
     icons: [
       {
