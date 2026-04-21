@@ -3,6 +3,7 @@ import { Space_Mono } from "next/font/google"
 import { ViewTransition } from "react"
 
 import "./globals.css"
+import { AlphaNoticeAlert } from "@/components/alpha-notice-alert"
 import { SiteBackgroundLayer } from "@/components/site-background-layer"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
@@ -78,6 +79,7 @@ export default async function RootLayout({
     >
       <body>
         <ThemeProvider>
+          <AlphaNoticeAlert />
           <SiteBackgroundLayer />
           <div className="relative isolate z-10 flex min-h-svh flex-col">
             <SiteHeader
