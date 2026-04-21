@@ -7,6 +7,7 @@ import { SiteBackgroundLayer } from "@/components/site-background-layer"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { ThemeProvider } from "@/components/theme-provider"
+import { VercelWebAnalytics } from "@/components/vercel-web-analytics"
 import { getAnnouncementsFeed } from "@/lib/announcements/load"
 import { getSiteUrl } from "@/lib/site-url"
 import { cn } from "@/lib/utils"
@@ -97,6 +98,7 @@ export default async function RootLayout({
             <SiteFooter />
           </div>
         </ThemeProvider>
+        <VercelWebAnalytics />
       </body>
     </html>
   )

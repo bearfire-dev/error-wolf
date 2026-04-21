@@ -51,6 +51,7 @@ import { type SimplifyWarning } from "@/lib/simplify/stub"
 import {
   HUNT_GITHUB_SOURCE_URL,
   HUNT_SENTRY_URL,
+  HUNT_VERCEL_ANALYTICS_PRIVACY_URL,
   HUNT_STEP_INDEX,
   HUNT_STEPS,
   STACK_TRACE_PLACEHOLDER,
@@ -561,11 +562,11 @@ function KeyStep({
 
       <div className="flex min-h-0 flex-1 flex-col gap-4">
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto rounded-[2px] border border-foreground/25 bg-card px-2 py-2 dark:bg-card">
-          <p className="max-sm:text-base font-mono text-sm leading-snug text-pretty text-foreground md:text-xs">
-            Your key and input is sent directly from your browser to
-            OpenRouter (and their providers). We do not collect your key, input, or output.
+          <p className="font-mono text-sm leading-snug text-pretty text-foreground max-sm:text-base md:text-xs">
+            Your key and input is sent directly from your browser to OpenRouter
+            (and their providers). We do not collect your key, input, or output.
           </p>
-          <p className="max-sm:text-base font-mono text-sm leading-snug text-pretty text-foreground md:text-xs">
+          <p className="font-mono text-sm leading-snug text-pretty text-foreground max-sm:text-base md:text-xs">
             We use{" "}
             <a
               href={HUNT_SENTRY_URL}
@@ -575,9 +576,24 @@ function KeyStep({
             >
               Sentry
             </a>{" "}
-            in privacy mode for basic usage, performance, and error collection. If you choose to submit an error report with a screenshot then we see that too.
+            in privacy mode for basic usage, performance, and error collection.
+            If you choose to submit an error report with a screenshot then we
+            see that too.
           </p>
-          <p className="max-sm:text-base font-mono text-sm leading-snug text-pretty text-foreground md:text-xs">
+          <p className="font-mono text-sm leading-snug text-pretty text-foreground max-sm:text-base md:text-xs">
+            We use{" "}
+            <a
+              href={HUNT_VERCEL_ANALYTICS_PRIVACY_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-2 hover:text-primary"
+            >
+              Vercel Web Analytics
+            </a>{" "}
+            for basic page-view and traffic stats site-wide; that is not tied to
+            the initialize consent on the home page.
+          </p>
+          <p className="font-mono text-sm leading-snug text-pretty text-foreground max-sm:text-base md:text-xs">
             This site is open source under the O&apos;Saasy License. You can
             audit/easily run the code for yourself by visiting our{" "}
             <a
