@@ -66,6 +66,61 @@ function cloneProviderPreferences(
   }
 }
 
+function normalizeProviderSlugs(
+  value: string[] | undefined
+): string[] | undefined {
+  if (!value?.length) return undefined
+
+  const seen = new Set<string>()
+  const normalized: string[] = []
+  for (const slug of value) {
+    const next = slug.trim().toLowerCase()
+    if (!next || seen.has(next)) continue
+    seen.add(next)
+    normalized.push(next)
+  }
+  return normalized.length > 0 ? normalized : undefined
+}
+
+function normalizeProviderSort(
+  sort: OpenRouterProviderPreferences["sort"]
+): OpenRouterProviderPreferences["sort"] | null {
+  if (!sort) return null
+  return typeof sort === "object" ? { ...sort } : sort
+}
+
+function serializeProviderPreference(
+  value:
+    | OpenRouterProviderPreferences["preferred_max_latency"]
+    | OpenRouterProviderPreferences["preferred_min_throughput"]
+): string {
+  if (typeof value === "object" && value !== null) {
+    return JSON.stringify(value)
+  }
+  return String(value ?? "")
+}
+
+function providerRoutingIdentity(
+  provider: OpenRouterProviderPreferences | undefined
+): string {
+  if (!provider) return ""
+
+  return JSON.stringify({
+    order: normalizeProviderSlugs(provider.order) ?? null,
+    only: normalizeProviderSlugs(provider.only) ?? null,
+    ignore: normalizeProviderSlugs(provider.ignore) ?? null,
+    sort: normalizeProviderSort(provider.sort),
+    allowFallbacks: provider.allow_fallbacks ?? null,
+    requireParameters: provider.require_parameters ?? null,
+    preferredMaxLatency: serializeProviderPreference(
+      provider.preferred_max_latency
+    ),
+    preferredMinThroughput: serializeProviderPreference(
+      provider.preferred_min_throughput
+    ),
+  })
+}
+
 function normalizeLatencyPolicy(
   policy: OpenRouterLatencyPolicy | undefined,
   primaryProvider: OpenRouterProviderPreferences | undefined
@@ -77,9 +132,12 @@ function normalizeLatencyPolicy(
 
   const secondaryProvider = cloneProviderPreferences(policy.secondaryProvider)
   if (!secondaryProvider) return null
-  const secondarySlug = secondaryProvider?.order?.[0]?.trim().toLowerCase()
-  const primarySlug = primaryProvider?.order?.[0]?.trim().toLowerCase()
-  if (!secondarySlug || secondarySlug === primarySlug) return null
+  if (
+    providerRoutingIdentity(secondaryProvider) ===
+    providerRoutingIdentity(primaryProvider)
+  ) {
+    return null
+  }
 
   const cancelAfterMs =
     typeof policy.cancelAfterMs === "number" &&
@@ -298,7 +356,10 @@ function requestDebugMeta(
     model: request.model,
     maxOutputTokens: request.maxOutputTokens ?? null,
     providerOrder: request.provider?.order ?? null,
+    providerOnly: request.provider?.only ?? null,
+    providerIgnore: request.provider?.ignore ?? null,
     allowFallbacks: request.provider?.allow_fallbacks ?? null,
+    requireParameters: request.provider?.require_parameters ?? null,
     providerSort: request.provider?.sort ?? null,
     preferredMaxLatency: request.provider?.preferred_max_latency ?? null,
     preferredMinThroughput: request.provider?.preferred_min_throughput ?? null,
@@ -758,6 +819,7 @@ async function runHedgedStreamingCompletion(
         requestDebugMeta(secondary.request, {
           reason,
           primaryProviderOrder: primary.request.provider?.order ?? null,
+          primaryProviderOnly: primary.request.provider?.only ?? null,
           primaryRunningMs:
             primary.startedAtMs > 0
               ? roundDurationMs(nowMs() - primary.startedAtMs)
@@ -999,5 +1061,24 @@ export async function runStreamingCompletion(
   if (!latencyPolicy) {
     return runSingleStreamingCompletion(request, options)
   }
-  return runHedgedStreamingCompletion(request, options, latencyPolicy)
+
+  try {
+    return await runHedgedStreamingCompletion(request, options, latencyPolicy)
+  } catch (error) {
+    if (
+      !(error instanceof OpenRouterLatencyTimeoutError) ||
+      request.signal?.aborted
+    ) {
+      throw error
+    }
+
+    console.warn(
+      "[openrouter] retrying stream without latency policy after timeout",
+      requestDebugMeta(request, {
+        hedgeAfterMs: latencyPolicy.hedgeAfterMs,
+        cancelAfterMs: latencyPolicy.cancelAfterMs ?? null,
+      })
+    )
+    return runSingleStreamingCompletion(request, options)
+  }
 }

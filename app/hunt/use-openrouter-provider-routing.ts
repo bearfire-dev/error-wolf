@@ -7,8 +7,6 @@ import type { FastestProviderEstimate } from "@/lib/openrouter/estimate-fastest-
 import { fetchModelEndpointsDirect } from "@/lib/openrouter/endpoints-client"
 import type { OpenRouterPublicEndpoint } from "@/lib/openrouter/endpoints-types"
 import {
-  HUNT_OPENROUTER_LATENCY_CANCEL_FALLBACK_MS,
-  HUNT_OPENROUTER_LATENCY_CANCEL_MAX_MS,
   HUNT_OPENROUTER_LATENCY_HEDGE_FALLBACK_MS,
   HUNT_OPENROUTER_LATENCY_HEDGE_MAX_MS,
   HUNT_ROUTING_E2E_TOKEN_ESTIMATE,
@@ -24,6 +22,7 @@ import type {
   OpenRouterLatencyPolicy,
   OpenRouterPercentilePreferenceMap,
   OpenRouterProviderPreferences,
+  OpenRouterProviderSortConfig,
 } from "@/lib/simplify/types"
 
 // Keep provider metadata fresh enough for interactive sessions without
@@ -31,17 +30,39 @@ import type {
 const REFRESH_MS = 90 * 1000
 const ROUTING_PERCENTILE: PercentileKey = "p90"
 const MAX_PROVIDER_ORDER = 4
-const PROVIDER_PREFERRED_MAX_LATENCY: OpenRouterPercentilePreferenceMap = {
-  p50: 1.5,
-  p90: 3,
+const SMALL_REQUEST_MAX_TOKENS = 3500
+const LARGE_REQUEST_MIN_TOKENS = 12000
+const LATENCY_PROFILE_MAX_LATENCY: OpenRouterPercentilePreferenceMap = {
+  p50: 1.1,
+  p90: 2.2,
+  p99: 4.5,
+}
+const LATENCY_PROFILE_MIN_THROUGHPUT: OpenRouterPercentilePreferenceMap = {
+  p50: 8,
+  p90: 4,
+}
+const BALANCED_PROFILE_MAX_LATENCY: OpenRouterPercentilePreferenceMap = {
+  p50: 1.7,
+  p90: 3.2,
   p99: 6,
 }
-const PROVIDER_PREFERRED_MIN_THROUGHPUT: OpenRouterPercentilePreferenceMap = {
+const BALANCED_PROFILE_MIN_THROUGHPUT: OpenRouterPercentilePreferenceMap = {
   p50: 12,
   p90: 6,
 }
+const THROUGHPUT_PROFILE_MAX_LATENCY: OpenRouterPercentilePreferenceMap = {
+  p50: 2.3,
+  p90: 4.4,
+  p99: 8,
+}
+const THROUGHPUT_PROFILE_MIN_THROUGHPUT: OpenRouterPercentilePreferenceMap = {
+  p50: 18,
+  p90: 9,
+}
 
 const EMPTY_ENDPOINTS: OpenRouterPublicEndpoint[] = []
+type RoutingProfileKind = "latency" | "balanced" | "throughput"
+type RoutingSort = OpenRouterProviderSortConfig["by"]
 
 export type OpenRouterProviderRankings = {
   byThroughput: RankedProvider[]
@@ -66,15 +87,124 @@ function uniqueProviderOrder(slugs: readonly string[]): string[] {
   return order
 }
 
-function buildProviderPreferences(
-  order: readonly string[]
-): OpenRouterProviderPreferences {
-  return {
-    order: uniqueProviderOrder(order).slice(0, MAX_PROVIDER_ORDER),
-    allow_fallbacks: true,
-    preferred_max_latency: PROVIDER_PREFERRED_MAX_LATENCY,
-    preferred_min_throughput: PROVIDER_PREFERRED_MIN_THROUGHPUT,
+function topProviderSlugs(
+  rows: readonly RankedProvider[],
+  limit: number
+): string[] {
+  return uniqueProviderOrder(rows.map((row) => row.slug)).slice(0, limit)
+}
+
+function profileKindForTokens(totalTokens: number): RoutingProfileKind {
+  if (totalTokens <= SMALL_REQUEST_MAX_TOKENS) return "latency"
+  if (totalTokens >= LARGE_REQUEST_MIN_TOKENS) return "throughput"
+  return "balanced"
+}
+
+function preferredMaxLatencyForProfile(
+  kind: RoutingProfileKind
+): OpenRouterPercentilePreferenceMap {
+  switch (kind) {
+    case "latency":
+      return LATENCY_PROFILE_MAX_LATENCY
+    case "throughput":
+      return THROUGHPUT_PROFILE_MAX_LATENCY
+    default:
+      return BALANCED_PROFILE_MAX_LATENCY
   }
+}
+
+function preferredMinThroughputForProfile(
+  kind: RoutingProfileKind
+): OpenRouterPercentilePreferenceMap {
+  switch (kind) {
+    case "latency":
+      return LATENCY_PROFILE_MIN_THROUGHPUT
+    case "throughput":
+      return THROUGHPUT_PROFILE_MIN_THROUGHPUT
+    default:
+      return BALANCED_PROFILE_MIN_THROUGHPUT
+  }
+}
+
+function primarySortForProfile(
+  kind: RoutingProfileKind,
+  fastestEstimate: FastestProviderEstimate | null
+): RoutingSort {
+  if (kind === "latency") return "latency"
+  if (kind === "throughput") return "throughput"
+
+  return fastestEstimate &&
+    fastestEstimate.breakdown.generationSeconds >
+      fastestEstimate.breakdown.ttftSeconds
+    ? "throughput"
+    : "latency"
+}
+
+function secondarySortForProfile(
+  kind: RoutingProfileKind,
+  fastestEstimate: FastestProviderEstimate | null
+): RoutingSort {
+  return primarySortForProfile(kind, fastestEstimate) === "latency"
+    ? "throughput"
+    : "latency"
+}
+
+function buildProviderShortlist(params: {
+  anchorSlug: string
+  rankings: OpenRouterProviderRankings
+  sort: RoutingSort
+  exclude?: readonly string[]
+}): string[] {
+  const excluded = new Set(
+    (params.exclude ?? []).map((slug) => slug.trim().toLowerCase())
+  )
+  const latencyCandidates = topProviderSlugs(
+    params.rankings.byLatency,
+    MAX_PROVIDER_ORDER
+  )
+  const throughputCandidates = topProviderSlugs(
+    params.rankings.byThroughput,
+    MAX_PROVIDER_ORDER
+  )
+  const ordered =
+    params.sort === "latency"
+      ? [params.anchorSlug, ...latencyCandidates, ...throughputCandidates]
+      : [params.anchorSlug, ...throughputCandidates, ...latencyCandidates]
+
+  return uniqueProviderOrder(ordered)
+    .filter((slug) => !excluded.has(slug))
+    .slice(0, MAX_PROVIDER_ORDER)
+}
+
+function buildProviderPreferences(params: {
+  shortlist: readonly string[]
+  sort: RoutingSort
+  kind: RoutingProfileKind
+}): OpenRouterProviderPreferences | undefined {
+  const shortlist = uniqueProviderOrder(params.shortlist).slice(
+    0,
+    MAX_PROVIDER_ORDER
+  )
+  if (shortlist.length === 0) return undefined
+
+  return {
+    only: shortlist,
+    allow_fallbacks: true,
+    require_parameters: true,
+    sort: params.sort,
+    preferred_max_latency: preferredMaxLatencyForProfile(params.kind),
+    preferred_min_throughput: preferredMinThroughputForProfile(params.kind),
+  }
+}
+
+function preferredProviderSlug(
+  provider: OpenRouterProviderPreferences | undefined
+): string | null {
+  return (
+    provider?.order?.[0]?.trim().toLowerCase() ??
+    provider?.only?.[0]?.trim().toLowerCase() ??
+    null
+  )
 }
 
 function providerLatencyMs(
@@ -96,29 +226,29 @@ function providerLatencyMs(
   return null
 }
 
-function buildProviderOrder(params: {
-  primarySlug: string
-  rankings: OpenRouterProviderRankings
-}): string[] {
-  return uniqueProviderOrder([
-    params.primarySlug,
-    ...params.rankings.byLatency.map((row) => row.slug),
-    ...params.rankings.byThroughput.map((row) => row.slug),
-  ]).slice(0, MAX_PROVIDER_ORDER)
+function isSlowStartModel(modelId: string): boolean {
+  const normalized = modelId.trim().toLowerCase()
+  return normalized.includes("gpt-oss-120b") || normalized.includes("405b")
 }
 
 function deriveLatencyPolicy(params: {
-  provider: OpenRouterProviderPreferences | undefined
+  primaryProvider: OpenRouterProviderPreferences | undefined
+  secondaryProvider: OpenRouterProviderPreferences | undefined
   endpoints: OpenRouterPublicEndpoint[]
+  totalTokens: number
+  routingModelId: string
 }): OpenRouterLatencyPolicy | undefined {
-  const providerOrder = params.provider?.order
-  const primarySlug = providerOrder?.[0]?.trim().toLowerCase()
-  if (!primarySlug) return undefined
-
-  const secondaryOrder = providerOrder
-    ?.map((slug) => slug.trim().toLowerCase())
-    .filter((slug) => slug && slug !== primarySlug)
-  if (!secondaryOrder?.length) return undefined
+  const secondaryProvider = params.secondaryProvider
+  const primarySlug = preferredProviderSlug(params.primaryProvider)
+  const secondarySlug = preferredProviderSlug(secondaryProvider)
+  if (
+    !primarySlug ||
+    !secondaryProvider ||
+    !secondarySlug ||
+    secondarySlug === primarySlug
+  ) {
+    return undefined
+  }
 
   // Use a stricter percentile than p50 so interactive traffic responds to
   // tail latency instead of inheriting long waits from median-only stats.
@@ -127,27 +257,25 @@ function deriveLatencyPolicy(params: {
     params.endpoints,
     ROUTING_PERCENTILE
   )
+  const tokenScale =
+    params.totalTokens >= LARGE_REQUEST_MIN_TOKENS
+      ? 1.2
+      : params.totalTokens <= SMALL_REQUEST_MAX_TOKENS
+        ? 0.9
+        : 1
+  const modelScale = isSlowStartModel(params.routingModelId) ? 1.15 : 1
   const hedgeAfterMs =
     baselineLatencyMs !== null
       ? clampMs(
-          Math.round(baselineLatencyMs * 0.8),
+          Math.round(baselineLatencyMs * 0.8 * tokenScale * modelScale),
           HUNT_OPENROUTER_LATENCY_HEDGE_FALLBACK_MS,
           HUNT_OPENROUTER_LATENCY_HEDGE_MAX_MS
         )
       : HUNT_OPENROUTER_LATENCY_HEDGE_FALLBACK_MS
-  const cancelAfterMs =
-    baselineLatencyMs !== null
-      ? clampMs(
-          Math.max(Math.round(baselineLatencyMs * 1.4), hedgeAfterMs + 1200),
-          HUNT_OPENROUTER_LATENCY_CANCEL_FALLBACK_MS,
-          HUNT_OPENROUTER_LATENCY_CANCEL_MAX_MS
-        )
-      : HUNT_OPENROUTER_LATENCY_CANCEL_FALLBACK_MS
 
   return {
     hedgeAfterMs,
-    cancelAfterMs,
-    secondaryProvider: buildProviderPreferences(secondaryOrder),
+    secondaryProvider,
   }
 }
 
@@ -226,25 +354,84 @@ export function useOpenRouterProviderRouting({
     [endpointsView, e2eTokenEstimate]
   )
 
-  const providerPreferences = useMemo(():
-    | OpenRouterProviderPreferences
-    | undefined => {
-    if (!fastestEstimate?.slug) return undefined
-    return buildProviderPreferences(
-      buildProviderOrder({
-        primarySlug: fastestEstimate.slug,
-        rankings,
-      })
-    )
-  }, [fastestEstimate, rankings])
+  const routingProfileKind = useMemo(
+    (): RoutingProfileKind => profileKindForTokens(e2eTokenEstimate),
+    [e2eTokenEstimate]
+  )
+
+  const primarySort = useMemo(
+    (): RoutingSort =>
+      primarySortForProfile(routingProfileKind, fastestEstimate),
+    [fastestEstimate, routingProfileKind]
+  )
+
+  const secondarySort = useMemo(
+    (): RoutingSort =>
+      secondarySortForProfile(routingProfileKind, fastestEstimate),
+    [fastestEstimate, routingProfileKind]
+  )
+
+  const providerShortlists = useMemo(() => {
+    const anchorSlug =
+      fastestEstimate?.slug ??
+      rankings.byLatency[0]?.slug ??
+      rankings.byThroughput[0]?.slug ??
+      null
+    if (!anchorSlug) {
+      return { primary: [] as string[], secondary: [] as string[] }
+    }
+
+    const primary = buildProviderShortlist({
+      anchorSlug,
+      rankings,
+      sort: primarySort,
+    })
+    const secondary = buildProviderShortlist({
+      anchorSlug,
+      rankings,
+      sort: secondarySort,
+      exclude: primary.slice(0, 1),
+    })
+
+    return { primary, secondary }
+  }, [fastestEstimate, primarySort, rankings, secondarySort])
+
+  const providerPreferences = useMemo(
+    (): OpenRouterProviderPreferences | undefined =>
+      buildProviderPreferences({
+        shortlist: providerShortlists.primary,
+        sort: primarySort,
+        kind: routingProfileKind,
+      }),
+    [primarySort, providerShortlists.primary, routingProfileKind]
+  )
+
+  const secondaryProviderPreferences = useMemo(
+    (): OpenRouterProviderPreferences | undefined =>
+      buildProviderPreferences({
+        shortlist: providerShortlists.secondary,
+        sort: secondarySort,
+        kind: routingProfileKind,
+      }),
+    [providerShortlists.secondary, routingProfileKind, secondarySort]
+  )
 
   const providerLatencyPolicy = useMemo(
     (): OpenRouterLatencyPolicy | undefined =>
       deriveLatencyPolicy({
-        provider: providerPreferences,
+        primaryProvider: providerPreferences,
+        secondaryProvider: secondaryProviderPreferences,
         endpoints: endpointsView,
+        totalTokens: e2eTokenEstimate,
+        routingModelId,
       }),
-    [endpointsView, providerPreferences]
+    [
+      e2eTokenEstimate,
+      endpointsView,
+      providerPreferences,
+      routingModelId,
+      secondaryProviderPreferences,
+    ]
   )
 
   useEffect(() => {
@@ -279,19 +466,29 @@ export function useOpenRouterProviderRouting({
   }, [active, refresh])
 
   useEffect(() => {
-    if (!active || !providerPreferences?.order?.length) return
+    if (!active || !providerPreferences) return
 
     console.info("[hunt] OpenRouter provider routing updated", {
       model: routingModelId.trim(),
       percentile: ROUTING_PERCENTILE,
-      primaryProvider: providerPreferences.order[0] ?? null,
-      fallbackProviders: providerPreferences.order.slice(1),
+      routingProfile: routingProfileKind,
+      primaryProvider: preferredProviderSlug(providerPreferences),
+      primaryCandidates:
+        providerPreferences.only ?? providerPreferences.order ?? [],
+      secondaryProvider: preferredProviderSlug(secondaryProviderPreferences),
+      secondaryCandidates:
+        secondaryProviderPreferences?.only ??
+        secondaryProviderPreferences?.order ??
+        [],
       allowFallbacks: providerPreferences.allow_fallbacks ?? null,
+      requireParameters: providerPreferences.require_parameters ?? null,
+      providerSort: providerPreferences.sort ?? null,
       preferredMaxLatency: providerPreferences.preferred_max_latency ?? null,
       preferredMinThroughput:
         providerPreferences.preferred_min_throughput ?? null,
       hedgeAfterMs: providerLatencyPolicy?.hedgeAfterMs ?? null,
       cancelAfterMs: providerLatencyPolicy?.cancelAfterMs ?? null,
+      e2eTokenEstimate,
       rankingLastUpdatedAt: lastUpdatedView,
       topLatencyProviders: rankings.byLatency
         .slice(0, 3)
@@ -302,11 +499,14 @@ export function useOpenRouterProviderRouting({
     })
   }, [
     active,
+    e2eTokenEstimate,
     lastUpdatedView,
     providerLatencyPolicy,
     providerPreferences,
     rankings,
+    routingProfileKind,
     routingModelId,
+    secondaryProviderPreferences,
   ])
 
   return {

@@ -3,10 +3,7 @@ import {
   summarizeRunCosts,
 } from "@/lib/openrouter/costs"
 import type { OpenRouterPublicEndpoint } from "@/lib/openrouter/endpoints-types"
-import {
-  OpenRouterLatencyTimeoutError,
-  runStreamingCompletion,
-} from "@/lib/simplify/openrouter-client"
+import { runStreamingCompletion } from "@/lib/simplify/openrouter-client"
 import type {
   SimplifyRunOptions,
   SimplifyThroughputReporter,
@@ -136,22 +133,12 @@ async function runV1AnalysisBranch(params: {
       if (isAbortError(error)) throw error
 
       const message = errorMessage(error)
-      const retryable = !(error instanceof OpenRouterLatencyTimeoutError)
-      if (retryable && attempt <= maxRetries) {
+      if (attempt <= maxRetries) {
         progress.retry(
           variant.id,
           `${variant.label} / retry ${attempt}/${maxRetries}`
         )
         continue
-      }
-
-      if (!retryable) {
-        console.warn("[hunt] skipping retry after OpenRouter latency timeout", {
-          stepId: variant.id,
-          attempt,
-          modelId,
-          providerOrder: provider?.order ?? null,
-        })
       }
 
       const warning = `${variant.label} skipped after retry: ${message}`
@@ -238,22 +225,12 @@ async function runV1Synthesis(params: {
       if (isAbortError(error)) throw error
 
       const message = errorMessage(error)
-      const retryable = !(error instanceof OpenRouterLatencyTimeoutError)
-      if (retryable && attempt <= maxRetries) {
+      if (attempt <= maxRetries) {
         progress.retry(
           "synthesis",
           `merging compact variants / retry ${attempt}/${maxRetries}`
         )
         continue
-      }
-
-      if (!retryable) {
-        console.warn("[hunt] skipping retry after OpenRouter latency timeout", {
-          stepId: "synthesis",
-          attempt,
-          modelId,
-          providerOrder: provider?.order ?? null,
-        })
       }
 
       progress.fail("synthesis", message)
