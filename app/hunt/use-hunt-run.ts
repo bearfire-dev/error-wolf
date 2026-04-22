@@ -34,11 +34,16 @@ import {
   type SimplifyWarning,
   type ThroughputBus,
 } from "@/lib/simplify/stub"
-import { OpenRouterInsufficientCreditsError } from "@/lib/simplify/openrouter-client"
+import {
+  OpenRouterInsufficientCreditsError,
+  OpenRouterLatencyTimeoutError,
+} from "@/lib/simplify/openrouter-client"
 import type { SimplifyPipelineStepId } from "@/lib/simplify/types"
 
 const KEY_CREDITS_NOTICE =
   "OpenRouter reported insufficient credits. Add credits to your account or use a different API key."
+const OPENROUTER_LATENCY_NOTICE =
+  "OpenRouter did not emit a first token before the interactive hedge budget expired. The app avoids giving up early now, but if this still appears, retry once or reduce the input size."
 
 function billingPromptTokensFromSpan(
   span: SimplifyRunCostSpan
@@ -228,7 +233,10 @@ export function useHuntRun({
         inputChars: inputText.length,
         durationMs: Math.round(durationMs),
         providerOrder: openRouterProvider?.order ?? null,
+        providerOnly: openRouterProvider?.only ?? null,
         allowFallbacks: openRouterProvider?.allow_fallbacks ?? null,
+        requireParameters: openRouterProvider?.require_parameters ?? null,
+        providerSort: openRouterProvider?.sort ?? null,
         preferredMaxLatency: openRouterProvider?.preferred_max_latency ?? null,
         preferredMinThroughput:
           openRouterProvider?.preferred_min_throughput ?? null,
@@ -331,7 +339,10 @@ export function useHuntRun({
         engineId: engine.id,
         inputChars: inputText.length,
         providerOrder: openRouterProvider?.order ?? null,
+        providerOnly: openRouterProvider?.only ?? null,
         allowFallbacks: openRouterProvider?.allow_fallbacks ?? null,
+        requireParameters: openRouterProvider?.require_parameters ?? null,
+        providerSort: openRouterProvider?.sort ?? null,
         preferredMaxLatency: openRouterProvider?.preferred_max_latency ?? null,
         preferredMinThroughput:
           openRouterProvider?.preferred_min_throughput ?? null,
@@ -343,6 +354,11 @@ export function useHuntRun({
       if (e instanceof OpenRouterInsufficientCreditsError) {
         setKeyCreditsNotice(KEY_CREDITS_NOTICE)
         setStep("key")
+        return
+      }
+      if (e instanceof OpenRouterLatencyTimeoutError) {
+        setLastError(OPENROUTER_LATENCY_NOTICE)
+        setStep("input")
         return
       }
       setLastError(e instanceof Error ? e.message : "Something went wrong.")

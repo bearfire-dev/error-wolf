@@ -30,7 +30,8 @@ function sumDefined(values: Array<number | undefined>): number | undefined {
 function preferredProviderSlug(
   provider: OpenRouterProviderPreferences | undefined
 ): string | null {
-  return provider?.order?.[0]?.trim().toLowerCase() ?? null
+  const preferred = provider?.order?.[0] ?? provider?.only?.[0]
+  return preferred?.trim().toLowerCase() ?? null
 }
 
 function endpointForCost(

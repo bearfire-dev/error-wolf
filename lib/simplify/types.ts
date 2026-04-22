@@ -52,12 +52,22 @@ export type OpenRouterPercentilePreferenceMap = Partial<{
   p99: number
 }>
 
+export type OpenRouterProviderSortConfig = {
+  by: "price" | "throughput" | "latency"
+  partition?: string
+}
+
+export type OpenRouterProviderSort =
+  | OpenRouterProviderSortConfig["by"]
+  | OpenRouterProviderSortConfig
+
 export type OpenRouterProviderPreferences = {
   order?: string[]
   allow_fallbacks?: boolean
-  sort?: string | { by: string; partition?: string }
+  sort?: OpenRouterProviderSort
   only?: string[]
   ignore?: string[]
+  require_parameters?: boolean
   preferred_min_throughput?: number | OpenRouterPercentilePreferenceMap
   preferred_max_latency?: number | OpenRouterPercentilePreferenceMap
 }
