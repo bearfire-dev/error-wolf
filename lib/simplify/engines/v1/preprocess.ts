@@ -193,8 +193,10 @@ function compactErrorHeadline(line: string): string {
   return compacted || line.trim()
 }
 
+/** `Set` keeps insertion order and the first occurrence, matching the old
+ * `indexOf` filter exactly while dropping its quadratic scan. */
 function uniqueStrings(values: string[]): string[] {
-  return values.filter((value, index) => values.indexOf(value) === index)
+  return [...new Set(values)]
 }
 
 function compactList(values: string[], limit: number): string[] {
@@ -327,6 +329,11 @@ export function preprocessV1Input(input: string): V1PreprocessResult {
   const diagnosticSummaries: DiagnosticSummary[] = []
   const contextTags: string[] = []
   const contextTools: string[] = []
+  // Parallel membership sets. The ordered arrays still drive output; these keep
+  // the "have I seen this?" check O(1) instead of scanning a list that grows
+  // once per distinct line prefix.
+  const contextTagSet = new Set<string>()
+  const contextToolSet = new Set<string>()
 
   let removedEmptyCount = 0
   let removedDividerCount = 0
@@ -349,11 +356,8 @@ export function preprocessV1Input(input: string): V1PreprocessResult {
     const stripped = stripLogPrefix(trimmed)
     const tagMatch = trimmed.match(/^\[([^\]]+)\]/)
     const tag = tagMatch?.[1]?.trim().toLowerCase() ?? null
-    if (
-      tag &&
-      !LOW_SIGNAL_CONTEXT_TAGS.has(tag) &&
-      !contextTags.includes(tag)
-    ) {
+    if (tag && !LOW_SIGNAL_CONTEXT_TAGS.has(tag) && !contextTagSet.has(tag)) {
+      contextTagSet.add(tag)
       contextTags.push(tag)
     }
 
@@ -383,7 +387,8 @@ export function preprocessV1Input(input: string): V1PreprocessResult {
     const failureSignal = parseFailureSignal(stripped)
     if (failureSignal) {
       failureSignals.push(failureSignal)
-      if (failureSignal.tool && !contextTools.includes(failureSignal.tool)) {
+      if (failureSignal.tool && !contextToolSet.has(failureSignal.tool)) {
+        contextToolSet.add(failureSignal.tool)
         contextTools.push(failureSignal.tool)
       }
       continue
@@ -394,8 +399,9 @@ export function preprocessV1Input(input: string): V1PreprocessResult {
       diagnosticSummaries.push(diagnosticSummary)
       if (
         diagnosticSummary.tool &&
-        !contextTools.includes(diagnosticSummary.tool)
+        !contextToolSet.has(diagnosticSummary.tool)
       ) {
+        contextToolSet.add(diagnosticSummary.tool)
         contextTools.push(diagnosticSummary.tool)
       }
       continue
@@ -460,7 +466,10 @@ export function preprocessV1Input(input: string): V1PreprocessResult {
 
   const contextParts = [
     contextTools.length > 0 ? contextTools.slice(0, 3).join("/") : null,
-    contextTags.length > 0 ? contextTags.join("/") : null,
+    // Capped like contextTools above it. A timestamp-prefixed log yields one
+    // distinct tag per line, and every one of them shipped into the CTX line of
+    // every prompt.
+    contextTags.length > 0 ? compactList(contextTags, 6).join("/") : null,
     frames.find((frame) => frame.location?.startsWith("src/"))?.location ??
       frames[0]?.location ??
       null,

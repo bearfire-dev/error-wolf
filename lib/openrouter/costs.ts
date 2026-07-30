@@ -37,7 +37,8 @@ function preferredProviderSlug(
 function endpointForCost(
   endpoints: OpenRouterPublicEndpoint[] | undefined,
   modelId: string,
-  providerSlug: string | null
+  providerSlug: string | null,
+  resolvedProviderName?: string | null
 ): OpenRouterPublicEndpoint | null {
   if (!endpoints || endpoints.length === 0) return null
 
@@ -45,6 +46,18 @@ function endpointForCost(
     (endpoint) => endpoint.model_id === modelId
   )
   const scoped = modelMatches.length > 0 ? modelMatches : endpoints
+
+  // The provider that actually served wins over the one we asked for. Match on
+  // the display name OpenRouter reports in-stream ("Cerebras") before falling
+  // back to the slug derived from the request shortlist.
+  const servedName = resolvedProviderName?.trim().toLowerCase()
+  if (servedName) {
+    const servedMatch = scoped.find(
+      (endpoint) => endpoint.provider_name?.trim().toLowerCase() === servedName
+    )
+    if (servedMatch) return servedMatch
+  }
+
   if (providerSlug) {
     const providerMatch = scoped.find(
       (endpoint) => endpointProviderSlug(endpoint) === providerSlug
@@ -60,16 +73,19 @@ export function buildOpenRouterCostSpan(params: {
   modelId: string
   usage: OpenRouterUsage | null
   provider?: OpenRouterProviderPreferences
+  /** Provider that actually served, per the stream. Beats the requested list. */
+  resolvedProviderName?: string | null
   endpoints?: OpenRouterPublicEndpoint[]
 }): SimplifyRunCostSpan {
   const providerSlug = preferredProviderSlug(params.provider)
   const endpoint = endpointForCost(
     params.endpoints,
     params.modelId,
-    providerSlug
+    providerSlug,
+    params.resolvedProviderName
   )
-  const promptPrice = parseUnitPrice(endpoint?.pricing.prompt)
-  const completionPrice = parseUnitPrice(endpoint?.pricing.completion)
+  const promptPrice = parseUnitPrice(endpoint?.pricing?.prompt)
+  const completionPrice = parseUnitPrice(endpoint?.pricing?.completion)
   const promptTokens = params.usage?.promptTokens
   const completionTokens = params.usage?.completionTokens
 
@@ -94,9 +110,11 @@ export function buildOpenRouterCostSpan(params: {
     stepId: params.stepId,
     requestId: params.requestId,
     modelId: params.modelId,
-    providerSlug:
-      providerSlug ?? (endpoint ? endpointProviderSlug(endpoint) : null),
-    providerName: endpoint?.provider_name ?? null,
+    // Report the endpoint we actually priced against, so the slug and the name
+    // always describe the same provider.
+    providerSlug: endpoint ? endpointProviderSlug(endpoint) : providerSlug,
+    providerName:
+      endpoint?.provider_name ?? params.resolvedProviderName ?? null,
     promptTokens,
     completionTokens,
     totalTokens: params.usage?.totalTokens,

@@ -3,7 +3,18 @@ import {
   summarizeRunCosts,
 } from "@/lib/openrouter/costs"
 import type { OpenRouterPublicEndpoint } from "@/lib/openrouter/endpoints-types"
-import { runStreamingCompletion } from "@/lib/simplify/openrouter-client"
+import {
+  isRetryableOpenRouterError,
+  runStreamingCompletion,
+} from "@/lib/simplify/openrouter-client"
+import {
+  backoffDelayMs,
+  sleepUnlessAborted,
+} from "@/lib/simplify/retry-backoff"
+import {
+  SOLO_FIRST_TOKEN_TIMEOUT_MS,
+  streamTimeoutsFor,
+} from "@/lib/simplify/stream-timeouts"
 import type {
   SimplifyRunOptions,
   SimplifyThroughputReporter,
@@ -65,7 +76,6 @@ async function runV1AnalysisBranch(params: {
   progress: ReturnType<typeof createV1ProgressTracker>
   variant: (typeof V1_ANALYSIS_PROMPT_VARIANTS)[number]
   provider?: SimplifyRunOptions["provider"]
-  providerLatencyPolicy?: SimplifyRunOptions["providerLatencyPolicy"]
   providerEndpoints?: OpenRouterPublicEndpoint[]
   onChunk?: SimplifyThroughputReporter
 }): Promise<V1AnalysisBranchResult | null> {
@@ -78,7 +88,6 @@ async function runV1AnalysisBranch(params: {
     progress,
     variant,
     provider,
-    providerLatencyPolicy,
     onChunk,
   } = params
   const attemptDurationsMs: number[] = []
@@ -102,7 +111,11 @@ async function runV1AnalysisBranch(params: {
         },
         {
           onChunk: (delta) => onChunk?.(variant.id, delta.length, nowMs()),
-          latencyPolicy: providerLatencyPolicy,
+          // No hedge here. Hedging hides first-token latency on a serial critical
+          // path; these three branches already run in parallel, so hedging only
+          // triples request volume against the same provider shortlist.
+          latencyPolicy: undefined,
+          timeouts: streamTimeoutsFor(false),
         }
       )
       const costSpan = buildOpenRouterCostSpan({
@@ -111,6 +124,7 @@ async function runV1AnalysisBranch(params: {
         modelId: result.modelId,
         usage: result.usage,
         provider: result.resolvedProvider ?? provider,
+        resolvedProviderName: result.resolvedProviderName,
         endpoints: params.providerEndpoints,
       })
 
@@ -133,11 +147,12 @@ async function runV1AnalysisBranch(params: {
       if (isAbortError(error)) throw error
 
       const message = errorMessage(error)
-      if (attempt <= maxRetries) {
+      if (attempt <= maxRetries && isRetryableOpenRouterError(error)) {
         progress.retry(
           variant.id,
           `${variant.label} / retry ${attempt}/${maxRetries}`
         )
+        await sleepUnlessAborted(backoffDelayMs(attempt, error), signal)
         continue
       }
 
@@ -197,6 +212,8 @@ async function runV1Synthesis(params: {
         {
           onChunk: (delta) => onChunk?.("synthesis", delta.length, nowMs()),
           latencyPolicy: providerLatencyPolicy,
+          timeouts: streamTimeoutsFor(Boolean(providerLatencyPolicy)),
+          soloFirstTokenMs: SOLO_FIRST_TOKEN_TIMEOUT_MS,
         }
       )
       const costSpan = buildOpenRouterCostSpan({
@@ -205,6 +222,7 @@ async function runV1Synthesis(params: {
         modelId: result.modelId,
         usage: result.usage,
         provider: result.resolvedProvider ?? provider,
+        resolvedProviderName: result.resolvedProviderName,
         endpoints: params.providerEndpoints,
       })
 
@@ -225,11 +243,12 @@ async function runV1Synthesis(params: {
       if (isAbortError(error)) throw error
 
       const message = errorMessage(error)
-      if (attempt <= maxRetries) {
+      if (attempt <= maxRetries && isRetryableOpenRouterError(error)) {
         progress.retry(
           "synthesis",
           `merging compact variants / retry ${attempt}/${maxRetries}`
         )
+        await sleepUnlessAborted(backoffDelayMs(attempt, error), signal)
         continue
       }
 
@@ -289,7 +308,6 @@ export async function runV1Pipeline(
           progress,
           variant,
           provider,
-          providerLatencyPolicy,
           providerEndpoints,
           onChunk,
         })
@@ -298,7 +316,13 @@ export async function runV1Pipeline(
   ).filter((analysis): analysis is V1AnalysisBranchResult => analysis !== null)
 
   if (analyses.length === 0) {
-    const message = "All compression passes failed. Nothing to merge."
+    // Carry the upstream reason forward. On its own, "all passes failed" tells
+    // the user nothing about whether the key, the credits, or the provider is
+    // at fault — and every branch failed for the same reason.
+    const cause = warnings.at(-1)?.message
+    const message = cause
+      ? `All compression passes failed: ${cause}`
+      : "All compression passes failed. Nothing to merge."
     progress.fail("synthesis", message)
     throw new Error(message)
   }

@@ -139,11 +139,17 @@ export type OpenRouterTextResponse = {
   modelId: string
   usage: OpenRouterUsage | null
   resolvedProvider?: OpenRouterProviderPreferences
+  /** Provider that actually served the request, as reported in the stream. */
+  resolvedProviderName?: string | null
 }
 
 export type OpenRouterTextStreamEvent =
   | { type: "delta"; text: string }
   | { type: "usage"; usage: OpenRouterUsage }
+  /** Upstream error delivered inside the stream rather than as an HTTP status. */
+  | { type: "error"; message: string; code: number | null }
+  /** Identity of the generation, emitted from the first payload of a stream. */
+  | { type: "meta"; id?: string; model?: string; provider?: string }
 
 export type OpenRouterTextStream = {
   stream: AsyncIterable<OpenRouterTextStreamEvent>

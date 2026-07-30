@@ -1,0 +1,8 @@
+# Postinstall scripts pnpm is allowed to run. Without these, `pnpm <script>`
+# aborts on its dependency-status check. esbuild backs Vitest, sharp backs Next
+# image optimization, and @sentry/cli uploads source maps at build time.
+allowBuilds:
+  "@sentry/cli": true
+  esbuild: true
+  msw: false
+  sharp: true

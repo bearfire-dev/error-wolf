@@ -41,7 +41,11 @@ export function buildRasterSvg(rawSvg: string, pathFill: string): string {
  * reach the image edge through low-alpha seams stay transparent
  * (area outside the logo).
  */
-function fillInteriorHolesBlack(rgba: Uint8Array, width: number, height: number) {
+function fillInteriorHolesBlack(
+  rgba: Uint8Array,
+  width: number,
+  height: number
+) {
   const pix = width * height
   const exterior = new Uint8Array(pix)
   const stack: number[] = []

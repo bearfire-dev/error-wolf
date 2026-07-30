@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { estimateFastestProvider } from "@/lib/openrouter/estimate-fastest-provider"
 import type { FastestProviderEstimate } from "@/lib/openrouter/estimate-fastest-provider"
@@ -28,6 +28,12 @@ import type {
 // Keep provider metadata fresh enough for interactive sessions without
 // hammering the public endpoints API on every keystroke.
 const REFRESH_MS = 90 * 1000
+
+/** Debounce for tab-focus refreshes, so alt-tabbing does not spam OpenRouter. */
+const VISIBILITY_REFRESH_MIN_MS = 10 * 1000
+
+/** A bad key fails every refresh forever; log it at most this often. */
+const ERROR_LOG_THROTTLE_MS = 5 * 60 * 1000
 const ROUTING_PERCENTILE: PercentileKey = "p90"
 const MAX_PROVIDER_ORDER = 4
 const SMALL_REQUEST_MAX_TOKENS = 3500
@@ -300,34 +306,56 @@ export function useOpenRouterProviderRouting({
   const active =
     enabled && Boolean(apiKey.trim()) && Boolean(routingModelId.trim())
 
-  const refresh = useCallback(async () => {
-    const key = apiKey.trim()
-    const model = routingModelId.trim()
-    if (!enabled || !key || !model) return
+  /** Monotonic sequence: only the newest launched request may commit state. */
+  const requestSeqRef = useRef(0)
+  const lastRefreshAtRef = useRef(0)
+  const lastErrorLoggedAtRef = useRef(0)
 
-    const result = await fetchModelEndpointsDirect(key, model)
+  const refresh = useCallback(
+    async (signal?: AbortSignal) => {
+      const key = apiKey.trim()
+      const model = routingModelId.trim()
+      if (!enabled || !key || !model) return
 
-    if (!result.ok) {
-      console.error("[hunt] OpenRouter provider rankings refresh failed", {
-        code: result.error.code,
-        httpStatus: result.error.httpStatus ?? null,
-        message: result.error.message,
+      requestSeqRef.current += 1
+      const seq = requestSeqRef.current
+      lastRefreshAtRef.current = Date.now()
+
+      const result = await fetchModelEndpointsDirect(key, model, signal)
+
+      // A slow response for a previous model must not clobber a fresh one: the
+      // stale shortlist would go out as `only: [...]` with `require_parameters`,
+      // and OpenRouter rejects that outright.
+      if (signal?.aborted || seq !== requestSeqRef.current) return
+
+      if (!result.ok) {
+        // Throttled: with a bad key this fires every REFRESH_MS forever.
+        const now = Date.now()
+        if (now - lastErrorLoggedAtRef.current > ERROR_LOG_THROTTLE_MS) {
+          lastErrorLoggedAtRef.current = now
+          console.error("[hunt] OpenRouter provider rankings refresh failed", {
+            code: result.error.code,
+            httpStatus: result.error.httpStatus ?? null,
+            message: result.error.message,
+            model,
+          })
+        }
+        // Keep the last good rankings. Clearing them drops provider routing for
+        // the whole session over what is usually one transient blip.
+        setError(result.error.message)
+        return
+      }
+
+      setEndpoints(result.data.endpoints)
+      setLastUpdated(Date.now())
+      setError(null)
+      console.info("[hunt] OpenRouter provider rankings refreshed", {
         model,
+        endpointCount: result.data.endpoints.length,
       })
-      setEndpoints([])
-      setLastUpdated(null)
-      setError(result.error.message)
-      return
-    }
-
-    setEndpoints(result.data.endpoints)
-    setLastUpdated(Date.now())
-    setError(null)
-    console.info("[hunt] OpenRouter provider rankings refreshed", {
-      model,
-      endpointCount: result.data.endpoints.length,
-    })
-  }, [apiKey, enabled, routingModelId])
+    },
+    [apiKey, enabled, routingModelId]
+  )
 
   const endpointsView = useMemo(
     () => (active ? endpoints : EMPTY_ENDPOINTS),
@@ -434,35 +462,42 @@ export function useOpenRouterProviderRouting({
     ]
   )
 
+  // Mount, interval, and visibility all funnel through one controller so an
+  // in-flight request is actually aborted on unmount — the old `cancelled` flag
+  // only stopped new launches, and let stale responses commit state afterwards.
   useEffect(() => {
     if (!active) return
 
-    let cancelled = false
+    const controller = new AbortController()
     const run = () => {
-      if (!cancelled) void refresh()
+      if (controller.signal.aborted) return
+      void refresh(controller.signal)
     }
 
     const initial = window.setTimeout(run, 0)
-    const id = window.setInterval(run, REFRESH_MS)
+
+    const onInterval = () => {
+      // A hidden tab has no one to show rankings to.
+      if (document.visibilityState !== "visible") return
+      run()
+    }
+    const id = window.setInterval(onInterval, REFRESH_MS)
+
+    const onVisibility = () => {
+      if (document.visibilityState !== "visible") return
+      if (Date.now() - lastRefreshAtRef.current < VISIBILITY_REFRESH_MIN_MS) {
+        return
+      }
+      run()
+    }
+    document.addEventListener("visibilitychange", onVisibility)
 
     return () => {
-      cancelled = true
+      controller.abort()
       window.clearTimeout(initial)
       window.clearInterval(id)
+      document.removeEventListener("visibilitychange", onVisibility)
     }
-  }, [active, refresh])
-
-  useEffect(() => {
-    if (!active) return
-
-    const onVis = () => {
-      if (document.visibilityState === "visible") {
-        window.setTimeout(() => void refresh(), 0)
-      }
-    }
-
-    document.addEventListener("visibilitychange", onVis)
-    return () => document.removeEventListener("visibilitychange", onVis)
   }, [active, refresh])
 
   useEffect(() => {

@@ -93,6 +93,15 @@ const ProcessingReplayPanel = dynamic(loadProcessingReplayPanel, {
 const loadProcessingDag = () =>
   import("./processing-dag").then((m) => m.ProcessingDag)
 
+/**
+ * Why `[ hunt ]` is unavailable. `null` means it is available.
+ * `estimating` is transient; `nothing-usable` needs telling the user about.
+ */
+type CompressBlockReason = "estimating" | "nothing-usable" | null
+
+const COMPRESS_BLOCK_NOTICE =
+  "nothing usable left after cleanup — this paste is only dividers, blank lines, or dev-server banners"
+
 export function HuntClient({
   stackTraceExamples,
   initialHasOpenRouterKey,
@@ -226,13 +235,33 @@ export function HuntClient({
     goToProcessingReplay,
   ])
 
+  // Storage reads belong in an effect, not in render. `stats` is recomputed from
+  // the same history whenever it changes, so this refreshes exactly then —
+  // instead of parsing the whole history on every keystroke as it used to.
+  const [recentEntries, setRecentEntries] = useState<RecentSimplifyResult[]>([])
+  const sessionStats = session.stats
+  useEffect(() => {
+    setRecentEntries(getRecentResults())
+  }, [sessionStats])
+
   const processingStepIndicatorClickable =
     replayHasData &&
     (session.step === "output" ||
       (session.step === "processing" && revisitProcessingFromOutput))
 
-  const autoCompressBlocked =
-    selectedModelRouteId === "auto" && routingEstimate.inputTokens === null
+  // A pending estimate must never latch the button off. `resolveHuntModelRoute`
+  // already falls back to the fuller v1 engine when `inputTokens` is null, so
+  // "still estimating" is safe to run — it is only cosmetic. The button is
+  // blocked solely when the estimate has settled and says the paste cleans up
+  // to nothing, which is the one case where running really would be pointless.
+  const compressBlockReason: CompressBlockReason =
+    inputs.input.rawInput.trim().length === 0 ||
+    selectedModelRouteId !== "auto" ||
+    routingEstimate.inputTokens !== null
+      ? null
+      : routingEstimate.estimating
+        ? "estimating"
+        : "nothing-usable"
 
   useEffect(() => {
     if (session.step !== "key") {
@@ -305,7 +334,7 @@ export function HuntClient({
               onSimplify={() => void run.simplify()}
               onEditKey={() => setStep("key")}
               keyOk={session.keyOk}
-              compressBlocked={autoCompressBlocked}
+              compressBlockReason={compressBlockReason}
               onPreloadStackTraceExamples={() =>
                 void loadStackTraceExamplesDialog()
               }
@@ -355,11 +384,23 @@ export function HuntClient({
               run.replay &&
               run.replay.frames.length > 0
             ) && (
-              <ProcessingStep
-                progress={run.progress}
-                dag={run.activeRunDag ?? resolvedEngine.dag}
-                bus={run.throughputBus}
-              />
+              <div className="relative flex h-full min-h-0 flex-1 flex-col pb-16">
+                <ProcessingStep
+                  progress={run.progress}
+                  dag={run.activeRunDag ?? resolvedEngine.dag}
+                  bus={run.throughputBus}
+                />
+                <div className="pointer-events-auto absolute bottom-4 left-4 z-10 flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={run.cancelling}
+                    onClick={run.cancelRun}
+                  >
+                    {run.cancelling ? "[ stopping ]" : "[ cancel ]"}
+                  </Button>
+                </div>
+              </div>
             )}
 
           {session.step === "output" && session.stats.current && (
@@ -379,6 +420,7 @@ export function HuntClient({
 
       <StatsStrip
         stats={session.stats}
+        recentEntries={recentEntries}
         step={session.step}
         tokenStatsPendingForId={run.tokenStatsPendingForId}
       />
@@ -651,7 +693,7 @@ function InputStep({
   onSimplify,
   onEditKey,
   keyOk,
-  compressBlocked,
+  compressBlockReason,
   onPreloadStackTraceExamples,
   onPreloadProcessingDag,
   smartSubmit,
@@ -669,7 +711,7 @@ function InputStep({
   onSimplify: () => void
   onEditKey: () => void
   keyOk: boolean
-  compressBlocked: boolean
+  compressBlockReason: CompressBlockReason
   onPreloadStackTraceExamples: () => void
   onPreloadProcessingDag: () => void
   smartSubmit: boolean
@@ -677,8 +719,12 @@ function InputStep({
 }) {
   const pendingSmartSubmitPasteRef = useRef(false)
 
+  // "estimating" stays runnable: routing falls back to v1 without a token
+  // count, so a slow or stalled estimate must not strand the user.
   const canCompress =
-    !disabled && rawInput.trim().length > 0 && !compressBlocked
+    !disabled &&
+    rawInput.trim().length > 0 &&
+    compressBlockReason !== "nothing-usable"
 
   useEffect(() => {
     if (!smartSubmit) {
@@ -754,6 +800,15 @@ function InputStep({
         </p>
       )}
 
+      {!lastError && compressBlockReason === "nothing-usable" && (
+        <p
+          role="alert"
+          className="shrink-0 font-mono text-[0.6875rem] tracking-wider text-muted-foreground uppercase"
+        >
+          [skip] {COMPRESS_BLOCK_NOTICE}
+        </p>
+      )}
+
       <div className="flex w-full min-w-0 shrink-0 flex-col gap-2">
         <div className="flex w-full min-w-0 items-center justify-between gap-x-4">
           <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
@@ -763,7 +818,7 @@ function InputStep({
               onClick={onSimplify}
               onPointerEnter={onPreloadProcessingDag}
             >
-              [ hunt ]
+              {compressBlockReason === "estimating" ? "[ … ]" : "[ hunt ]"}
             </Button>
             <span className="font-mono text-[0.625rem] tracking-wider text-muted-foreground uppercase">
               shift+enter
@@ -1140,10 +1195,12 @@ function savingsVersusReference(
 
 function StatsStrip({
   stats,
+  recentEntries,
   step,
   tokenStatsPendingForId,
 }: {
   stats: SimplifyStats
+  recentEntries: RecentSimplifyResult[]
   step: HuntStep
   tokenStatsPendingForId: string | null
 }) {
@@ -1160,7 +1217,6 @@ function StatsStrip({
     }
     prevStepRef.current = step
   }, [step])
-  const recentEntries = getRecentResults()
   const row = viewRun ? stats.current : stats.all
   if (!row) return null
 

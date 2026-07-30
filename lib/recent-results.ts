@@ -7,7 +7,7 @@ import {
   type SimplifyEngineId,
 } from "@/lib/simplify/engines/types"
 
-/** Current persistence: localStorage, up to 1024 items, 30-day retention. */
+/** Current persistence: localStorage, up to `MAX_ITEMS` rows, 30-day retention. */
 export const RECENT_RESULTS_STORAGE_KEY = "error-wolf:recent-results-v2"
 
 /** Pre-rename localStorage key (migrated on read). */
@@ -15,7 +15,12 @@ const LEGACY_LOCAL_V2_KEY = "better-errors:recent-results-v2"
 
 const LEGACY_SESSION_KEY = "better-errors:recent-results-v1"
 
-const MAX_ITEMS = 1024
+/**
+ * Every row holds a full model output, so this is a byte budget in disguise:
+ * 1024 rows routinely passed the ~5 MB origin quota, after which every write
+ * failed silently and history quietly stopped recording.
+ */
+const MAX_ITEMS = 200
 const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000
 
 export type RecentSimplifyResult = {
@@ -153,25 +158,104 @@ function migrateFromV1IfNeeded(): void {
   }
 }
 
+let migrationsRun = false
+
+/** Legacy-key migrations only matter once per session, not once per read. */
+function runMigrationsOnce(): void {
+  if (migrationsRun) return
+  migrationsRun = true
+  migrateFromLegacyLocalV2IfNeeded()
+  migrateFromV1IfNeeded()
+}
+
+/**
+ * Memoizes the parsed history against the exact stored string. Reads happen on
+ * every render of the stats strip, and parsing megabytes of JSON per render was
+ * a measurable part of the typing lag.
+ */
+let parseCache: { raw: string; parsed: RecentSimplifyResult[] } | null = null
+
+export type RecentResultsWriteStatus = "ok" | "quota" | "unavailable"
+
+let lastWriteStatus: RecentResultsWriteStatus = "ok"
+
+/** Whether the last persist attempt made it to storage. */
+export function getRecentResultsWriteStatus(): RecentResultsWriteStatus {
+  return lastWriteStatus
+}
+
+function isQuotaError(error: unknown): boolean {
+  if (typeof DOMException !== "undefined" && error instanceof DOMException) {
+    return (
+      error.name === "QuotaExceededError" ||
+      error.name === "NS_ERROR_DOM_QUOTA_REACHED"
+    )
+  }
+  return error instanceof Error && /quota/i.test(error.name + error.message)
+}
+
+/**
+ * Persists history, shedding the oldest half once on quota rather than dropping
+ * the write on the floor. Returns what actually landed in storage.
+ */
+function writeAll(entries: RecentSimplifyResult[]): RecentSimplifyResult[] {
+  if (typeof window === "undefined") {
+    lastWriteStatus = "unavailable"
+    return entries
+  }
+
+  const persist = (rows: RecentSimplifyResult[]) => {
+    const json = JSON.stringify(rows)
+    window.localStorage.setItem(RECENT_RESULTS_STORAGE_KEY, json)
+    parseCache = { raw: json, parsed: rows }
+  }
+
+  try {
+    persist(entries)
+    lastWriteStatus = "ok"
+    return entries
+  } catch (error) {
+    if (!isQuotaError(error)) {
+      lastWriteStatus = "unavailable"
+      return entries
+    }
+  }
+
+  const trimmed = entries.slice(0, Math.max(1, Math.floor(entries.length / 2)))
+  try {
+    persist(trimmed)
+    lastWriteStatus = "ok"
+    return trimmed
+  } catch {
+    lastWriteStatus = "quota"
+    return entries
+  }
+}
+
 function readAll(): RecentSimplifyResult[] {
   if (typeof window === "undefined") return []
   try {
-    migrateFromLegacyLocalV2IfNeeded()
-    migrateFromV1IfNeeded()
+    runMigrationsOnce()
     const raw = window.localStorage.getItem(RECENT_RESULTS_STORAGE_KEY)
     if (!raw) return []
+    if (parseCache?.raw === raw) return parseCache.parsed
     const parsed = JSON.parse(raw) as unknown
     if (!Array.isArray(parsed)) return []
-    const valid = parsed.filter(isRecentResult)
-    const normalized = normalize(valid)
-    const nextJson = JSON.stringify(normalized)
-    if (nextJson !== raw) {
-      window.localStorage.setItem(RECENT_RESULTS_STORAGE_KEY, nextJson)
-    }
+    // Normalizing on read must not write back: a read should stay a read, and
+    // this one runs inside React's render phase.
+    const normalized = normalize(parsed.filter(isRecentResult))
+    parseCache = { raw, parsed: normalized }
     return normalized
   } catch {
     return []
   }
+}
+
+/** Test seam: drops the in-process cache and the once-per-session migration flag. */
+export function resetRecentResultsCacheForTests(): void {
+  parseCache = null
+  migrationsRun = false
+  lastWriteStatus = "ok"
 }
 
 function isRecentResult(value: unknown): value is RecentSimplifyResult {
@@ -285,15 +369,7 @@ export function addRecentResult(
   }
   const prev = readAll()
   const next = normalize([row, ...prev.filter((r) => r.id !== id)])
-  try {
-    window.localStorage.setItem(
-      RECENT_RESULTS_STORAGE_KEY,
-      JSON.stringify(next)
-    )
-  } catch {
-    // ignore quota
-  }
-  return next
+  return writeAll(next)
 }
 
 export function updateRecentResultTokens(
@@ -360,15 +436,7 @@ export function updateRecentResultTokens(
         }
       : r
   )
-  try {
-    window.localStorage.setItem(
-      RECENT_RESULTS_STORAGE_KEY,
-      JSON.stringify(next)
-    )
-  } catch {
-    // ignore quota
-  }
-  return next
+  return writeAll(next)
 }
 
 export function clearRecentResults(): void {

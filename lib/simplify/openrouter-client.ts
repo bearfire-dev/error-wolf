@@ -29,6 +29,136 @@ export class OpenRouterLatencyTimeoutError extends Error {
   }
 }
 
+/** HTTP 429. Carries the server's own backoff hint when it sends one. */
+export class OpenRouterRateLimitError extends Error {
+  override readonly name = "OpenRouterRateLimitError"
+  readonly retryAfterMs: number | null
+
+  constructor(message: string, retryAfterMs: number | null) {
+    super(message)
+    this.retryAfterMs = retryAfterMs
+    Object.setPrototypeOf(this, new.target.prototype)
+  }
+}
+
+/**
+ * Whether retrying this failure could plausibly succeed. A bad key or a
+ * malformed request fails identically every time, and retrying it just burns
+ * the user's time across three analysis branches plus synthesis.
+ */
+export function isRetryableOpenRouterError(error: unknown): boolean {
+  if (error instanceof OpenRouterInsufficientCreditsError) return false
+  if (error instanceof OpenRouterTerminalRequestError) return false
+  return true
+}
+
+/** A 4xx that will fail the same way no matter how often it is retried. */
+export class OpenRouterTerminalRequestError extends Error {
+  override readonly name = "OpenRouterTerminalRequestError"
+  readonly status: number
+
+  constructor(message: string, status: number) {
+    super(message)
+    this.status = status
+    Object.setPrototypeOf(this, new.target.prototype)
+  }
+}
+
+const TERMINAL_HTTP_STATUSES = new Set([400, 401, 403, 404, 422])
+
+/** Parses `Retry-After`, which is either delta-seconds or an HTTP date. */
+function parseRetryAfterMs(headerValue: string | null): number | null {
+  if (!headerValue) return null
+  const trimmed = headerValue.trim()
+  if (!trimmed) return null
+
+  const seconds = Number(trimmed)
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return Math.round(seconds * 1000)
+  }
+
+  const at = Date.parse(trimmed)
+  if (Number.isNaN(at)) return null
+  return Math.max(0, at - Date.now())
+}
+
+export type OpenRouterStreamTimeoutKind = "first_token" | "idle" | "total"
+
+/** A streaming request that exceeded one of its watchdog budgets. */
+export class OpenRouterStreamTimeoutError extends Error {
+  override readonly name = "OpenRouterStreamTimeoutError"
+  readonly kind: OpenRouterStreamTimeoutKind
+
+  constructor(kind: OpenRouterStreamTimeoutKind, message: string) {
+    super(message)
+    this.kind = kind
+    Object.setPrototypeOf(this, new.target.prototype)
+  }
+}
+
+const STREAM_TIMEOUT_MESSAGES: Record<OpenRouterStreamTimeoutKind, string> = {
+  first_token: "OpenRouter did not send a first token in time.",
+  idle: "OpenRouter stopped sending output mid-stream.",
+  total: "OpenRouter request exceeded its time budget.",
+}
+
+function streamTimeoutError(
+  kind: OpenRouterStreamTimeoutKind
+): OpenRouterStreamTimeoutError {
+  return new OpenRouterStreamTimeoutError(kind, STREAM_TIMEOUT_MESSAGES[kind])
+}
+
+export type OpenRouterStreamTimeouts = {
+  firstTokenMs?: number
+  idleMs?: number
+  totalMs?: number
+}
+
+/**
+ * Single-timer watchdog for one streaming request. `kick()` is called on every
+ * delta and switches the budget from first-token to idle, so a slow start and a
+ * mid-stream stall are distinguishable without extra flags.
+ */
+function createStreamWatchdog(params: {
+  timeouts: OpenRouterStreamTimeouts | undefined
+  onExpire: (kind: OpenRouterStreamTimeoutKind) => void
+}): { kick: () => void; dispose: () => void } {
+  const { firstTokenMs, idleMs, totalMs } = params.timeouts ?? {}
+  let stageTimer: ReturnType<typeof setTimeout> | null = null
+  let totalTimer: ReturnType<typeof setTimeout> | null = null
+  let disposed = false
+
+  const armStage = (
+    ms: number | undefined,
+    kind: OpenRouterStreamTimeoutKind
+  ) => {
+    if (stageTimer !== null) clearTimeout(stageTimer)
+    stageTimer = null
+    if (disposed || ms === undefined || !Number.isFinite(ms) || ms <= 0) return
+    stageTimer = setTimeout(() => {
+      if (!disposed) params.onExpire(kind)
+    }, ms)
+  }
+
+  armStage(firstTokenMs, "first_token")
+  if (totalMs !== undefined && Number.isFinite(totalMs) && totalMs > 0) {
+    totalTimer = setTimeout(() => {
+      if (!disposed) params.onExpire("total")
+    }, totalMs)
+  }
+
+  return {
+    kick: () => armStage(idleMs, "idle"),
+    dispose: () => {
+      disposed = true
+      if (stageTimer !== null) clearTimeout(stageTimer)
+      if (totalTimer !== null) clearTimeout(totalTimer)
+      stageTimer = null
+      totalTimer = null
+    },
+  }
+}
+
 const OPENROUTER_CHAT_COMPLETIONS_URL =
   "https://openrouter.ai/api/v1/chat/completions"
 
@@ -400,9 +530,52 @@ async function parseOpenRouterFailure(response: Response): Promise<{
   }
 }
 
+/** Parses one SSE payload, returning `undefined` rather than throwing on junk. */
+function safeParseJson(payload: string): unknown | undefined {
+  try {
+    return JSON.parse(payload) as unknown
+  } catch {
+    console.warn(
+      "[openrouter] skipping malformed stream frame",
+      payload.slice(0, 200)
+    )
+    return undefined
+  }
+}
+
+function extractStreamMeta(
+  payload: unknown
+): Extract<OpenRouterTextStreamEvent, { type: "meta" }> | null {
+  if (!payload || typeof payload !== "object") return null
+  const record = payload as Record<string, unknown>
+  const id = typeof record.id === "string" ? record.id : undefined
+  const model = typeof record.model === "string" ? record.model : undefined
+  const provider =
+    typeof record.provider === "string" ? record.provider : undefined
+  if (!id && !model && !provider) return null
+  return { type: "meta", id, model, provider }
+}
+
 function* eventsForPayload(
-  parsed: unknown
+  parsed: unknown,
+  emitMeta: boolean
 ): Generator<OpenRouterTextStreamEvent> {
+  if (emitMeta) {
+    const meta = extractStreamMeta(parsed)
+    if (meta) yield meta
+  }
+
+  // OpenRouter can report a failure mid-stream instead of as an HTTP status.
+  const errorMessage = extractErrorMessage(parsed)
+  if (errorMessage) {
+    yield {
+      type: "error",
+      message: errorMessage,
+      code: extractErrorCode(parsed),
+    }
+    return
+  }
+
   const delta = extractStreamDeltaText(parsed)
   if (delta) yield { type: "delta", text: delta }
   const usage = extractUsage(parsed)
@@ -416,36 +589,57 @@ async function* parseServerSentEvents(
   const decoder = new TextDecoder()
   let buffer = ""
   let eventData: string[] = []
+  let sawFirstPayload = false
 
-  while (true) {
-    const { done, value } = await reader.read()
-    buffer += decoder.decode(value, { stream: !done })
+  /** Yields one accumulated `data:` block, if it holds anything meaningful. */
+  function* flushEvent(): Generator<OpenRouterTextStreamEvent> {
+    const payload = eventData.join("\n").trim()
+    eventData = []
+    if (!payload || payload === "[DONE]") return
+    const parsed = safeParseJson(payload)
+    if (parsed === undefined) return
+    const emitMeta = !sawFirstPayload
+    sawFirstPayload = true
+    yield* eventsForPayload(parsed, emitMeta)
+  }
 
-    const lines = buffer.split(/\r?\n/)
-    buffer = lines.pop() ?? ""
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      buffer += decoder.decode(value, { stream: !done })
 
-    for (const line of lines) {
-      if (!line) {
-        const payload = eventData.join("\n").trim()
-        eventData = []
-        if (!payload || payload === "[DONE]") continue
-        const parsed = JSON.parse(payload) as unknown
-        for (const event of eventsForPayload(parsed)) yield event
-        continue
+      const lines = buffer.split(/\r?\n/)
+      buffer = lines.pop() ?? ""
+
+      for (const line of lines) {
+        if (!line) {
+          yield* flushEvent()
+          continue
+        }
+
+        if (line.startsWith("data:")) {
+          eventData.push(line.slice(5).trimStart())
+        }
       }
 
-      if (line.startsWith("data:")) {
-        eventData.push(line.slice(5).trimStart())
+      if (done) {
+        // A final frame may arrive with no terminating blank line.
+        if (buffer.startsWith("data:")) {
+          eventData.push(buffer.slice(5).trimStart())
+        }
+        buffer = ""
+        yield* flushEvent()
+        return
       }
     }
-
-    if (done) {
-      const payload = eventData.join("\n").trim()
-      if (payload && payload !== "[DONE]") {
-        const parsed = JSON.parse(payload) as unknown
-        for (const event of eventsForPayload(parsed)) yield event
-      }
-      return
+  } finally {
+    // Releases the connection when a consumer exits the loop early, which the
+    // hedged path does as soon as a losing leg is identified.
+    try {
+      reader.releaseLock()
+      await body.cancel()
+    } catch {
+      // Already closed or errored; nothing to release.
     }
   }
 }
@@ -481,7 +675,14 @@ async function fetchOpenRouterResponse(params: {
       await parseOpenRouterFailure(response)
     const requestError = insufficientCredits
       ? new OpenRouterInsufficientCreditsError(message)
-      : new Error(message)
+      : response.status === 429
+        ? new OpenRouterRateLimitError(
+            message,
+            parseRetryAfterMs(response.headers.get("retry-after"))
+          )
+        : TERMINAL_HTTP_STATUSES.has(response.status)
+          ? new OpenRouterTerminalRequestError(message, response.status)
+          : new Error(message)
     console.error(`[openrouter] ${logPrefix}`, requestError, {
       ...requestDebugMeta(request),
       status: response.status,
@@ -531,6 +732,26 @@ async function fetchOpenRouterStreamResponse(
   }
 
   return { response, startedAtMs }
+}
+
+/**
+ * OpenRouter returns `x-generation-id`, and its `access-control-expose-headers`
+ * lists only `X-Generation-Id`, `X-Provider-Name`, and `cf-ray`. `x-request-id`
+ * is neither sent nor readable cross-origin, so it is not consulted here — the
+ * in-band `id` from the stream payload is the primary source.
+ */
+function streamRequestIdFromHeaders(response: Response): string | null {
+  return response.headers.get("x-generation-id")
+}
+
+/** Maps an in-stream error frame to the same error types as an HTTP failure. */
+function streamErrorToThrowable(
+  event: Extract<OpenRouterTextStreamEvent, { type: "error" }>
+): Error {
+  if (event.code === 402) {
+    return new OpenRouterInsufficientCreditsError(event.message)
+  }
+  return new Error(event.message)
 }
 
 function createLinkedAbortController(signal?: AbortSignal): {
@@ -593,9 +814,13 @@ export async function generateOpenRouterText(
 }
 
 export async function streamOpenRouterText(
-  request: OpenRouterTextRequest
+  request: OpenRouterTextRequest,
+  signal = request.signal
 ): Promise<OpenRouterTextStream> {
-  const { response, startedAtMs } = await fetchOpenRouterStreamResponse(request)
+  const { response, startedAtMs } = await fetchOpenRouterStreamResponse(
+    request,
+    signal
+  )
 
   return {
     stream: parseServerSentEvents(response.body!),
@@ -607,6 +832,13 @@ export async function streamOpenRouterText(
 export type RunStreamingCompletionOptions = {
   onChunk?: (delta: string) => void
   latencyPolicy?: OpenRouterLatencyPolicy
+  /** Watchdog budgets. Omit a field to leave that budget unbounded. */
+  timeouts?: OpenRouterStreamTimeouts
+  /**
+   * First-token budget for the unhedged retry after both hedge legs time out.
+   * A solo request has no racing partner, so it earns the longer budget.
+   */
+  soloFirstTokenMs?: number
 }
 
 type StreamingLegName = "primary" | "secondary"
@@ -634,6 +866,8 @@ type StreamingLeg = {
   usage: OpenRouterUsage | null
   sawDelta: boolean
   firstDeltaAtMs: number | null
+  resolvedProviderName: string | null
+  timeoutKind: OpenRouterStreamTimeoutKind | null
 }
 
 function createStreamingLeg(
@@ -657,6 +891,8 @@ function createStreamingLeg(
     usage: null,
     sawDelta: false,
     firstDeltaAtMs: null,
+    resolvedProviderName: null,
+    timeoutKind: null,
   }
 }
 
@@ -671,15 +907,38 @@ async function runSingleStreamingCompletion(
   request: OpenRouterTextRequest,
   options: RunStreamingCompletionOptions
 ): Promise<OpenRouterTextResponse> {
-  const { stream, response, startedAtMs } = await streamOpenRouterText(request)
-  const requestId = response.headers.get("x-request-id")
+  const { controller, detach } = createLinkedAbortController(request.signal)
+  let expiredKind: OpenRouterStreamTimeoutKind | null = null
+  const watchdog = createStreamWatchdog({
+    timeouts: options.timeouts,
+    onExpire: (kind) => {
+      expiredKind = kind
+      controller.abort(streamTimeoutError(kind))
+    },
+  })
 
   let text = ""
   let usage: OpenRouterUsage | null = null
   let firstDeltaAtMs: number | null = null
+  let modelId = request.model
+  let resolvedProviderName: string | null = null
+  let requestId: string | null = null
+  let startedAtMs = nowMs()
+
   try {
-    for await (const event of stream) {
-      if (event.type === "delta") {
+    const opened = await streamOpenRouterText(request, controller.signal)
+    startedAtMs = opened.startedAtMs
+    requestId = streamRequestIdFromHeaders(opened.response)
+
+    for await (const event of opened.stream) {
+      if (event.type === "meta") {
+        requestId = event.id ?? requestId
+        modelId = event.model ?? modelId
+        resolvedProviderName = event.provider ?? resolvedProviderName
+      } else if (event.type === "error") {
+        throw streamErrorToThrowable(event)
+      } else if (event.type === "delta") {
+        watchdog.kick()
         if (firstDeltaAtMs === null) {
           firstDeltaAtMs = nowMs()
           console.info(
@@ -697,6 +956,17 @@ async function runSingleStreamingCompletion(
       }
     }
   } catch (error) {
+    // A watchdog expiry aborts the fetch, so the surfaced error would otherwise
+    // be an opaque AbortError. Report the budget that was actually blown.
+    if (expiredKind !== null) {
+      const timeoutError = streamTimeoutError(expiredKind)
+      console.error(
+        "[openrouter] stream watchdog expired",
+        timeoutError,
+        requestDebugMeta(request, { requestId, kind: expiredKind })
+      )
+      throw timeoutError
+    }
     if (isAbortError(error)) throw error
     console.error(
       "[openrouter] stream read failed",
@@ -704,6 +974,9 @@ async function runSingleStreamingCompletion(
       requestDebugMeta(request)
     )
     throw error
+  } finally {
+    watchdog.dispose()
+    detach()
   }
 
   const trimmed = text.trim()
@@ -732,9 +1005,10 @@ async function runSingleStreamingCompletion(
     durationMs: nowMs() - startedAtMs,
     raw: null,
     requestId,
-    modelId: request.model,
+    modelId,
     usage,
     resolvedProvider: cloneProviderPreferences(request.provider),
+    resolvedProviderName,
   }
 }
 
@@ -881,7 +1155,22 @@ async function runHedgedStreamingCompletion(
         modelId: leg.modelId,
         usage: leg.usage,
         resolvedProvider: cloneProviderPreferences(leg.resolvedProvider),
+        resolvedProviderName: leg.resolvedProviderName,
       })
+    }
+
+    /**
+     * Settles the outer promise once the last in-flight leg is done. Called from
+     * `runLeg`'s `finally` so no exit path — including an early `return` from the
+     * abort branches — can leave the promise pending forever.
+     */
+    const drainIfLastLeg = () => {
+      if (settled || winner || activeLegs > 0) return
+      if (!secondaryStarted) {
+        maybeStartSecondary("all_legs_failed")
+        return
+      }
+      settleFailure(bestError ?? emptyResponseError())
     }
 
     const runLeg = async (leg: StreamingLeg) => {
@@ -896,6 +1185,15 @@ async function runHedgedStreamingCompletion(
         }, latencyPolicy.cancelAfterMs)
       }
 
+      const watchdog = createStreamWatchdog({
+        timeouts: options.timeouts,
+        onExpire: (kind) => {
+          if (settled) return
+          leg.timeoutKind = kind
+          leg.controller.abort(streamTimeoutError(kind))
+        },
+      })
+
       try {
         const { response, startedAtMs } = await fetchOpenRouterStreamResponse(
           leg.request,
@@ -903,7 +1201,7 @@ async function runHedgedStreamingCompletion(
         )
         leg.startedAtMs = startedAtMs
         leg.response = response
-        leg.requestId = response.headers.get("x-request-id")
+        leg.requestId = streamRequestIdFromHeaders(response)
 
         for await (const event of parseServerSentEvents(response.body!)) {
           if (event.type === "usage") {
@@ -911,6 +1209,19 @@ async function runHedgedStreamingCompletion(
             continue
           }
 
+          if (event.type === "meta") {
+            leg.requestId = event.id ?? leg.requestId
+            leg.modelId = event.model ?? leg.modelId
+            leg.resolvedProviderName =
+              event.provider ?? leg.resolvedProviderName
+            continue
+          }
+
+          if (event.type === "error") {
+            throw streamErrorToThrowable(event)
+          }
+
+          watchdog.kick()
           if (!leg.sawDelta) {
             leg.sawDelta = true
             leg.firstDeltaAtMs = nowMs()
@@ -950,11 +1261,41 @@ async function runHedgedStreamingCompletion(
           rememberFailure(emptyResponseError())
         }
       } catch (error) {
-        if (isAbortError(error)) {
-          if (request.signal?.aborted) {
-            settleFailure(error)
+        // The run-level signal outranks any per-leg watchdog: a user cancel or a
+        // run deadline must surface as itself, not as a stream timeout.
+        if (request.signal?.aborted) {
+          settleFailure(
+            isAbortError(error) || leg.timeoutKind !== null
+              ? (request.signal.reason ?? error)
+              : error
+          )
+          return
+        }
+
+        if (leg.timeoutKind !== null) {
+          const timeoutError = streamTimeoutError(leg.timeoutKind)
+          console.error(
+            "[openrouter] stream watchdog expired",
+            timeoutError,
+            requestDebugMeta(leg.request, {
+              leg: leg.name,
+              kind: leg.timeoutKind,
+              secondaryStarted,
+              secondaryStartReason,
+            })
+          )
+          if (winner === leg) {
+            settleFailure(timeoutError)
             return
           }
+          if (leg === primary) {
+            maybeStartSecondary("primary_latency_timeout")
+          }
+          rememberFailure(timeoutError)
+          return
+        }
+
+        if (isAbortError(error)) {
           if (winner && winner !== leg) {
             return
           }
@@ -1022,19 +1363,12 @@ async function runHedgedStreamingCompletion(
         }
         rememberFailure(error)
       } finally {
+        watchdog.dispose()
         clearStreamingLegTimer(leg)
         leg.detachAbort()
         activeLegs -= 1
+        drainIfLastLeg()
       }
-
-      if (settled || winner || activeLegs > 0) {
-        return
-      }
-      if (!secondaryStarted) {
-        maybeStartSecondary("all_legs_failed")
-        return
-      }
-      settleFailure(bestError ?? emptyResponseError())
     }
 
     secondaryLaunchTimer = setTimeout(() => {
@@ -1065,10 +1399,13 @@ export async function runStreamingCompletion(
   try {
     return await runHedgedStreamingCompletion(request, options, latencyPolicy)
   } catch (error) {
-    if (
-      !(error instanceof OpenRouterLatencyTimeoutError) ||
-      request.signal?.aborted
-    ) {
+    // Both hedge legs ran out of patience. One unhedged retry gets the longer
+    // solo budget. A run-level abort — user cancel or run deadline — never retries.
+    const retryable =
+      error instanceof OpenRouterLatencyTimeoutError ||
+      (error instanceof OpenRouterStreamTimeoutError &&
+        error.kind === "first_token")
+    if (!retryable || request.signal?.aborted) {
       throw error
     }
 
@@ -1079,6 +1416,13 @@ export async function runStreamingCompletion(
         cancelAfterMs: latencyPolicy.cancelAfterMs ?? null,
       })
     )
-    return runSingleStreamingCompletion(request, options)
+    return runSingleStreamingCompletion(request, {
+      ...options,
+      timeouts: {
+        ...options.timeouts,
+        firstTokenMs:
+          options.soloFirstTokenMs ?? options.timeouts?.firstTokenMs,
+      },
+    })
   }
 }

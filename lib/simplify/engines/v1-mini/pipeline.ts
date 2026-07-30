@@ -4,7 +4,18 @@ import {
 } from "@/lib/openrouter/costs"
 import type { OpenRouterPublicEndpoint } from "@/lib/openrouter/endpoints-types"
 import { preprocessV1Input } from "@/lib/simplify/engines/v1/preprocess"
-import { runStreamingCompletion } from "@/lib/simplify/openrouter-client"
+import {
+  isRetryableOpenRouterError,
+  runStreamingCompletion,
+} from "@/lib/simplify/openrouter-client"
+import {
+  backoffDelayMs,
+  sleepUnlessAborted,
+} from "@/lib/simplify/retry-backoff"
+import {
+  SOLO_FIRST_TOKEN_TIMEOUT_MS,
+  streamTimeoutsFor,
+} from "@/lib/simplify/stream-timeouts"
 import type {
   SimplifyRunOptions,
   SimplifyThroughputReporter,
@@ -96,6 +107,8 @@ async function runV1MiniCompression(params: {
         {
           onChunk: (delta) => onChunk?.("compress", delta.length, nowMs()),
           latencyPolicy: providerLatencyPolicy,
+          timeouts: streamTimeoutsFor(Boolean(providerLatencyPolicy)),
+          soloFirstTokenMs: SOLO_FIRST_TOKEN_TIMEOUT_MS,
         }
       )
       const costSpan = buildOpenRouterCostSpan({
@@ -104,6 +117,7 @@ async function runV1MiniCompression(params: {
         modelId: result.modelId,
         usage: result.usage,
         provider: result.resolvedProvider ?? provider,
+        resolvedProviderName: result.resolvedProviderName,
         endpoints: providerEndpoints,
       })
 
@@ -124,11 +138,12 @@ async function runV1MiniCompression(params: {
       if (isAbortError(error)) throw error
 
       const message = errorMessage(error)
-      if (attempt <= maxRetries) {
+      if (attempt <= maxRetries && isRetryableOpenRouterError(error)) {
         progress.retry(
           "compress",
           `single-pass compact rewrite / retry ${attempt}/${maxRetries}`
         )
+        await sleepUnlessAborted(backoffDelayMs(attempt, error), signal)
         continue
       }
 

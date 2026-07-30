@@ -1,11 +1,11 @@
 "use client"
 
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import type { Dispatch, SetStateAction } from "react"
 
 import type { HuntStep } from "@/lib/hunt-constants"
 import type { OpenRouterPublicEndpoint } from "@/lib/openrouter/endpoints-types"
-import { estimateTokenCountsFastAsync } from "@/lib/tokens/estimate-token-count-fast"
+import { estimateTokenCountsFast } from "@/lib/tokens/estimate-token-count-fast"
 import { getSimplifyEngine } from "@/lib/simplify/engines/registry"
 import type {
   SimplifyEngineId,
@@ -37,13 +37,24 @@ import {
 import {
   OpenRouterInsufficientCreditsError,
   OpenRouterLatencyTimeoutError,
+  OpenRouterStreamTimeoutError,
 } from "@/lib/simplify/openrouter-client"
+import {
+  classifyRunFailure,
+  createRunController,
+  runTimeoutMsForEngine,
+  type RunController,
+} from "@/lib/simplify/run-deadline"
 import type { SimplifyPipelineStepId } from "@/lib/simplify/types"
 
 const KEY_CREDITS_NOTICE =
   "OpenRouter reported insufficient credits. Add credits to your account or use a different API key."
 const OPENROUTER_LATENCY_NOTICE =
   "OpenRouter did not emit a first token before the interactive hedge budget expired. The app avoids giving up early now, but if this still appears, retry once or reduce the input size."
+const RUN_TIMEOUT_NOTICE =
+  "The run passed its time budget and was stopped. Try a smaller paste, or run it again."
+const STREAM_TIMEOUT_NOTICE =
+  "OpenRouter stopped responding partway through. Nothing was lost — run it again."
 
 function billingPromptTokensFromSpan(
   span: SimplifyRunCostSpan
@@ -150,6 +161,23 @@ export function useHuntRun({
   const outputRef = useRef("")
   const tokenCountRunIdRef = useRef<string | null>(null)
   const outputFeedbackLockedRef = useRef(false)
+  /** Non-null only while a run is in flight; also acts as the re-entrancy lock. */
+  const runControllerRef = useRef<RunController | null>(null)
+  const [cancelling, setCancelling] = useState(false)
+
+  const cancelRun = useCallback(() => {
+    if (!runControllerRef.current) return
+    setCancelling(true)
+    runControllerRef.current.cancel()
+  }, [])
+
+  // Leaving the page mid-run would otherwise leave every in-flight request
+  // streaming to a component that no longer exists.
+  useEffect(() => {
+    return () => {
+      runControllerRef.current?.cancel()
+    }
+  }, [])
 
   const resetOutput = useCallback(() => {
     outputRef.current = ""
@@ -173,6 +201,13 @@ export function useHuntRun({
   const simplify = useCallback(async () => {
     const trimmed = rawInput.trim()
     if (!trimmed) return
+    // Guards both the double shift+Enter path and the smart-submit paste effect,
+    // neither of which is covered by the component's `canCompress` check.
+    if (runControllerRef.current) return
+
+    const run = createRunController(runTimeoutMsForEngine(engine.id))
+    runControllerRef.current = run
+    setCancelling(false)
 
     const startedAt = performance.now()
     const inputChars = rawInput.length
@@ -218,6 +253,7 @@ export function useHuntRun({
         apiKey,
         input: inputText,
         resolvedModelId,
+        signal: run.controller.signal,
         onProgress: captureProgress,
         onChunk: captureChunk,
         provider: openRouterProvider,
@@ -301,42 +337,49 @@ export function useHuntRun({
         tokenCountRunIdRef.current = countingForId
         setTokenStatsPendingForId(countingForId)
 
-        void estimateTokenCountsFastAsync([
-          inputText,
-          result.cleanedInput,
-          text,
-        ])
-          .then(([pasteInputTokens, cleanedInputTokens, outputTokens]) => {
-            if (tokenCountRunIdRef.current !== countingForId) return
+        // Synchronous by nature — the heuristic is arithmetic, not a tokenizer.
+        // The run is already finished here, so blocking briefly costs nothing.
+        try {
+          const [pasteInputTokens, cleanedInputTokens, outputTokens] =
+            estimateTokenCountsFast([inputText, result.cleanedInput, text])
 
-            const updated = updateRecentResultTokens(countingForId, {
-              pasteInputTokens,
-              cleanedInputTokens,
-              compressorPromptTokens,
-              outputTokens,
-              estimatedCostUsd: result.cost.estimatedCostUsd,
-              reportedCostUsd: result.cost.reportedCostUsd,
-              displayCostUsd: result.cost.displayCostUsd,
-              costSource: result.cost.source,
-              costSpans: result.cost.spans,
-            })
-            setStats(getStats(updated))
+          const updated = updateRecentResultTokens(countingForId, {
+            pasteInputTokens,
+            cleanedInputTokens,
+            compressorPromptTokens,
+            outputTokens,
+            estimatedCostUsd: result.cost.estimatedCostUsd,
+            reportedCostUsd: result.cost.reportedCostUsd,
+            displayCostUsd: result.cost.displayCostUsd,
+            costSource: result.cost.source,
+            costSpans: result.cost.spans,
           })
-          .catch(() => {
-            // tokens remain undefined; strip shows … without char reduction
-          })
-          .finally(() => {
-            if (tokenCountRunIdRef.current === countingForId) {
-              tokenCountRunIdRef.current = null
-            }
-            setTokenStatsPendingForId((current) =>
-              current === countingForId ? null : current
-            )
-          })
+          setStats(getStats(updated))
+        } catch {
+          // tokens remain undefined; strip shows … without char reduction
+        } finally {
+          tokenCountRunIdRef.current = null
+          setTokenStatsPendingForId((current) =>
+            current === countingForId ? null : current
+          )
+        }
       }
     } catch (e) {
+      const failure = classifyRunFailure(e, run.controller.signal)
+
+      // A cancel is a deliberate user action, not a crash. Return to the input
+      // screen quietly rather than showing a `[fail]` banner.
+      if (failure === "cancelled") {
+        console.info("[hunt] simplify run cancelled", { engineId: engine.id })
+        setActiveRunDag(null)
+        setProgress(null)
+        setStep("input")
+        return
+      }
+
       console.error("[hunt] simplify run failed", e, {
         engineId: engine.id,
+        failure,
         inputChars: inputText.length,
         providerOrder: openRouterProvider?.order ?? null,
         providerOnly: openRouterProvider?.only ?? null,
@@ -356,6 +399,16 @@ export function useHuntRun({
         setStep("key")
         return
       }
+      if (failure === "timeout") {
+        setLastError(RUN_TIMEOUT_NOTICE)
+        setStep("input")
+        return
+      }
+      if (e instanceof OpenRouterStreamTimeoutError) {
+        setLastError(STREAM_TIMEOUT_NOTICE)
+        setStep("input")
+        return
+      }
       if (e instanceof OpenRouterLatencyTimeoutError) {
         setLastError(OPENROUTER_LATENCY_NOTICE)
         setStep("input")
@@ -363,6 +416,10 @@ export function useHuntRun({
       }
       setLastError(e instanceof Error ? e.message : "Something went wrong.")
       setStep("input")
+    } finally {
+      run.dispose()
+      runControllerRef.current = null
+      setCancelling(false)
     }
   }, [
     apiKey,
@@ -443,6 +500,8 @@ export function useHuntRun({
     outputFeedbackVote,
     submitOutputFeedback,
     simplify,
+    cancelRun,
+    cancelling,
     copyOutput,
     discardOutput,
   }

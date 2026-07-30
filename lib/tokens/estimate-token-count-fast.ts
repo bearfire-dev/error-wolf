@@ -173,15 +173,3 @@ export function estimateTokenCountsFast(
 ): number[] {
   return inputs.map((input) => estimateTokenCountFast(input))
 }
-
-export function estimateTokenCountFastAsync(
-  input: FastTokenEstimateInput
-): Promise<number> {
-  return Promise.resolve(estimateTokenCountFast(input))
-}
-
-export function estimateTokenCountsFastAsync(
-  inputs: readonly FastTokenEstimateInput[]
-): Promise<number[]> {
-  return Promise.resolve(estimateTokenCountsFast(inputs))
-}

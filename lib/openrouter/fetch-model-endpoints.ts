@@ -1,5 +1,9 @@
-import type { OpenRouterModelEndpointsResponse } from "@/lib/openrouter/endpoints-types"
+import type {
+  OpenRouterModelEndpointsResponse,
+  OpenRouterPublicEndpoint,
+} from "@/lib/openrouter/endpoints-types"
 import { directBrowserOpenRouterErrorMessage } from "@/lib/openrouter/direct-browser-errors"
+import { HUNT_OPENROUTER_ENDPOINTS_TIMEOUT_MS } from "@/lib/openrouter/hunt-routing-config"
 import { openRouterEndpointsUrl } from "@/lib/openrouter/model-path"
 
 export type FetchModelEndpointsErrorCode =
@@ -27,6 +31,21 @@ function error(
   return { ok: false, error: { code, message, httpStatus } }
 }
 
+/**
+ * Guards the fields every consumer dereferences without a fallback:
+ * `provider_name` in `rank-providers`, and `pricing.prompt` / `pricing.completion`
+ * in `costs`. Everything else is read defensively already.
+ */
+function isPublicEndpoint(value: unknown): value is OpenRouterPublicEndpoint {
+  if (!value || typeof value !== "object") return false
+  const row = value as Record<string, unknown>
+  if (typeof row.provider_name !== "string" || !row.provider_name.trim()) {
+    return false
+  }
+  if (!row.pricing || typeof row.pricing !== "object") return false
+  return true
+}
+
 export async function fetchModelEndpointsFromOpenRouter(
   apiKey: string,
   modelId: string,
@@ -42,12 +61,16 @@ export async function fetchModelEndpointsFromOpenRouter(
     return error("bad_model_id", `Invalid model id for endpoints: ${modelId}`)
   }
 
+  // Rankings are advisory: a slow response must not pin an open connection or
+  // stack up behind the 90s refresh interval.
+  const timeout = AbortSignal.timeout(HUNT_OPENROUTER_ENDPOINTS_TIMEOUT_MS)
+
   let response: Response
   try {
     response = await fetch(url, {
       method: "GET",
       headers: { Authorization: `Bearer ${key}` },
-      signal,
+      signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
     })
   } catch (e) {
     if (!(e instanceof Error && e.name === "AbortError")) {
@@ -109,8 +132,24 @@ export async function fetchModelEndpointsFromOpenRouter(
     return error("bad_response", "OpenRouter response missing endpoints array.")
   }
 
+  // Rows feed ranking and pricing, both of which run inside `useMemo` during
+  // render. An unchecked cast turns provider-side schema drift into a
+  // render-phase throw that the error boundary cannot recover from.
+  const endpoints = d.endpoints.filter(isPublicEndpoint)
+  const dropped = d.endpoints.length - endpoints.length
+  if (dropped > 0) {
+    console.warn("[openrouter] dropped malformed endpoint rows", {
+      modelId,
+      dropped,
+      kept: endpoints.length,
+    })
+  }
+
   return {
     ok: true,
-    data: data as OpenRouterModelEndpointsResponse["data"],
+    data: {
+      ...(data as OpenRouterModelEndpointsResponse["data"]),
+      endpoints,
+    },
   }
 }

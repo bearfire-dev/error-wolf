@@ -8,6 +8,9 @@ import type {
 
 import {
   OpenRouterInsufficientCreditsError,
+  OpenRouterRateLimitError,
+  OpenRouterStreamTimeoutError,
+  OpenRouterTerminalRequestError,
   runStreamingCompletion,
 } from "./openrouter-client"
 
@@ -52,6 +55,10 @@ function createStreamingResponse(params: {
   status?: number
   headers?: HeadersInit
   signal?: AbortSignal
+  model?: string
+  providerName?: string
+  /** Omit the leading in-band identity frame, as a bare provider might. */
+  omitMeta?: boolean
 }): Response {
   const chunks = params.chunks ?? []
   const signal = params.signal
@@ -60,6 +67,21 @@ function createStreamingResponse(params: {
 
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
+      // Production OpenRouter carries `id`/`model`/`provider` in-band on every
+      // chunk. `x-request-id` is never sent and would not be readable
+      // cross-origin, so identity must come from the payload.
+      if (!params.omitMeta) {
+        controller.enqueue(
+          encoder.encode(
+            sseEvent({
+              id: params.requestId,
+              model: params.model ?? "openai/gpt-oss-120b",
+              provider: params.providerName ?? "Cerebras",
+            })
+          )
+        )
+      }
+
       const onAbort = () => {
         if (closed) return
         closed = true
@@ -104,7 +126,6 @@ function createStreamingResponse(params: {
   return new Response(stream, {
     status: params.status ?? 200,
     headers: {
-      "x-request-id": params.requestId,
       ...params.headers,
     },
   })
@@ -442,5 +463,257 @@ describe("runStreamingCompletion", () => {
 
     expect(result.text).toBe("winner")
     expect(chunks).toEqual(["winner"])
+  })
+
+  it("settles instead of hanging when every hedged leg is cancelled", async () => {
+    // Regression: the abort branches used to `return` past the tail block that
+    // settles the outer promise, so the last leg to finish left it pending
+    // forever and the UI sat on "03 COMP" until a reload.
+    mockFetchSequence({ waitForAbort: true }, { waitForAbort: true })
+
+    const promise = runStreamingCompletion(
+      createRequest({ provider: createProvider("primary") }),
+      {
+        latencyPolicy: createLatencyPolicy({
+          hedgeAfterMs: 50,
+          cancelAfterMs: 90,
+        }),
+      }
+    )
+    const settled = promise.then(
+      () => "resolved" as const,
+      () => "rejected" as const
+    )
+
+    await vi.advanceTimersByTimeAsync(500)
+    await expect(settled).resolves.toBe("rejected")
+  })
+
+  it("surfaces a mid-stream error frame instead of reporting an empty response", async () => {
+    mockFetchSequence({
+      response: createStreamingResponse({
+        requestId: "req-mid-error",
+        chunks: [
+          {
+            atMs: 10,
+            text: sseEvent({
+              error: { message: "provider exploded", code: 500 },
+            }),
+          },
+        ],
+      }),
+    })
+
+    const promise = runStreamingCompletion(createRequest())
+    const assertion = expect(promise).rejects.toThrow("provider exploded")
+    await vi.advanceTimersByTimeAsync(100)
+    await assertion
+  })
+
+  it("maps a mid-stream 402 frame to the insufficient-credits error", async () => {
+    mockFetchSequence({
+      response: createStreamingResponse({
+        requestId: "req-mid-402",
+        chunks: [
+          {
+            atMs: 10,
+            text: sseEvent({
+              error: { message: "out of credits", code: 402 },
+            }),
+          },
+        ],
+      }),
+    })
+
+    const promise = runStreamingCompletion(createRequest())
+    const assertion = expect(promise).rejects.toBeInstanceOf(
+      OpenRouterInsufficientCreditsError
+    )
+    await vi.advanceTimersByTimeAsync(100)
+    await assertion
+  })
+
+  it("skips a malformed frame and still completes the stream", async () => {
+    mockFetchSequence({
+      response: createStreamingResponse({
+        requestId: "req-malformed",
+        chunks: [
+          { atMs: 5, text: deltaEvent("before ") },
+          { atMs: 10, text: "data: <html>not json</html>\n\n" },
+          { atMs: 15, text: deltaEvent("after") },
+        ],
+      }),
+    })
+
+    const promise = runStreamingCompletion(createRequest())
+    await vi.advanceTimersByTimeAsync(100)
+    const result = await promise
+
+    expect(result.text).toBe("before after")
+  })
+
+  it("flushes a trailing frame that has no terminating blank line", async () => {
+    mockFetchSequence({
+      response: createStreamingResponse({
+        requestId: "req-trailing",
+        chunks: [
+          { atMs: 5, text: deltaEvent("kept ") },
+          {
+            atMs: 10,
+            text: `data: ${JSON.stringify({
+              choices: [{ delta: { content: "tail" } }],
+            })}`,
+          },
+        ],
+      }),
+    })
+
+    const promise = runStreamingCompletion(createRequest())
+    await vi.advanceTimersByTimeAsync(100)
+    const result = await promise
+
+    expect(result.text).toBe("kept tail")
+  })
+
+  it("takes identity from the stream payload, not from response headers", async () => {
+    // `x-request-id` is never sent by OpenRouter and would not be readable
+    // cross-origin anyway; `id`/`model`/`provider` ride in every chunk.
+    mockFetchSequence({
+      response: createStreamingResponse({
+        requestId: "gen-in-band",
+        model: "openai/gpt-oss-120b",
+        providerName: "Cerebras",
+        chunks: [{ atMs: 5, text: deltaEvent("ok") }],
+      }),
+    })
+
+    const promise = runStreamingCompletion(createRequest())
+    await vi.advanceTimersByTimeAsync(100)
+    const result = await promise
+
+    expect(result.requestId).toBe("gen-in-band")
+    expect(result.resolvedProviderName).toBe("Cerebras")
+  })
+
+  it("aborts and reports a first-token timeout when nothing arrives", async () => {
+    let observed: AbortSignal | undefined
+    mockFetchSequence({
+      response: (signal) => {
+        observed = signal
+        return createStreamingResponse({
+          requestId: "req-slow",
+          chunks: [{ atMs: 5_000, text: deltaEvent("too late") }],
+          signal,
+        })
+      },
+    })
+
+    const promise = runStreamingCompletion(createRequest(), {
+      timeouts: { firstTokenMs: 1_000 },
+    })
+    const assertion = expect(promise).rejects.toBeInstanceOf(
+      OpenRouterStreamTimeoutError
+    )
+    await vi.advanceTimersByTimeAsync(2_000)
+    await assertion
+    expect(observed?.aborted).toBe(true)
+  })
+
+  it("reports an idle timeout when the stream stalls after its first token", async () => {
+    mockFetchSequence({
+      response: (signal) =>
+        createStreamingResponse({
+          requestId: "req-stalled",
+          chunks: [
+            { atMs: 100, text: deltaEvent("started") },
+            { atMs: 30_000, text: deltaEvent(" finished") },
+          ],
+          signal,
+        }),
+    })
+
+    const promise = runStreamingCompletion(createRequest(), {
+      timeouts: { firstTokenMs: 5_000, idleMs: 1_000 },
+    })
+    const assertion = expect(promise).rejects.toMatchObject({
+      name: "OpenRouterStreamTimeoutError",
+      kind: "idle",
+    })
+    await vi.advanceTimersByTimeAsync(4_000)
+    await assertion
+  })
+
+  it("propagates a caller abort reason rather than a stream timeout", async () => {
+    mockFetchSequence({ waitForAbort: true })
+
+    const controller = new AbortController()
+    const reason = new Error("user cancelled")
+    const promise = runStreamingCompletion(
+      createRequest({ signal: controller.signal })
+    )
+    const settled = promise.catch((e: unknown) => e)
+
+    controller.abort(reason)
+    await vi.advanceTimersByTimeAsync(10)
+    await expect(settled).resolves.toBeInstanceOf(Error)
+    expect(controller.signal.reason).toBe(reason)
+  })
+
+  it("cancels the response body when the consumer leaves early", async () => {
+    let cancelled = false
+    mockFetchSequence({
+      response: () => {
+        const base = createStreamingResponse({
+          requestId: "req-cancel",
+          chunks: [{ atMs: 5, text: deltaEvent("done") }],
+        })
+        const stream = base.body!.pipeThrough(
+          new TransformStream({
+            flush() {
+              cancelled = true
+            },
+          })
+        )
+        return new Response(stream, { status: 200 })
+      },
+    })
+
+    const promise = runStreamingCompletion(createRequest())
+    await vi.advanceTimersByTimeAsync(100)
+    await promise
+
+    expect(cancelled).toBe(true)
+  })
+
+  it("classifies a 429 as retryable and keeps its Retry-After hint", async () => {
+    mockFetchSequence({
+      response: createJsonResponse(
+        429,
+        { error: { message: "slow down", code: 429 } },
+        { "retry-after": "2" }
+      ),
+    })
+
+    const promise = runStreamingCompletion(createRequest())
+    const settled = promise.catch((e: unknown) => e)
+    await vi.advanceTimersByTimeAsync(100)
+    const error = await settled
+
+    expect(error).toBeInstanceOf(OpenRouterRateLimitError)
+    expect((error as OpenRouterRateLimitError).retryAfterMs).toBe(2_000)
+  })
+
+  it("classifies a 401 as terminal so callers stop retrying a bad key", async () => {
+    mockFetchSequence({
+      response: createJsonResponse(401, {
+        error: { message: "invalid key", code: 401 },
+      }),
+    })
+
+    const promise = runStreamingCompletion(createRequest())
+    const settled = promise.catch((e: unknown) => e)
+    await vi.advanceTimersByTimeAsync(100)
+
+    expect(await settled).toBeInstanceOf(OpenRouterTerminalRequestError)
   })
 })

@@ -30,7 +30,9 @@ export function endpointProviderSlug(
     return tag.slice(0, slash).trim().toLowerCase()
   }
 
-  return endpoint.provider_name
+  // Defensive: exported and reachable from call sites that skip the fetch-time
+  // row guard. An empty slug collapses in `dedupeBySlugBestScore`.
+  return (endpoint.provider_name ?? "")
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
