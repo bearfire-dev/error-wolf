@@ -8,91 +8,212 @@ alwaysApply: true
 
 ## About
 
-**error wolf** is a small Next.js application template using the App Router, TypeScript, Tailwind CSS v4, and shadcn/ui (Base UI primitives, Hugeicons). It is a starter-style layout: root shell in `app/layout.tsx`, shared UI under `components/`, and utilities in `lib/`.
+**error wolf** compresses noisy stack traces and build logs. The work happens in
+the browser with the user's own OpenRouter key. The server does three things
+only: it sets the consent cookie, it reads cookies for the /hunt gate, and it
+proxies Sentry reports.
+
+The product logic is in `src/lib/`. That code imports no framework APIs. Keep it
+that way.
 
 ## Core
 
 - Cold, professional tone. No flattery. Objective corrections only.
-- Stay focused; do not pad answers.
+- Stay focused. Do not pad answers.
 - Prefer existing patterns over new frameworks or parallel design systems.
 - Refine touched code in place: same behavior, fewer moving parts.
 - Prefer single-purpose modules, components, and functions with consistent names.
-- This repo has no `.agents/skills/` tree; use this file, `README.md`, and `components.json` as the primary conventions.
+- This repo has no `.agents/skills/` tree. Use this file, `README.md`, and
+  `components.json` as the primary conventions.
 
 ## Stack
 
-| Area                  | Choice                                                                                                                                                                                                  |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Package manager**   | **pnpm** (`pnpm-lock.yaml`)                                                                                                                                                                             |
-| **Runtime / app**     | **Next.js 16** (App Router: `app/`)                                                                                                                                                                     |
-| **UI**                | **React 19**                                                                                                                                                                                            |
-| **React Compiler**    | **Next.js `reactCompiler: true`** + dev **`babel-plugin-react-compiler`** (compile-time memoization; same React runtime)                                                                                |
-| **Language**          | **TypeScript** (`strict: true` in `tsconfig.json`)                                                                                                                                                      |
-| **Dev server**        | **Turbopack** (`next dev --turbopack`)                                                                                                                                                                  |
-| **Styling**           | **Tailwind CSS v4** via `@tailwindcss/postcss` and `postcss.config.mjs`                                                                                                                                 |
-| **Components**        | **shadcn/ui** (`shadcn`, `components.json`), **@base-ui/react**, **class-variance-authority**                                                                                                           |
-| **Icons**             | **Hugeicons** (`@hugeicons/react`, `@hugeicons/core-free-icons`; `components.json` → `iconLibrary: "hugeicons"`)                                                                                        |
-| **Theming**           | **next-themes** (`attribute="class"`, system default; header sun/moon icon toggles light/dark)                                                                                                          |
-| **Animation helpers** | **tw-animate-css** (imported from `app/globals.css`)                                                                                                                                                    |
-| **Lint**              | **Oxlint** (`.oxlintrc.json`): Next.js + TypeScript + React rules, **`--type-aware`** via **`oxlint-tsgolint`**, React Compiler checks via **`eslint-plugin-react-compiler`** as an Oxlint **jsPlugin** |
-| **Format**            | **Oxfmt** (`.oxfmtrc.json`): Prettier-compatible options + **`sortTailwindcss`** (`app/globals.css`, `cn` / `cva`)                                                                                      |
+| Area                  | Choice                                                                                                          |
+| --------------------- | --------------------------------------------------------------------------------------------------------------- |
+| **Package manager**   | **pnpm** (`pnpm-lock.yaml`)                                                                                     |
+| **Runtime / app**     | **TanStack Start** on **Cloudflare Workers** (file routes: `src/routes/`)                                       |
+| **Routing**           | **TanStack Router** (`src/routeTree.gen.ts` is generated — do not edit it)                                      |
+| **UI**                | **React 19**                                                                                                    |
+| **React Compiler**    | **babel-plugin-react-compiler** through **@rolldown/plugin-babel** (`@vitejs/plugin-react` v6 uses Oxc)         |
+| **Language**          | **TypeScript** (`strict: true` in `tsconfig.json`)                                                              |
+| **Build / dev**       | **Vite 8** (`vite dev`, `vite build`)                                                                           |
+| **Styling**           | **Tailwind CSS v4** through **@tailwindcss/vite**                                                               |
+| **Components**        | **shadcn/ui** (`shadcn`, `components.json`), **@base-ui/react**, **class-variance-authority**                   |
+| **Icons**             | **Hugeicons** (`@hugeicons/react`, `@hugeicons/core-free-icons`)                                                |
+| **Fonts**             | **@fontsource/space-mono**, imported from `src/globals.css`                                                     |
+| **Theming**           | Local provider in `src/components/theme-provider.tsx` plus a pre-paint inline script                            |
+| **Images**            | **vite-imagetools** for the background photo, plain `<img>` for the logo                                        |
+| **Observability**     | **@sentry/react** in the browser, **@sentry/cloudflare** in the Worker, **@sentry/core** for isomorphic metrics |
+| **Animation helpers** | **tw-animate-css** (imported from `src/globals.css`)                                                            |
+| **Lint**              | **Oxlint** (`.oxlintrc.json`): TypeScript and React rules, **`--type-aware`** through **`oxlint-tsgolint`**     |
+| **Format**            | **Oxfmt** (`.oxfmtrc.json`): Prettier-compatible options plus **`sortTailwindcss`**                             |
+| **Test**              | **Vitest** (`vitest.config.ts`), unit tests beside the sources in `src/lib/`                                    |
 
-**Module system:** ESM — `package.json` has `"type": "module"`; config files use `.mjs` where applicable (`next.config.mjs`, `postcss.config.mjs`).
+**Module system:** ESM. `package.json` sets `"type": "module"`.
 
 ## Layout
 
-- **`app/`** — Next App Router: `layout.tsx` (root shell, fonts, `ThemeProvider`), `page.tsx`, `globals.css` (Tailwind entry, design tokens, shadcn theme imports).
-- **`components/`** — Shared UI: `theme-provider.tsx`, `ui/` (e.g. shadcn-style primitives).
-- `**lib/**` — Cross-cutting helpers (e.g. `cn()` in `lib/utils.ts`).
-- `**hooks/**` — Reserved alias in `components.json`; add hooks here when needed.
+- **`src/routes/`** — file routes. `__root.tsx` holds the document shell, the
+  head metadata, the theme provider, and the error boundary. A directory or file
+  with a `-` prefix is route-local UI and gets no URL, such as `-hunt/`.
+- **`src/lib/`** — the product. Simplify engines, the OpenRouter client, routing
+  estimation, cost models, and token estimation. No framework imports.
+- **`src/lib/server/`** — the only server-side modules. They adapt the TanStack
+  request helpers to the framework-free helpers in `src/lib/`.
+- **`src/components/`** — shared UI. `ui/` holds the shadcn primitives.
+- **`src/hooks/`** — shared hooks.
+- **`src/integrations/`** — browser Sentry setup.
+- **`src/assets/`** — images that the build processes. Files in `public/` ship
+  as-is, so do not put a large source image there.
+- **`src/client.tsx`**, **`src/router.tsx`**, **`src/server.ts`** — the browser
+  entry, the router factory, and the Worker entry.
 
-Colocate by feature as the app grows; keep routes and route-local UI under `app/` when it is page-specific.
+Colocate by feature as the app grows. Keep route-local UI under `src/routes/`
+with a `-` prefix.
+
+## Routes
+
+| URL              | File                          | Notes                                      |
+| ---------------- | ----------------------------- | ------------------------------------------ |
+| `/`              | `src/routes/index.tsx`        | Marketing page and the consent button.     |
+| `/hunt`          | `src/routes/hunt.tsx`         | The product. A loader gates it on consent. |
+| `/privacy`       | `src/routes/privacy.tsx`      |                                            |
+| `/anonymous-tea` | `src/routes/anonymous-tea.ts` | Sentry tunnel. POST only.                  |
+| `/robots.txt`    | `src/routes/robots[.]txt.ts`  | Square brackets escape the dot in a path.  |
+| `/sitemap.xml`   | `src/routes/sitemap[.]xml.ts` |                                            |
+
+Do not change these URLs. The consent flow, the sitemap, and the Sentry client
+all reference them.
+
+## Server touchpoints
+
+There are three. Handle each with care.
+
+1. `src/lib/server/consent.ts` sets the consent cookie. The home route then
+   navigates to /hunt. The cookie attributes must not change.
+   `src/lib/consent.ts` clears the same cookie from the browser with the same
+   flags. Do not throw a `redirect` from this server function. An imperative
+   server-function call receives it as a raw `Response`, and the navigation
+   never happens.
+2. `src/routes/hunt.tsx` reads the consent cookie and the OpenRouter key cookie
+   in a server function. It must keep the legacy cookie names. If you drop them,
+   existing users lose their consent.
+3. `src/routes/anonymous-tea.ts` proxies Sentry envelopes. The DSN allowlist in
+   `src/lib/sentry-tunnel-allowlist.ts` pins the upstream host and project id.
+   It is the only guard on the route. Do not remove it.
 
 ## UI
 
-- **Tailwind v4** is driven from `[app/globals.css](app/globals.css)`: `@import "tailwindcss"`, `@import "tw-animate-css"`, `@import "shadcn/tailwind.css"`, `@theme inline` tokens, and `:root` / `.dark` CSS variables (shadcn-style palette).
-- **Dark mode** uses the `.dark` class on ancestors (see `@custom-variant dark` in `globals.css`); `next-themes` applies the class on `html`.
-- **Fonts:** `next/font/google` — Geist Sans, Geist Mono, Lora (serif); variables are wired in `app/layout.tsx`.
-- **New shadcn pieces:** follow `[README.md](README.md)` (e.g. `npx shadcn@latest add <component>`). Prefer **pnpm** for installs: `pnpm dlx shadcn@latest add <component>` when adding dependencies through the CLI.
-- **Imports:** use path aliases from `components.json` / `tsconfig.json` — e.g. `@/components/ui/button`, `@/lib/utils`.
-- **Do not** introduce a second component library or icon set; stay on Base UI + Hugeicons + existing tokens.
+- **Tailwind v4** runs from `src/globals.css`. That file holds the Tailwind
+  import, the font imports, the `@theme inline` tokens, and the `:root` and
+  `.dark` variables.
+- **Dark mode** uses the `.dark` class on `<html>`. An inline script in
+  `__root.tsx` sets the class before first paint. Without it, a dark-mode user
+  sees a light flash.
+- **New shadcn pieces:** `pnpm dlx shadcn@latest add <component>`.
+- **Imports:** use the `@/*` alias. It points at `./src`.
+- **Do not** add a second component library or icon set.
 
 ## Tooling
 
-Use **pnpm** (lockfile present).
+Use **pnpm**.
 
 | Command              | Purpose                                        |
 | -------------------- | ---------------------------------------------- |
-| `pnpm dev`           | Dev server (`next dev --turbopack`)            |
-| `pnpm build`         | Production build (`next build`)                |
-| `pnpm start`         | Production server (`next start`)               |
+| `pnpm dev`           | Vite dev server on port 3000                   |
+| `pnpm build`         | Production build into `dist/`                  |
+| `pnpm preview`       | Serve the production build                     |
+| `pnpm deploy`        | Build, then `wrangler deploy`                  |
+| `pnpm test`          | Vitest, one run                                |
+| `pnpm test:watch`    | Vitest in watch mode                           |
 | `pnpm lint`          | Oxlint (`--type-aware`)                        |
 | `pnpm lint:fix`      | Oxlint with safe fixes                         |
 | `pnpm format`        | Oxfmt (write)                                  |
 | `pnpm format:check`  | Oxfmt check-only                               |
 | `pnpm typecheck`     | `tsgo --noEmit` (`@typescript/native-preview`) |
-| `pnpm typecheck:tsc` | Classic `tsc --noEmit` (parity / escape hatch) |
+| `pnpm typecheck:tsc` | Classic `tsc --noEmit` (parity check)          |
+| `pnpm cf-typegen`    | Generate Worker binding types                  |
 
-There is **no** combined `check` script; run `pnpm format` (or `pnpm format:check`), `pnpm lint`, and `pnpm typecheck` as needed after substantive edits.
+There is no combined `check` script. After a substantive edit, run
+`pnpm format`, `pnpm lint`, `pnpm typecheck`, and `pnpm test`.
 
-**Node version:** not pinned in-repo; use a current LTS compatible with Next 16 if you need a local baseline.
+**Node version:** `package.json` asks for 24.x. CI uses 24.
+
+## Cloudflare
+
+`wrangler.jsonc` configures the Worker. Read it before you change the build.
+
+- `main` points at `src/server.ts`. That file wraps the TanStack Start server
+  entry with `Sentry.withSentry`.
+- `compatibility_flags` includes `nodejs_compat`.
+- There is no `routes` block. The site serves from `*.workers.dev` until the
+  custom domain moves.
+
+The Vite build writes `dist/server/wrangler.json`. Run `wrangler deploy` from the
+repo root after `vite build`. It finds that file.
+
+**Workers have no filesystem.** Do not use `node:fs` or `process.cwd()` in code
+that the server bundle reaches. Read files at build time instead. See
+`src/lib/example-traces.ts` and `src/lib/announcements/load.ts`.
+
+**Bundle size.** Cloudflare rejects a Worker above 3 MiB gzip. Run
+`pnpm exec wrangler deploy --dry-run` to print the current size.
+
+To test against the Workers runtime and not the Vite dev server, run
+`pnpm build`, then `pnpm exec wrangler dev`. Node API differences appear there.
+
+### Deploy
+
+CI runs `.github/workflows/ci.yml` on Blacksmith runners. The deploy step needs
+the repo secret `CLOUDFLARE_API_TOKEN` with the `Workers Scripts:Edit`
+permission. Without the secret, the job still runs the checks and the build, and
+it reports that it skipped the deploy.
+
+## Environment variables
+
+Vite inlines every `VITE_*` variable into both bundles at build time.
+
+| Name                      | Where   | Purpose                                        |
+| ------------------------- | ------- | ---------------------------------------------- |
+| `VITE_SITE_URL`           | Build   | Canonical origin for metadata and the sitemap. |
+| `VITE_SENTRY_DSN`         | Build   | Sentry DSN. Unset disables Sentry.             |
+| `VITE_SENTRY_ENVIRONMENT` | Build   | Environment tag in Sentry.                     |
+| `SENTRY_AUTH_TOKEN`       | CI only | Source-map upload. Never commit a value.       |
+| `SENTRY_ORG`              | CI      | Source-map upload.                             |
+| `SENTRY_PROJECT`          | CI      | Source-map upload.                             |
+| `SENTRY_DSN`              | Worker  | Optional runtime override.                     |
+| `SENTRY_ENVIRONMENT`      | Worker  | Optional runtime override.                     |
+
+A Sentry DSN is public by design. An auth token is not. **The repo is public.**
+Keep tokens out of tracked files and out of workflow logs.
 
 ## Code style
 
-- **TypeScript:** strict mode; path alias `@/*` → repo root (matches `tsconfig.json` `paths` and `components.json` aliases). Primary typecheck uses **tsgo**; the `typescript` package remains for `pnpm typecheck:tsc` and editor tooling.
-- **Oxfmt** (`.oxfmtrc.json`): LF, **no semicolons**, double quotes, 2 spaces, print width 80, trailing commas `es5`; Tailwind class sorting via **`sortTailwindcss`** (`stylesheet: app/globals.css`, `functions: ["cn", "cva"]`); `sortPackageJson` is off (see config).
-- **Oxlint** (`.oxlintrc.json`): migrated from the former Next ESLint presets; **`eslint-plugin-react-compiler`** is loaded as a jsPlugin; ignores include `node_modules`, build outputs, `.next/`, `next-env.d.ts`, and `scripts/example-bg-photo-tuner/**`.
-- **React:** use `"use client"` only where client APIs are required (e.g. theme provider). Prefer server components by default in `app/` where practical.
-- **Utilities:** merge Tailwind classes with `cn()` from `@/lib/utils` (`clsx` + `tailwind-merge`).
+- **TypeScript:** strict mode. The `@/*` alias points at `./src`. `tsgo` is the
+  primary typechecker. The `typescript` package stays for `pnpm typecheck:tsc`
+  and for editor tooling.
+- **Oxfmt** (`.oxfmtrc.json`): LF, no semicolons, double quotes, 2 spaces, print
+  width 80, trailing commas `es5`. Tailwind class sorting reads
+  `src/globals.css` and the `cn` and `cva` functions.
+- **Oxlint** (`.oxlintrc.json`): `eslint-plugin-react-compiler` loads as a
+  jsPlugin. The ignore list covers `node_modules`, `dist`, `.wrangler`, the
+  generated route tree, and `scripts/example-bg-photo-tuner/**`.
+- **React:** the app renders on the server and hydrates in the browser. There is
+  no React Server Components boundary, so a `"use client"` directive means
+  nothing here. Do not add one.
+- **Utilities:** merge Tailwind classes with `cn()` from `@/lib/utils`.
 
 ## Testing
 
-**No test runner is configured** — there is no `test` script in `package.json` and no Vitest/Jest/Cypress setup in-repo. If you add tests, introduce a single stack (and scripts) deliberately; do not assume tests exist until then.
+Vitest runs in the `node` environment. Test files sit beside their sources in
+`src/lib/`. Run `pnpm test`.
 
-## CI / observability
-
-No `.github/workflows` or other CI config is present in this repository. No Sentry or other observability SDKs are wired in `package.json`.
+These tests cover the parts that are hard to check by hand: cost models, model
+endpoint fetching, preprocessing, the OpenRouter client, recent results, and run
+deadlines. Keep them passing. If a test needs a change, change its framework
+assumptions and never the expected behavior.
 
 ## Git
 
-Use standard git workflows. This repo does not define mandatory commit-message prefixes or PR tooling; use project or team conventions if provided separately.
+Use standard git workflows. This repo defines no mandatory commit-message
+prefixes.

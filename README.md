@@ -14,11 +14,18 @@ Suggestions, product feedback, and bug reports are welcome. Please **[open a Git
 
 ## Development / Local Run
 
-Stack: **pnpm**, **Next.js 16** (App Router), **React 19**, **TypeScript**, **Tailwind CSS v4**, **shadcn/ui** (Base UI + Hugeicons). Conventions and tooling details live in [AGENTS.md](./AGENTS.md).
+Stack: **pnpm**, **TanStack Start** on **Cloudflare Workers**, **Vite 8**, **React 19**, **TypeScript**, **Tailwind CSS v4**, **shadcn/ui** (Base UI + Hugeicons). Conventions and tooling details live in [AGENTS.md](./AGENTS.md).
 
 ```bash
 pnpm install
 pnpm dev
+```
+
+To run against the Workers runtime instead of the Vite dev server:
+
+```bash
+pnpm build
+pnpm exec wrangler dev
 ```
 
 ## License
