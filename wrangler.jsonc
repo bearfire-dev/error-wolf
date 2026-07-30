@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "error-wolf",
+  "compatibility_date": "2026-07-30",
+  "compatibility_flags": ["nodejs_compat"],
+  // Wraps `@tanstack/react-start/server-entry` with `Sentry.withSentry`.
+  "main": "src/server.ts",
+  "observability": {
+    "enabled": true,
+  },
+}

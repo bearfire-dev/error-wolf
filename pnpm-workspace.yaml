@@ -1,8 +1,24 @@
 # Postinstall scripts pnpm is allowed to run. Without these, `pnpm <script>`
-# aborts on its dependency-status check. esbuild backs Vitest, sharp backs Next
-# image optimization, and @sentry/cli uploads source maps at build time.
+# aborts on its dependency-status check. esbuild backs Vitest, workerd backs the
+# Cloudflare Vite plugin and `wrangler dev`, sharp backs vite-imagetools, and
+# @sentry/cli uploads source maps at build time.
 allowBuilds:
   "@sentry/cli": true
   esbuild: true
   msw: false
   sharp: true
+  workerd: true
+minimumReleaseAgeExclude:
+  - '@cloudflare/vite-plugin@1.49.0'
+  - '@cloudflare/workerd-darwin-64@1.20260730.1'
+  - '@cloudflare/workerd-darwin-arm64@1.20260730.1'
+  - '@cloudflare/workerd-linux-64@1.20260730.1'
+  - '@cloudflare/workerd-linux-arm64@1.20260730.1'
+  - '@cloudflare/workerd-windows-64@1.20260730.1'
+  - '@tanstack/react-start-rsc@0.1.33'
+  - '@tanstack/react-start@1.168.34'
+  - '@tanstack/start-plugin-core@1.171.25'
+  - miniflare@4.20260730.0
+  - vite@8.2.0
+  - workerd@1.20260730.1
+  - wrangler@4.116.0

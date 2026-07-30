@@ -13,12 +13,13 @@
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
-
-# production
+# build output
+/dist
 /build
+
+# cloudflare / wrangler local state
+/.wrangler
+worker-configuration.d.ts
 
 # misc
 .DS_Store
@@ -35,7 +36,6 @@ pnpm-debug.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
 # Sentry Config File
 .env.sentry-build-plugin

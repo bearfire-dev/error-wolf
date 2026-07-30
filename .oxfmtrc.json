@@ -7,17 +7,21 @@
   "trailingComma": "es5",
   "printWidth": 80,
   "sortTailwindcss": {
-    "stylesheet": "app/globals.css",
-    "functions": ["cn", "cva"]
+    "stylesheet": "src/globals.css",
+    "functions": [
+      "cn",
+      "cva"
+    ]
   },
   "sortPackageJson": false,
   "ignorePatterns": [
     "dist/",
     "node_modules/",
-    ".next/",
+    ".wrangler/",
     ".turbo/",
     "coverage/",
     "pnpm-lock.yaml",
-    ".pnpm-store/"
+    ".pnpm-store/",
+    "src/routeTree.gen.ts"
   ]
 }
