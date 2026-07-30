@@ -1,7 +1,4 @@
-"use client"
-
-import dynamic from "next/dynamic"
-import { useCallback, useEffect, useState } from "react"
+import { Suspense, lazy, useCallback, useEffect, useState } from "react"
 
 import { BubbleChatNotificationIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -49,10 +46,7 @@ function AnnouncementsMarkdownLoading() {
   )
 }
 
-const LazyReactMarkdown = dynamic(loadReactMarkdown, {
-  ssr: false,
-  loading: () => <AnnouncementsMarkdownLoading />,
-})
+const LazyReactMarkdown = lazy(loadReactMarkdown)
 
 const ANNOUNCEMENTS_MARKDOWN_COMPONENTS: Components = {
   p: ({ children }) => (
@@ -212,9 +206,13 @@ export function SiteHeaderAnnouncementsDialog({
         >
           {markdown.trim() ? (
             open ? (
-              <LazyReactMarkdown components={ANNOUNCEMENTS_MARKDOWN_COMPONENTS}>
-                {markdown}
-              </LazyReactMarkdown>
+              <Suspense fallback={<AnnouncementsMarkdownLoading />}>
+                <LazyReactMarkdown
+                  components={ANNOUNCEMENTS_MARKDOWN_COMPONENTS}
+                >
+                  {markdown}
+                </LazyReactMarkdown>
+              </Suspense>
             ) : null
           ) : (
             <p className="text-xs text-muted-foreground">No updates yet.</p>

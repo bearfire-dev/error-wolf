@@ -1,6 +1,4 @@
-"use client"
-
-import { getFeedback } from "@sentry/nextjs"
+import { getFeedback } from "@sentry/react"
 import { useLayoutEffect, type RefObject } from "react"
 
 /**
@@ -31,9 +29,9 @@ export function useSentryFeedbackAttach(
       attempts++
       if (attempts < maxAttempts) {
         window.setTimeout(tryAttach, 50)
-      } else if (process.env.NODE_ENV === "development") {
+      } else if (import.meta.env.DEV) {
         console.warn(
-          "[error-wolf] User Feedback unavailable: set NEXT_PUBLIC_SENTRY_DSN to the HTTPS Client Keys URL (.env.example) and restart."
+          "[error-wolf] User Feedback unavailable: set VITE_SENTRY_DSN to the HTTPS Client Keys URL (.env.example) and restart."
         )
       }
     }

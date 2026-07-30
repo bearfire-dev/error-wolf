@@ -1,7 +1,4 @@
-"use client"
-
-import dynamic from "next/dynamic"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react"
 import {
   ReloadIcon,
   ThumbsDownIcon,
@@ -51,7 +48,6 @@ import { type SimplifyWarning } from "@/lib/simplify/stub"
 import {
   HUNT_GITHUB_SOURCE_URL,
   HUNT_SENTRY_URL,
-  HUNT_VERCEL_ANALYTICS_PRIVACY_URL,
   HUNT_STEP_INDEX,
   HUNT_STEPS,
   STACK_TRACE_PLACEHOLDER,
@@ -63,6 +59,7 @@ import {
   type CostReferenceModel,
 } from "@/lib/simplify/cost-reference-models"
 import { cn } from "@/lib/utils"
+import { useHydrated } from "@/hooks/use-hydrated"
 import { useSentryFeedbackAttach } from "@/hooks/use-sentry-feedback-attach"
 
 import { useCostReferenceModel } from "./use-cost-reference-model"
@@ -74,21 +71,18 @@ import { useOpenRouterProviderRouting } from "./use-openrouter-provider-routing"
 import { ProcessingStep } from "./processing-step"
 
 const loadStackTraceExamplesDialog = () =>
-  import("@/components/stack-trace-examples-dialog").then(
-    (m) => m.StackTraceExamplesDialog
-  )
+  import("@/components/stack-trace-examples-dialog").then((m) => ({
+    default: m.StackTraceExamplesDialog,
+  }))
 
-const StackTraceExamplesDialog = dynamic(loadStackTraceExamplesDialog, {
-  ssr: false,
-})
+const StackTraceExamplesDialog = lazy(loadStackTraceExamplesDialog)
 
 const loadProcessingReplayPanel = () =>
-  import("./processing-replay-panel").then((m) => m.ProcessingReplayPanel)
+  import("./processing-replay-panel").then((m) => ({
+    default: m.ProcessingReplayPanel,
+  }))
 
-const ProcessingReplayPanel = dynamic(loadProcessingReplayPanel, {
-  ssr: false,
-  loading: () => null,
-})
+const ProcessingReplayPanel = lazy(loadProcessingReplayPanel)
 
 const loadProcessingDag = () =>
   import("./processing-dag").then((m) => m.ProcessingDag)
@@ -349,13 +343,15 @@ export function HuntClient({
             run.replay &&
             run.replay.frames.length > 0 && (
               <div className="relative flex h-full min-h-0 flex-1 flex-col pb-16">
-                <ProcessingReplayPanel
-                  key={replayPanelEpoch}
-                  frames={run.replay.frames}
-                  chunks={run.replay.chunks}
-                  durationMs={run.replay.durationMs}
-                  dag={replayEngine?.dag ?? resolvedEngine.dag}
-                />
+                <Suspense fallback={null}>
+                  <ProcessingReplayPanel
+                    key={replayPanelEpoch}
+                    frames={run.replay.frames}
+                    chunks={run.replay.chunks}
+                    durationMs={run.replay.durationMs}
+                    dag={replayEngine?.dag ?? resolvedEngine.dag}
+                  />
+                </Suspense>
                 <div className="pointer-events-auto absolute bottom-4 left-4 z-10 flex items-center gap-2">
                   <Button
                     type="button"
@@ -623,18 +619,6 @@ function KeyStep({
             see that too.
           </p>
           <p className="font-mono text-sm leading-snug text-pretty text-foreground max-sm:text-base md:text-xs">
-            We use{" "}
-            <a
-              href={HUNT_VERCEL_ANALYTICS_PRIVACY_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="underline underline-offset-2 hover:text-primary"
-            >
-              Vercel Web Analytics
-            </a>{" "}
-            for basic page-view and traffic stats site-wide.
-          </p>
-          <p className="font-mono text-sm leading-snug text-pretty text-foreground max-sm:text-base md:text-xs">
             This site is open source under the O&apos;Saasy License. You can
             audit/easily run the code for yourself by visiting our{" "}
             <a
@@ -718,6 +702,7 @@ function InputStep({
   onSmartSubmitChange: (enabled: boolean) => void
 }) {
   const pendingSmartSubmitPasteRef = useRef(false)
+  const hydrated = useHydrated()
 
   // "estimating" stays runnable: routing falls back to v1 without a token
   // count, so a slow or stalled estimate must not strand the user.
@@ -752,10 +737,17 @@ function InputStep({
           className="flex shrink-0 items-center gap-2"
           onPointerEnter={onPreloadStackTraceExamples}
         >
-          <StackTraceExamplesDialog
-            examples={stackTraceExamples}
-            onLoadExample={setRawInput}
-          />
+          {/* `next/dynamic` with `ssr: false` kept this out of the server HTML.
+              `useHydrated` holds the same contract: `lazy` alone would suspend
+              the whole input panel during SSR. */}
+          {hydrated ? (
+            <Suspense fallback={null}>
+              <StackTraceExamplesDialog
+                examples={stackTraceExamples}
+                onLoadExample={setRawInput}
+              />
+            </Suspense>
+          ) : null}
           {!keyOk && (
             <button
               type="button"

@@ -8,10 +8,7 @@
   "printWidth": 80,
   "sortTailwindcss": {
     "stylesheet": "src/globals.css",
-    "functions": [
-      "cn",
-      "cva"
-    ]
+    "functions": ["cn", "cva"]
   },
   "sortPackageJson": false,
   "ignorePatterns": [

@@ -1,5 +1,3 @@
-"use client"
-
 export type FastTokenEstimateKind = "text" | "prompt"
 
 export type FastTokenEstimateInput =

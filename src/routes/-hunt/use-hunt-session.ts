@@ -1,5 +1,3 @@
-"use client"
-
 import {
   startTransition,
   useCallback,
@@ -7,7 +5,7 @@ import {
   useRef,
   useState,
 } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@tanstack/react-router"
 
 import { hasConsent } from "@/lib/consent"
 import { emitUserSetupMetric } from "@/lib/sentry-product-metrics"
@@ -83,7 +81,7 @@ export function useHuntSession({
 
   useEffect(() => {
     if (!hasConsent()) {
-      router.replace("/")
+      void router.navigate({ to: "/", replace: true })
       return
     }
 

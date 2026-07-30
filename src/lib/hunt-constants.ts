@@ -29,5 +29,3 @@ export const STACK_TRACE_PLACEHOLDER = `Error: Invalid document id: root.
 export const HUNT_GITHUB_SOURCE_URL =
   "https://github.com/slate-rehm/error-wolf/"
 export const HUNT_SENTRY_URL = "https://sentry.io/"
-export const HUNT_VERCEL_ANALYTICS_PRIVACY_URL =
-  "https://vercel.com/docs/analytics/privacy-policy"

@@ -1,18 +1,23 @@
-import type { Metadata } from "next"
-import Link from "next/link"
+import { Link, createFileRoute } from "@tanstack/react-router"
 
 import { SITE_HEADER_GITHUB_URL } from "@/components/site-header-constants"
+import { getSiteUrl } from "@/lib/site-url"
 
-export const metadata: Metadata = {
-  title: "Privacy",
-  description:
-    "error-wolf is local-first. All processing happens in your browser. Your OpenRouter key never touches our servers. Open source and fully auditable.",
-  alternates: {
-    canonical: "/privacy",
-  },
-}
+const privacyDescription =
+  "error-wolf is local-first. All processing happens in your browser. Your OpenRouter key never touches our servers. Open source and fully auditable."
 
-export default function PrivacyPage() {
+export const Route = createFileRoute("/privacy")({
+  head: () => ({
+    meta: [
+      { title: "Privacy · error-wolf" },
+      { name: "description", content: privacyDescription },
+    ],
+    links: [{ rel: "canonical", href: new URL("/privacy", getSiteUrl()).href }],
+  }),
+  component: PrivacyPage,
+})
+
+function PrivacyPage() {
   return (
     <div className="py-10 sm:py-16">
       <div className="mx-auto max-w-2xl px-4 sm:px-6">
@@ -31,15 +36,6 @@ export default function PrivacyPage() {
             compression, and model calls happen client-side. No accounts. No
             server-side storage of your input or results. We collect anonymous
             telemetry to help improve the code:{" "}
-            <a
-              href="https://vercel.com/docs/analytics/privacy-policy"
-              target="_blank"
-              rel="noreferrer"
-              className="text-foreground/85 underline underline-offset-2 hover:text-primary"
-            >
-              Vercel Web Analytics
-            </a>{" "}
-            for site-wide aggregated page views (see Web analytics) and{" "}
             <a
               href="https://sentry.io/"
               target="_blank"
@@ -81,35 +77,6 @@ export default function PrivacyPage() {
           </p>
 
           <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">
-            Web analytics (Vercel)
-          </h3>
-          <p>
-            We use{" "}
-            <a
-              href="https://vercel.com/docs/analytics/privacy-policy"
-              target="_blank"
-              rel="noreferrer"
-              className="text-foreground/85 underline underline-offset-2 hover:text-primary"
-            >
-              Vercel Web Analytics
-            </a>{" "}
-            for site-wide aggregated page views and traffic. It is not tied to
-            the initialize consent cookie on the home page. Error and usage
-            telemetry uses{" "}
-            <a
-              href="https://sentry.io/"
-              target="_blank"
-              rel="noreferrer"
-              className="text-foreground/85 underline underline-offset-2 hover:text-primary"
-            >
-              Sentry
-            </a>{" "}
-            as described below. Before analytics events are sent, we strip query
-            strings from the reported URL in your browser so tokens and other
-            sensitive query data are not included.
-          </p>
-
-          <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">
             Consent and telemetry
           </h3>
           <p>
@@ -125,9 +92,10 @@ export default function PrivacyPage() {
             in privacy mode for basic error, performance, and usage data only.
             No personal data or stack traces are sent. When you use the
             initialize flow on the home page, consent is stored as a first-party
-            cookie for that experience. That cookie does not disable Vercel Web
-            Analytics (traffic still uses the section above). Optional feedback
-            you submit with a screenshot is visible to us in Sentry.
+            cookie for that experience. Error reports travel through a
+            first-party path on this site, not to a third-party host. Optional
+            feedback you submit with a screenshot is visible to us in Sentry. We
+            do not use a site-wide web analytics product.
           </p>
 
           <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">
@@ -150,7 +118,7 @@ export default function PrivacyPage() {
 
         <p className="mt-16 font-mono text-[0.6875rem] tracking-wider text-muted-foreground uppercase">
           <Link
-            href="/"
+            to="/"
             className="underline-offset-2 hover:text-foreground hover:underline"
           >
             &larr; back

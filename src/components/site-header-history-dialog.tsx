@@ -1,5 +1,3 @@
-"use client"
-
 import { useCallback, useMemo, useState } from "react"
 
 import { Clock04Icon, Delete02Icon } from "@hugeicons/core-free-icons"

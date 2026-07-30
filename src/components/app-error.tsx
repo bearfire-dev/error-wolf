@@ -1,13 +1,17 @@
-"use client"
-
-import * as Sentry from "@sentry/nextjs"
+import * as Sentry from "@sentry/react"
 import { useEffect, useState } from "react"
 
 import { CrashReportForm } from "@/components/sentry/crash-report-form"
 import { Button } from "@/components/ui/button"
 import { clearAll } from "@/lib/wipe"
 
-export default function Error({
+/**
+ * One boundary replaces `app/error.tsx` and `app/global-error.tsx`. TanStack
+ * renders `errorComponent` inside the root `shellComponent`, so the document
+ * shell, the theme, and the font are already in place — the second copy that
+ * `global-error.tsx` had to carry is not needed.
+ */
+export function AppError({
   error,
   reset,
 }: {

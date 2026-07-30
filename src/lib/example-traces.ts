@@ -1,11 +1,19 @@
-import fs from "node:fs"
-import path from "node:path"
-
 export type StackTraceExample = {
   id: string
   title: string
   content: string
 }
+
+/**
+ * Cloudflare Workers have no filesystem, so `examples/*.txt` is inlined at
+ * build time instead of read from disk on each request. Glob keys are
+ * repo-relative paths; the id stays the bare filename, as under `readdirSync`.
+ */
+const exampleFiles = import.meta.glob<string>("../../examples/*.txt", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+})
 
 function titleFromBasename(basename: string): string {
   const base = basename.replace(/\.txt$/i, "")
@@ -16,19 +24,17 @@ function titleFromBasename(basename: string): string {
     .join(" ")
 }
 
-/** Reads `examples/*.txt` at request time (server-only import). */
+const stackTraceExamples: StackTraceExample[] = Object.entries(exampleFiles)
+  .map(([filePath, content]) => {
+    const filename = filePath.slice(filePath.lastIndexOf("/") + 1)
+    return {
+      id: filename,
+      title: titleFromBasename(filename),
+      content,
+    }
+  })
+  .sort((a, b) => a.id.localeCompare(b.id))
+
 export function loadStackTraceExamples(): StackTraceExample[] {
-  const dir = path.join(process.cwd(), "examples")
-  if (!fs.existsSync(dir)) return []
-
-  const names = fs
-    .readdirSync(dir)
-    .filter((f) => f.endsWith(".txt"))
-    .sort((a, b) => a.localeCompare(b))
-
-  return names.map((filename) => ({
-    id: filename,
-    title: titleFromBasename(filename),
-    content: fs.readFileSync(path.join(dir, filename), "utf8"),
-  }))
+  return stackTraceExamples
 }

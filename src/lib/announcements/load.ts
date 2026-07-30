@@ -1,17 +1,14 @@
-import { readFileSync } from "fs"
-import { join } from "path"
-import { cache } from "react"
+import updatesMarkdown from "../../../content/updates.md?raw"
 
 import { parseAnnouncementsFile } from "@/lib/announcements/parse"
 
-const FILE = join(process.cwd(), "content", "updates.md")
+/**
+ * Cloudflare Workers have no filesystem, so `content/updates.md` is inlined at
+ * build time and parsed once per module instance. That replaces the per-request
+ * `readFileSync` and its React `cache` wrapper.
+ */
+const announcementsFeed = parseAnnouncementsFile(updatesMarkdown)
 
-/** Server-only: reads `content/updates.md` once per request (deduped via `cache`). */
-export const getAnnouncementsFeed = cache(() => {
-  try {
-    const raw = readFileSync(FILE, "utf8")
-    return parseAnnouncementsFile(raw)
-  } catch {
-    return { lastUpdatedMs: 0, body: "" }
-  }
-})
+export function getAnnouncementsFeed() {
+  return announcementsFeed
+}

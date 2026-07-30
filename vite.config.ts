@@ -1,8 +1,9 @@
 import { cloudflare } from "@cloudflare/vite-plugin"
+import babel from "@rolldown/plugin-babel"
 import { sentryVitePlugin } from "@sentry/vite-plugin"
 import tailwindcss from "@tailwindcss/vite"
 import { tanstackStart } from "@tanstack/react-start/plugin/vite"
-import viteReact from "@vitejs/plugin-react"
+import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 import { imagetools } from "vite-imagetools"
 
@@ -13,8 +14,8 @@ import { imagetools } from "vite-imagetools"
  */
 const shouldUploadSentrySourcemaps = Boolean(
   process.env.SENTRY_AUTH_TOKEN &&
-    process.env.SENTRY_ORG &&
-    process.env.SENTRY_PROJECT
+  process.env.SENTRY_ORG &&
+  process.env.SENTRY_PROJECT
 )
 
 export default defineConfig({
@@ -35,11 +36,11 @@ export default defineConfig({
     tailwindcss(),
     imagetools(),
     tanstackStart(),
-    viteReact({
-      babel: {
-        plugins: [["babel-plugin-react-compiler", { target: "19" }]],
-      },
-    }),
+    viteReact(),
+    // React Compiler, in place of the Next `reactCompiler: true` option.
+    // @vitejs/plugin-react v6 transforms with Oxc, so the compiler runs
+    // through the Rolldown Babel bridge.
+    babel({ presets: [reactCompilerPreset({ target: "19" })] }),
     shouldUploadSentrySourcemaps &&
       sentryVitePlugin({
         authToken: process.env.SENTRY_AUTH_TOKEN,

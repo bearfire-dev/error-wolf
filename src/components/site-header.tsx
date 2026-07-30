@@ -1,5 +1,4 @@
-import Image from "next/image"
-import Link from "next/link"
+import { Link } from "@tanstack/react-router"
 
 import { GithubIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -33,17 +32,17 @@ export function SiteHeader({
     >
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <Link
-          href="/"
+          to="/"
           className="inline-flex items-center gap-1.5 font-mono text-xs tracking-wider"
           aria-label="error-wolf home"
         >
-          <Image
+          <img
             src="/logo.svg"
             alt=""
             width={16}
             height={16}
+            decoding="async"
             className="size-4 shrink-0"
-            unoptimized
             aria-hidden
           />
           <span className="whitespace-nowrap text-foreground normal-case">

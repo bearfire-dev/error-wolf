@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+/* Space Mono replaces `next/font/google`. Weights 400 and 700 match the old
+   `Space_Mono({ weight: ["400", "700"] })` call. */
+@import "@fontsource/space-mono/400.css";
+@import "@fontsource/space-mono/700.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -49,6 +53,11 @@
 }
 
 :root {
+  /* `next/font` set this variable through a class on <html>. The @theme block
+     above still reads it, so the token names do not change. */
+  --font-space-mono:
+    "Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
   --background: oklch(0.985 0.008 95);
   --foreground: oklch(0.2 0.01 150);
   --card: oklch(0.97 0.01 95);
@@ -230,11 +239,21 @@
   }
 }
 
-/* App Router: view transitions (main column); header stays fixed.
-   Transform-only (no opacity) — avoids transparent frames / flicker. */
+/* View transitions (main column); header stays fixed.
+   Transform-only (no opacity) — avoids transparent frames / flicker.
+
+   React's <ViewTransition enter="ew-enter" exit="ew-exit"> is not in stable
+   React 19, so TanStack Router drives `document.startViewTransition` instead
+   and the classes come from CSS. The ::view-transition rules below are
+   unchanged. */
 :root {
   --ew-vt-exit: 300ms;
   --ew-vt-enter: 300ms;
+}
+
+.ew-vt-main {
+  view-transition-name: ew-main;
+  view-transition-class: ew-enter ew-exit;
 }
 
 @keyframes ew-vt-slide-in {

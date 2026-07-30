@@ -1,17 +1,18 @@
-import type { Metadata } from "next"
-import Link from "next/link"
+import { Link, createFileRoute } from "@tanstack/react-router"
 
-import { acceptConsentAndStart } from "@/app/actions/consent"
 import { ErrorWolfMark } from "@/components/error-wolf-mark"
 import { Button } from "@/components/ui/button"
+import { acceptConsentAndStart } from "@/lib/server/consent"
+import { getSiteUrl } from "@/lib/site-url"
 
-export const metadata: Metadata = {
-  alternates: {
-    canonical: "/",
-  },
-}
+export const Route = createFileRoute("/")({
+  head: () => ({
+    links: [{ rel: "canonical", href: new URL("/", getSiteUrl()).href }],
+  }),
+  component: HomePage,
+})
 
-export default function Page() {
+function HomePage() {
   return (
     <div className="py-16 sm:py-24">
       <div className="mx-auto max-w-2xl px-4 sm:px-6">
@@ -40,7 +41,17 @@ export default function Page() {
             </p>
 
             <div className="pt-2">
-              <form action={acceptConsentAndStart}>
+              {/* The Next server action worked without JavaScript. A TanStack
+                  server function does not, but the product runs the whole
+                  simplify pipeline in the browser, so JavaScript is required
+                  either way. The server function still sets the cookie and
+                  redirects, so the cookie contract is unchanged. */}
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  void acceptConsentAndStart()
+                }}
+              >
                 <Button type="submit" size="lg">
                   [ initialize ]
                 </Button>
@@ -49,7 +60,7 @@ export default function Page() {
 
             <div className="pt-4 font-mono text-sm text-muted-foreground">
               <Link
-                href="/privacy"
+                to="/privacy"
                 className="underline-offset-2 hover:text-foreground hover:underline"
               >
                 privacy

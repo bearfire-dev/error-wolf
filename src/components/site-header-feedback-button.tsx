@@ -1,5 +1,3 @@
-"use client"
-
 import { Bug01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useRef } from "react"

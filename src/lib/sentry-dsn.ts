@@ -1,23 +1,23 @@
 /**
  * Project DSN for `Sentry.init`: an HTTPS ingest URL from Sentry (Client Keys), not a CLI token.
- * Unset disables Sentry. In the browser use `NEXT_PUBLIC_SENTRY_DSN` — `SENTRY_DSN` alone is not inlined client-side.
+ * Unset disables Sentry. Vite inlines `VITE_*` into both the browser bundle and
+ * the Worker bundle at build time, so one variable serves both sides. A DSN is
+ * public by design — it is not a secret.
  */
 export function getSentryDsn(): string | undefined {
-  const dsn =
-    process.env.NEXT_PUBLIC_SENTRY_DSN?.trim() || process.env.SENTRY_DSN?.trim()
+  const dsn = import.meta.env.VITE_SENTRY_DSN?.trim()
   return dsn || undefined
 }
 
 /**
  * Environment name in Sentry (Issues filter). Use your own value when forking so events
  * stay out of the original maintainer project unless you share a DSN.
- * Falls back to Vercel or Node environment.
+ * Falls back to the Vite mode (`development` or `production`).
  */
 export function getSentryInitEnvironment(): string {
   return (
-    process.env.SENTRY_ENVIRONMENT?.trim() ||
-    process.env.VERCEL_ENV?.trim() ||
-    process.env.NODE_ENV ||
+    import.meta.env.VITE_SENTRY_ENVIRONMENT?.trim() ||
+    import.meta.env.MODE ||
     "development"
   )
 }

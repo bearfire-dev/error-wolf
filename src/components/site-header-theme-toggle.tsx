@@ -1,20 +1,9 @@
-"use client"
-
-import { useSyncExternalStore } from "react"
-import { useTheme } from "next-themes"
-
 import { Moon02Icon, Sun02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
+import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
-
-function useHydrated() {
-  return useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false
-  )
-}
+import { useHydrated } from "@/hooks/use-hydrated"
 
 export function SiteHeaderThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()

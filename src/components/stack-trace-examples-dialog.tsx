@@ -1,5 +1,3 @@
-"use client"
-
 import { useCallback, useState } from "react"
 
 import { InformationCircleIcon } from "@hugeicons/core-free-icons"

@@ -1,4 +1,10 @@
-import * as Sentry from "@sentry/nextjs"
+/**
+ * `@sentry/core` and not `@sentry/react`: the initialize metric is emitted from
+ * a server function on the Worker, where the browser SDK has no client bound.
+ * Both `@sentry/react` and `@sentry/cloudflare` re-export this same `metrics`
+ * object, so each side reports through whichever client is active.
+ */
+import { metrics } from "@sentry/core"
 
 enum MetricName {
   UserInitialize = "user-initialize",
@@ -25,14 +31,14 @@ function feedbackAttr(vote: "up" | "down" | null): "up" | "down" | "none" {
 
 /** Home: user clicked [ initialize ] and consent was stored. */
 export function emitUserInitializeMetric(): void {
-  Sentry.metrics.count(MetricName.UserInitialize, 1, {
+  metrics.count(MetricName.UserInitialize, 1, {
     attributes: { [Attr.OccurredAt]: nowIso() },
   })
 }
 
 /** Hunt 01 KEY: OpenRouter key verified and saved. */
 export function emitUserSetupMetric(): void {
-  Sentry.metrics.count(MetricName.UserSetup, 1, {
+  metrics.count(MetricName.UserSetup, 1, {
     attributes: { [Attr.OccurredAt]: nowIso() },
   })
 }
@@ -56,7 +62,7 @@ export function emitUserRunMetric(input: UserRunMetricInput): void {
     attributes[Attr.EstimatedCostUsd] = input.estimatedCostUsd
   }
 
-  Sentry.metrics.count(MetricName.UserRun, 1, { attributes })
+  metrics.count(MetricName.UserRun, 1, { attributes })
 }
 
 export type UserRunDownvoteMetricInput = {
@@ -77,5 +83,5 @@ export function emitUserRunDownvoteMetric(
     attributes[Attr.EstimatedCostUsd] = input.estimatedCostUsd
   }
 
-  Sentry.metrics.count(MetricName.UserRunDownvote, 1, { attributes })
+  metrics.count(MetricName.UserRunDownvote, 1, { attributes })
 }

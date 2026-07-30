@@ -3,8 +3,9 @@ import { CONSENT_COOKIE_NAME, LEGACY_CONSENT_COOKIE_NAME } from "@/lib/consent"
 const OPENROUTER_KEY_COOKIE = "error_wolf_openrouter_key"
 const OPENROUTER_KEY_COOKIE_LEGACY = "better_errors_openrouter_key"
 
-/** Minimal shape of `await cookies()` from `next/headers` for server-only helpers. */
-type NextCookieStore = {
+/** Minimal cookie-store shape, so this module stays framework-free.
+ * `lib/server/hunt-hints.ts` adapts the TanStack request helpers to it. */
+type CookieStore = {
   get(name: string): { value: string } | undefined
   has(name: string): boolean
 }
@@ -19,12 +20,12 @@ function cookieValueLooksNonEmpty(raw: string | undefined): boolean {
 }
 
 /** Server-only: consent cookies set by the initialize flow (and legacy name). */
-export function hasConsentFromCookieStore(jar: NextCookieStore): boolean {
+export function hasConsentFromCookieStore(jar: CookieStore): boolean {
   return jar.has(CONSENT_COOKIE_NAME) || jar.has(LEGACY_CONSENT_COOKIE_NAME)
 }
 
 /** Server-only: non-httpOnly OpenRouter key cookie present (value not read into HTML). */
-export function hasOpenRouterKeyFromCookieStore(jar: NextCookieStore): boolean {
+export function hasOpenRouterKeyFromCookieStore(jar: CookieStore): boolean {
   const raw =
     jar.get(OPENROUTER_KEY_COOKIE)?.value ??
     jar.get(OPENROUTER_KEY_COOKIE_LEGACY)?.value

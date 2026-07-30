@@ -1,7 +1,5 @@
-"use client"
-
 import { useCallback, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@tanstack/react-router"
 
 import { Delete02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -26,8 +24,11 @@ export function SiteHeaderWipeDialog() {
   const performWipe = useCallback(() => {
     clearAll()
     setOpen(false)
-    router.replace("/")
-    router.refresh()
+    // `invalidate` re-runs the loaders, which is what `router.refresh()` did in
+    // Next: /hunt must re-read the now-cleared consent cookie.
+    void router
+      .navigate({ to: "/", replace: true })
+      .then(() => router.invalidate())
   }, [router])
 
   return (

@@ -1,6 +1,4 @@
-"use client"
-
-import * as Sentry from "@sentry/nextjs"
+import * as Sentry from "@sentry/react"
 import { useCallback, useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -22,10 +20,10 @@ type Status = "idle" | "success" | "error"
 let warnedMissingDsn = false
 
 function warnMissingSentryDsnOnce() {
-  if (process.env.NODE_ENV !== "development" || warnedMissingDsn) return
+  if (!import.meta.env.DEV || warnedMissingDsn) return
   warnedMissingDsn = true
   console.warn(
-    "[error-wolf] Set NEXT_PUBLIC_SENTRY_DSN to the HTTPS Client Keys DSN (see .env.example), then restart."
+    "[error-wolf] Set VITE_SENTRY_DSN to the HTTPS Client Keys DSN (see .env.example), then restart."
   )
 }
 
@@ -92,9 +90,8 @@ export function CrashReportForm({
             Crash report
           </CardTitle>
           <CardDescription>
-            Set{" "}
-            <span className="text-foreground/90">NEXT_PUBLIC_SENTRY_DSN</span>{" "}
-            to the HTTPS ingest URL from Client Keys (not a{" "}
+            Set <span className="text-foreground/90">VITE_SENTRY_DSN</span> to
+            the HTTPS ingest URL from Client Keys (not a{" "}
             <span className="text-foreground/90">sntrys_</span> CLI token) in{" "}
             <span className="text-foreground/90">.env.local</span> or host env,
             then restart. See{" "}

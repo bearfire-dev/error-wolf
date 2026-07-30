@@ -1,5 +1,3 @@
-"use client"
-
 import { useDeferredValue, useMemo } from "react"
 
 import { getSimplifyEngine } from "@/lib/simplify/engines/registry"
