@@ -1,0 +1,60 @@
+# Deploy needs the repo secret CLOUDFLARE_API_TOKEN with the Workers Scripts:Edit
+# permission. Without it the job still runs lint, typecheck, test, and build, and
+# the deploy step reports that it was skipped.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+concurrency:
+  group: error-wolf-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.17.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm run format:check
+      - run: pnpm run lint
+      - run: pnpm run typecheck
+      - run: pnpm run test
+
+      # SENTRY_AUTH_TOKEN is CI-only. When it is absent, vite.config.ts turns
+      # off source maps and the Sentry plugin, and the build still succeeds.
+      - name: Build
+        env:
+          VITE_SITE_URL: ${{ vars.VITE_SITE_URL }}
+          VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+        run: pnpm run build
+
+      # Prints "Total Upload: ... / gzip: ...". Cloudflare rejects a Worker
+      # above 3 MiB gzip.
+      - name: Report Worker bundle size
+        run: pnpm exec wrangler deploy --dry-run
+
+      - name: Deploy Worker
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -n "$CLOUDFLARE_API_TOKEN" ]; then
+            pnpm dlx wrangler@4.116.0 deploy
+          else
+            echo "No CLOUDFLARE_API_TOKEN: skipping wrangler. Set the repo secret to deploy from CI."
+          fi
