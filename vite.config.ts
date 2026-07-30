@@ -31,6 +31,10 @@ export default defineConfig({
   build: {
     sourcemap: shouldUploadSentrySourcemaps,
   },
+  /** Resolves the `@/*` alias from tsconfig.json in every environment. */
+  resolve: {
+    tsconfigPaths: true,
+  },
   plugins: [
     cloudflare({ viteEnvironment: { name: "ssr" } }),
     tailwindcss(),

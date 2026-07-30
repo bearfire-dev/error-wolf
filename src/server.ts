@@ -2,7 +2,9 @@ import * as Sentry from "@sentry/cloudflare"
 import handler, { createServerEntry } from "@tanstack/react-start/server-entry"
 import type { ServerEntry } from "@tanstack/react-start/server-entry"
 
-import { getSentryDsn, getSentryInitEnvironment } from "@/lib/sentry-dsn"
+// Relative, not `@/`: the Cloudflare plugin loads this entry through its own
+// module runner, which does not apply the tsconfig path alias.
+import { getSentryDsn, getSentryInitEnvironment } from "./lib/sentry-dsn"
 
 /**
  * Worker bindings this entry reads. Both are optional: with no DSN, Sentry is

@@ -14,9 +14,19 @@ import {
  * pins the upstream to this project's own ingest host and project id, so the
  * route cannot be used as an open proxy. It does not rate-limit.
  */
+/** The Next route handler exported POST only, so anything else got a 405. A
+ * TanStack server route without the method falls through to the SSR renderer
+ * and would answer 200 with the app shell. */
+const methodNotAllowed = () =>
+  new Response(null, { status: 405, headers: { allow: "POST" } })
+
 export const Route = createFileRoute("/anonymous-tea")({
   server: {
     handlers: {
+      GET: methodNotAllowed,
+      PUT: methodNotAllowed,
+      PATCH: methodNotAllowed,
+      DELETE: methodNotAllowed,
       POST: async ({ request }) => {
         const allow = getSentryTunnelAllowlist(getSentryDsn())
         if (!allow) {

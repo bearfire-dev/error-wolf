@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start"
 import { setCookie } from "@tanstack/react-start/server"
-import { redirect } from "@tanstack/react-router"
 
 import { CONSENT_COOKIE_NAME } from "@/lib/consent"
 import { emitUserInitializeMetric } from "@/lib/sentry-product-metrics"
@@ -15,6 +14,11 @@ const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365
  * from the browser with the same flags, and `lib/hunt-server-hints.ts` reads it
  * on the server. `secure` is off in development so the flow works over plain
  * HTTP on localhost.
+ *
+ * The Next action redirected to /hunt from the server. This one returns, and
+ * the caller navigates. A `redirect` thrown from an imperative server-function
+ * call arrives on the client as a raw `Response`, which `useServerFn` does not
+ * recognize, so the navigation would never happen.
  */
 export const acceptConsentAndStart = createServerFn({ method: "POST" }).handler(
   async () => {
@@ -25,6 +29,5 @@ export const acceptConsentAndStart = createServerFn({ method: "POST" }).handler(
       secure: import.meta.env.PROD,
     })
     emitUserInitializeMetric()
-    throw redirect({ to: "/hunt" })
   }
 )

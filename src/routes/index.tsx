@@ -1,4 +1,5 @@
-import { Link, createFileRoute } from "@tanstack/react-router"
+import { Link, createFileRoute, useRouter } from "@tanstack/react-router"
+import { useState } from "react"
 
 import { ErrorWolfMark } from "@/components/error-wolf-mark"
 import { Button } from "@/components/ui/button"
@@ -13,6 +14,22 @@ export const Route = createFileRoute("/")({
 })
 
 function HomePage() {
+  const router = useRouter()
+  const [starting, setStarting] = useState(false)
+
+  /** Set the consent cookie on the server, then go to /hunt. The order
+   * matters: the /hunt loader reads the cookie back on the server. */
+  async function startHunt() {
+    setStarting(true)
+    try {
+      await acceptConsentAndStart()
+      await router.navigate({ to: "/hunt" })
+    } catch (error) {
+      console.error("[home] could not store consent", error)
+      setStarting(false)
+    }
+  }
+
   return (
     <div className="py-16 sm:py-24">
       <div className="mx-auto max-w-2xl px-4 sm:px-6">
@@ -44,15 +61,14 @@ function HomePage() {
               {/* The Next server action worked without JavaScript. A TanStack
                   server function does not, but the product runs the whole
                   simplify pipeline in the browser, so JavaScript is required
-                  either way. The server function still sets the cookie and
-                  redirects, so the cookie contract is unchanged. */}
+                  either way. The cookie contract is unchanged. */}
               <form
                 onSubmit={(event) => {
                   event.preventDefault()
-                  void acceptConsentAndStart()
+                  void startHunt()
                 }}
               >
-                <Button type="submit" size="lg">
+                <Button type="submit" size="lg" disabled={starting}>
                   [ initialize ]
                 </Button>
               </form>
