@@ -604,8 +604,9 @@ function KeyStep({
             (and their providers). We do not collect your key, input, or output.
           </p>
           <p className="font-mono text-sm leading-snug text-pretty text-foreground max-sm:text-base md:text-xs">
-            We run no analytics. If the app crashes it sends an anonymous crash
-            report with no key, no input, and no IP address. See our{" "}
+            We run no analytics. We do track bugs in this site, meaning errors
+            error-wolf itself throws, never the errors you paste in. A crash
+            report carries no key, no input, and no IP address. See our{" "}
             <Link
               to="/privacy"
               className="underline underline-offset-2 hover:text-primary"

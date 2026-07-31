@@ -35,8 +35,13 @@ function PrivacyPage() {
             error-wolf runs entirely in your browser. Stack normalization,
             compression, and model calls happen client-side. No accounts. No
             server-side storage of your input or results. We run no product
-            analytics and no ad trackers. We do collect anonymous crash reports,
-            described below.
+            analytics and no ad trackers.
+          </p>
+          <p className="mt-4 text-foreground">
+            We do track bugs in this website, so we can fix them. That means
+            errors thrown by error-wolf itself. It does not mean the errors you
+            paste in. Your traces and logs are your data, and they stay in your
+            browser.
           </p>
 
           <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">
@@ -68,22 +73,41 @@ function PrivacyPage() {
           </p>
 
           <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">
-            Crash reporting
+            Our errors, not yours
           </h3>
           <p>
-            When the app breaks, it sends a crash report to Sentry so we can fix
-            the bug. There are no accounts, no profiles, and no identifiers that
-            follow you between visits.
+            This app exists to process error traces, so this distinction matters
+            more here than on most sites.
           </p>
           <p className="mt-4">
-            A report contains the error type and message, a stack trace, the
-            page path, your browser and OS version, and the app release.
+            <span className="text-foreground">
+              The errors you paste in are your data.
+            </span>{" "}
+            They never reach our servers and never reach Sentry. They go from
+            your browser straight to OpenRouter, and the results come back the
+            same way, into this browser and nowhere else.
+          </p>
+          <p className="mt-4">
+            <span className="text-foreground">
+              The errors error-wolf itself throws are our bugs.
+            </span>{" "}
+            When the app breaks, it sends a crash report to Sentry so we can fix
+            it. That report is about our broken code, not about your input.
+          </p>
+
+          <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">
+            What a crash report contains
+          </h3>
+          <p>
+            The error type and message, a stack trace through our code, the page
+            path, your browser and OS version, and the app release. No accounts,
+            no profiles, and no identifier that follows you between visits.
           </p>
           <p className="mt-4">
             A report never contains your OpenRouter key, the traces or logs you
             paste, your results, cookies, request headers, request bodies, or
-            console output. Messages are scrubbed for key-shaped strings and
-            truncated before they are sent.
+            console output. Before a report is sent, messages are scrubbed for
+            key-shaped strings and truncated.
           </p>
           <p className="mt-4">
             Your browser posts the report to this site, not to Sentry, and our

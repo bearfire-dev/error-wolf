@@ -10,10 +10,14 @@ All OpenRouter traffic is initiated from your browser. If verification, rankings
 
 ### Anonymous crash reporting
 
-The app sends crash reports to Sentry. Reports carry no account, no cookies, no
-request headers, no request bodies, and no console output. Your OpenRouter key
-and the text you paste never leave the browser: messages are scrubbed for
-key-shaped strings and truncated first.
+We track bugs in this website, meaning errors that Error Wolf itself throws.
+That is not the same as the errors you paste in. Your traces, your logs, and
+your results are never uploaded and never reach Sentry.
+
+Crash reports carry no account, no cookies, no request headers, no request
+bodies, and no console output. Your OpenRouter key and the text you paste never
+leave the browser: messages are scrubbed for key-shaped strings and truncated
+first.
 
 The browser posts reports to `/wdyd` on this site, and the Worker forwards them.
 No third-party script loads in the page, and Sentry sees the report arrive from
