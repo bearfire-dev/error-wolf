@@ -1,11 +1,7 @@
 # Postinstall scripts pnpm is allowed to run. Without these, `pnpm <script>`
 # aborts on its dependency-status check. esbuild backs Vitest, workerd backs the
-# Cloudflare Vite plugin and `wrangler dev`, sharp backs vite-imagetools, and
-# @posthog/cli downloads its binary to upload source maps at build time.
-# core-js arrives through posthog-js and only polyfills, so it needs no script.
+# Cloudflare Vite plugin and `wrangler dev`, and sharp backs vite-imagetools.
 allowBuilds:
-  "@posthog/cli": true
-  core-js: false
   esbuild: true
   msw: false
   sharp: true

@@ -28,4 +28,3 @@ export const STACK_TRACE_PLACEHOLDER = `Error: Invalid document id: root.
 
 export const HUNT_GITHUB_SOURCE_URL =
   "https://github.com/slate-rehm/error-wolf/"
-export const HUNT_POSTHOG_URL = "https://posthog.com/"

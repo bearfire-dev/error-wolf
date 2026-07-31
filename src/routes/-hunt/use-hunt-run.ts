@@ -16,13 +16,11 @@ import type {
 } from "@/lib/simplify/types"
 import {
   addRecentResult,
-  getRecentResults,
   getStats,
   previewText,
   updateRecentResultTokens,
   type SimplifyStats,
 } from "@/lib/recent-results"
-import { captureUserRun, captureUserRunDownvote } from "@/lib/product-analytics"
 import {
   createThroughputBus,
   type SimplifyProgressSnapshot,
@@ -436,43 +434,22 @@ export function useHuntRun({
 
     try {
       await navigator.clipboard.writeText(outputRef.current)
-
-      const latest = getRecentResults()[0]
-      const estimatedCostUsd = latest?.estimatedCostUsd
-
-      captureUserRun({
-        modelDisplay: outputModelDisplay,
-        feedbackAtCopy: outputFeedbackVote,
-        ...(typeof estimatedCostUsd === "number" ? { estimatedCostUsd } : {}),
-      })
-
       resetOutput()
     } catch {
       setLastError("Could not copy to clipboard.")
     }
-  }, [outputFeedbackVote, outputModelDisplay, resetOutput])
+  }, [resetOutput])
 
   const discardOutput = useCallback(() => {
     resetOutput()
   }, [resetOutput])
 
-  const submitOutputFeedback = useCallback(
-    (vote: "up" | "down") => {
-      if (outputFeedbackLockedRef.current) return
-      outputFeedbackLockedRef.current = true
-      console.log("[hunt] output feedback", { sentiment: vote })
-      if (vote === "down") {
-        const latest = getRecentResults()[0]
-        const estimatedCostUsd = latest?.estimatedCostUsd
-        captureUserRunDownvote({
-          modelDisplay: outputModelDisplay,
-          ...(typeof estimatedCostUsd === "number" ? { estimatedCostUsd } : {}),
-        })
-      }
-      setOutputFeedbackVote(vote)
-    },
-    [outputModelDisplay]
-  )
+  const submitOutputFeedback = useCallback((vote: "up" | "down") => {
+    if (outputFeedbackLockedRef.current) return
+    outputFeedbackLockedRef.current = true
+    console.log("[hunt] output feedback", { sentiment: vote })
+    setOutputFeedbackVote(vote)
+  }, [])
 
   const clearKeyCreditsNotice = useCallback(() => {
     setKeyCreditsNotice(null)

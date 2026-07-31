@@ -1,8 +1,7 @@
 import { createServerFn } from "@tanstack/react-start"
-import { getRequestHeader, setCookie } from "@tanstack/react-start/server"
+import { setCookie } from "@tanstack/react-start/server"
 
 import { CONSENT_COOKIE_NAME } from "@/lib/consent"
-import { captureUserInitialize } from "@/lib/server/posthog"
 
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365
 
@@ -28,19 +27,5 @@ export const acceptConsentAndStart = createServerFn({ method: "POST" }).handler(
       sameSite: "lax",
       secure: import.meta.env.PROD,
     })
-
-    // Reads the anonymous distinct id from the posthog-js cookie, so this
-    // server event lands on the same person as the browser events. Analytics
-    // must never fail the consent flow, so the error is swallowed.
-    try {
-      await captureUserInitialize(
-        // A server function has no `env` binding, so the token falls back to
-        // the build-time `VITE_POSTHOG_KEY`.
-        {},
-        getRequestHeader("cookie") ?? null
-      )
-    } catch (error) {
-      console.error("[consent] could not record the initialize event", error)
-    }
   }
 )

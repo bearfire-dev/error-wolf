@@ -13,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { captureBrowserException } from "@/lib/product-analytics"
 import { clearAll } from "@/lib/wipe"
 
 import { SITE_HEADER_WIPE_HINT } from "./site-header-constants"
@@ -33,7 +32,7 @@ export function SiteHeaderWipeDialog() {
       .navigate({ to: "/", replace: true })
       .then(() => router.invalidate())
       .catch((error: unknown) => {
-        captureBrowserException(error)
+        console.error("[wipe] could not return to the home page", error)
       })
   }, [router])
 

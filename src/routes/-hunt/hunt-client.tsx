@@ -47,7 +47,6 @@ import type {
 import { type SimplifyWarning } from "@/lib/simplify/stub"
 import {
   HUNT_GITHUB_SOURCE_URL,
-  HUNT_POSTHOG_URL,
   HUNT_STEP_INDEX,
   HUNT_STEPS,
   STACK_TRACE_PLACEHOLDER,
@@ -604,17 +603,8 @@ function KeyStep({
             (and their providers). We do not collect your key, input, or output.
           </p>
           <p className="font-mono text-sm leading-snug text-pretty text-foreground max-sm:text-base md:text-xs">
-            We use{" "}
-            <a
-              href={HUNT_POSTHOG_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="underline underline-offset-2 hover:text-primary"
-            >
-              PostHog
-            </a>{" "}
-            for anonymous usage and error collection only. We never link those
-            events to an identified person.
+            We run no analytics and no error tracking. Nothing about your visit
+            leaves your browser.
           </p>
           <p className="font-mono text-sm leading-snug text-pretty text-foreground max-sm:text-base md:text-xs">
             This site is open source under the O&apos;Saasy License. You can

@@ -34,18 +34,8 @@ function PrivacyPage() {
           <p className="text-foreground">
             error-wolf runs entirely in your browser. Stack normalization,
             compression, and model calls happen client-side. No accounts. No
-            server-side storage of your input or results. We collect anonymous
-            telemetry to help improve the code:{" "}
-            <a
-              href="https://posthog.com/"
-              target="_blank"
-              rel="noreferrer"
-              className="text-foreground/85 underline underline-offset-2 hover:text-primary"
-            >
-              PostHog
-            </a>{" "}
-            for errors and product usage after you initialize from the home page
-            (see Consent and telemetry).
+            server-side storage of your input or results. We collect no
+            analytics and no telemetry of any kind.
           </p>
 
           <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">
@@ -77,24 +67,14 @@ function PrivacyPage() {
           </p>
 
           <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">
-            Consent and telemetry
+            Consent
           </h3>
           <p>
-            We use{" "}
-            <a
-              href="https://posthog.com/"
-              target="_blank"
-              rel="noreferrer"
-              className="text-foreground/85 underline underline-offset-2 hover:text-primary"
-            >
-              PostHog
-            </a>{" "}
-            for basic error and usage data only. No personal data or stack
-            traces are sent, and we never link events to an identified person.
-            When you use the initialize flow on the home page, consent is stored
-            as a first-party cookie for that experience. Telemetry travels
-            through a first-party subdomain of this site, not to a third-party
-            host. We do not use a site-wide web analytics product.
+            When you use the initialize flow on the home page, your consent is
+            stored as a first-party cookie for that experience. That cookie is
+            the only thing it does. We run no analytics product, no error
+            tracking, and no third-party scripts, so nothing about your visit
+            leaves your browser.
           </p>
 
           <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">

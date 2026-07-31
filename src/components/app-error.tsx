@@ -1,7 +1,4 @@
-import { useEffect } from "react"
-
 import { Button } from "@/components/ui/button"
-import { captureBrowserException } from "@/lib/product-analytics"
 import { clearAll } from "@/lib/wipe"
 
 /**
@@ -17,12 +14,6 @@ export function AppError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
-  // React swallows the error here, so `capture_exceptions` never sees it. The
-  // boundary has to report it. PostHog returns no event id, unlike Sentry.
-  useEffect(() => {
-    captureBrowserException(error)
-  }, [error])
-
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-6 px-4 py-16">
       <div className="space-y-2">

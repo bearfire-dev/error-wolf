@@ -10,8 +10,8 @@ alwaysApply: true
 
 **error wolf** compresses noisy stack traces and build logs. The work happens in
 the browser with the user's own OpenRouter key. The server does three things
-only: it sets the consent cookie, it reads cookies for the /hunt gate, and it
-reports its own uncaught exceptions.
+only: it sets the consent cookie, it reads the cookies for the /hunt gate, and
+it serves the app.
 
 The product logic is in `src/lib/`. That code imports no framework APIs. Keep it
 that way.
@@ -43,7 +43,6 @@ that way.
 | **Fonts**             | **@fontsource/space-mono**, imported from `src/globals.css`                                                 |
 | **Theming**           | Local provider in `src/components/theme-provider.tsx` plus a pre-paint inline script                        |
 | **Images**            | **vite-imagetools** for the background photo, plain `<img>` for the logo                                    |
-| **Observability**     | **posthog-js** in the browser, **posthog-node** in the Worker, behind a Cloudflare reverse proxy            |
 | **Animation helpers** | **tw-animate-css** (imported from `src/globals.css`)                                                        |
 | **Lint**              | **Oxlint** (`.oxlintrc.json`): TypeScript and React rules, **`--type-aware`** through **`oxlint-tsgolint`** |
 | **Format**            | **Oxfmt** (`.oxfmtrc.json`): Prettier-compatible options plus **`sortTailwindcss`**                         |
@@ -62,7 +61,6 @@ that way.
   request helpers to the framework-free helpers in `src/lib/`.
 - **`src/components/`** — shared UI. `ui/` holds the shadcn primitives.
 - **`src/hooks/`** — shared hooks.
-- **`src/integrations/`** — browser PostHog setup.
 - **`src/assets/`** — images that the build processes. Files in `public/` ship
   as-is, so do not put a large source image there.
 - **`src/client.tsx`**, **`src/router.tsx`**, **`src/server.ts`** — the browser
@@ -96,9 +94,8 @@ There are three. Handle each with care.
 2. `src/routes/hunt.tsx` reads the consent cookie and the OpenRouter key cookie
    in a server function. It must keep the legacy cookie names. If you drop them,
    existing users lose their consent.
-3. `src/server.ts` catches every uncaught Worker exception, reports it to
-   PostHog, then rethrows. It awaits the report: a Worker can be torn down
-   before an un-awaited flush completes.
+3. `src/server.ts` wraps the TanStack Start server entry. It adds nothing
+   today. It exists so request middleware or error reporting has one home.
 
 ## UI
 
@@ -116,23 +113,21 @@ There are three. Handle each with care.
 
 Use **pnpm**.
 
-| Command                  | Purpose                                        |
-| ------------------------ | ---------------------------------------------- |
-| `pnpm dev`               | Vite dev server on port 3000                   |
-| `pnpm build`             | Production build into `dist/`                  |
-| `pnpm preview`           | Serve the production build                     |
-| `pnpm deploy`            | Build, then `wrangler deploy`                  |
-| `pnpm deploy:proxy`      | Deploy the PostHog reverse-proxy Worker        |
-| `pnpm sourcemaps:upload` | Send browser source maps to PostHog            |
-| `pnpm test`              | Vitest, one run                                |
-| `pnpm test:watch`        | Vitest in watch mode                           |
-| `pnpm lint`              | Oxlint (`--type-aware`)                        |
-| `pnpm lint:fix`          | Oxlint with safe fixes                         |
-| `pnpm format`            | Oxfmt (write)                                  |
-| `pnpm format:check`      | Oxfmt check-only                               |
-| `pnpm typecheck`         | `tsgo --noEmit` (`@typescript/native-preview`) |
-| `pnpm typecheck:tsc`     | Classic `tsc --noEmit` (parity check)          |
-| `pnpm cf-typegen`        | Generate Worker binding types                  |
+| Command              | Purpose                                        |
+| -------------------- | ---------------------------------------------- |
+| `pnpm dev`           | Vite dev server on port 3000                   |
+| `pnpm build`         | Production build into `dist/`                  |
+| `pnpm preview`       | Serve the production build                     |
+| `pnpm deploy`        | Build, then `wrangler deploy`                  |
+| `pnpm test`          | Vitest, one run                                |
+| `pnpm test:watch`    | Vitest in watch mode                           |
+| `pnpm lint`          | Oxlint (`--type-aware`)                        |
+| `pnpm lint:fix`      | Oxlint with safe fixes                         |
+| `pnpm format`        | Oxfmt (write)                                  |
+| `pnpm format:check`  | Oxfmt check-only                               |
+| `pnpm typecheck`     | `tsgo --noEmit` (`@typescript/native-preview`) |
+| `pnpm typecheck:tsc` | Classic `tsc --noEmit` (parity check)          |
+| `pnpm cf-typegen`    | Generate Worker binding types                  |
 
 There is no combined `check` script. After a substantive edit, run
 `pnpm format`, `pnpm lint`, `pnpm typecheck`, and `pnpm test`.
@@ -144,7 +139,7 @@ There is no combined `check` script. After a substantive edit, run
 `wrangler.jsonc` configures the Worker. Read it before you change the build.
 
 - `main` points at `src/server.ts`. That file wraps the TanStack Start server
-  entry, and reports uncaught exceptions to PostHog.
+  entry.
 - `compatibility_flags` includes `nodejs_compat`.
 - There is no `routes` block. The site serves from `*.workers.dev` until the
   custom domain moves.
@@ -169,78 +164,16 @@ the repo secret `CLOUDFLARE_API_TOKEN` with the `Workers Scripts:Edit`
 permission. Without the secret, the job still runs the checks and the build, and
 it reports that it skipped the deploy.
 
-## PostHog
-
-PostHog does product analytics and error tracking. It replaced Sentry.
-
-**Anonymous only.** Nothing calls `posthog.identify`. `person_profiles` is
-`identified_only`, so an anonymous visitor gets no person profile. Do not add an
-identify call.
-
-**Surveys and feature flags are off.** Both are out of scope. Disabling flags
-also removes the `/flags` request on every page load.
-
-Three parts:
-
-1. **Browser** — `src/integrations/posthog.client.ts`, started from
-   `src/client.tsx` before hydration. `capture_exceptions` reports uncaught
-   browser errors. The React error boundary in `src/components/app-error.tsx`
-   must report by hand, because React swallows the error before the global
-   handler sees it.
-2. **Worker** — `src/lib/server/posthog.ts` with posthog-node. It sends each
-   event straight away (`flushAt: 1`, `flushInterval: 0`). A batched flush can
-   be lost when the Worker stops.
-3. **Reverse proxy** — `workers/posthog-proxy/`, a second Worker on its own
-   subdomain. `VITE_POSTHOG_HOST` points the browser at it.
-
-### The reverse proxy
-
-The browser SDK talks to the proxy, not to PostHog. That keeps ingest on a
-first-party hostname that ad blockers do not match. The Worker code comes from
-the PostHog Cloudflare guide.
-
-- Keep the words analytics, tracking, telemetry, posthog, and ph out of the
-  subdomain. Blockers match all of them.
-- Do not fold the proxy into `src/server.ts`. The app Worker answers on the site
-  origin, and the proxy must answer on a different hostname.
-- The Worker itself talks to `us.i.posthog.com` directly. Server-to-server
-  traffic has no ad blocker in the path.
-
-Deploy it by hand with `pnpm run deploy:proxy`. It changes rarely, so CI does
-not deploy it.
-
-### Product events
-
-`src/lib/product-events.ts` holds the event names and property builders. It
-imports no SDK, so the browser path and the Worker path build the same payload.
-`user_initialize` fires in a server function. It reads the anonymous distinct id
-from the posthog-js cookie, so it lands on the same person as the browser
-events. With no cookie the event is dropped, because a fresh id per request
-would inflate the unique-user count.
-
-### Source maps
-
-`pnpm run sourcemaps:upload` injects a chunk id into each bundle and uploads the
-maps, so PostHog can read a minified browser stack trace. `vite.config.ts` only
-builds source maps when both upload variables are set.
-
 ## Environment variables
 
 Vite inlines every `VITE_*` variable into both bundles at build time.
 
-| Name                  | Where   | Purpose                                               |
-| --------------------- | ------- | ----------------------------------------------------- |
-| `VITE_SITE_URL`       | Build   | Canonical origin for metadata and the sitemap.        |
-| `VITE_POSTHOG_KEY`    | Build   | PostHog project token. Unset disables PostHog.        |
-| `VITE_POSTHOG_HOST`   | Build   | Reverse-proxy origin. Unset disables the browser SDK. |
-| `POSTHOG_CLI_API_KEY` | CI only | Source-map upload. Never commit a value.              |
-| `POSTHOG_CLI_ENV_ID`  | CI      | Source-map upload. PostHog environment id.            |
-| `POSTHOG_KEY`         | Worker  | Optional runtime override of the project token.       |
-| `POSTHOG_HOST`        | Worker  | Optional runtime override of the ingest host.         |
+| Name            | Where | Purpose                                        |
+| --------------- | ----- | ---------------------------------------------- |
+| `VITE_SITE_URL` | Build | Canonical origin for metadata and the sitemap. |
 
-A PostHog project token (`phc_`) is public by design and ships in the bundle. A
-personal API key (`phx_`) is not. **The repo is public.** Keep `phx_` keys out of
-tracked files and out of workflow logs.
+Vite inlines a `VITE_*` value into the browser bundle, so never put a secret in
+one. **The repo is public.**
 
 ## Code style
 
