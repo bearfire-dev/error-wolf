@@ -1,0 +1,43 @@
+# Checks only. Cloudflare deploys this Worker through its Git integration
+# (Workers Builds), so nothing here needs a Cloudflare API token.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+concurrency:
+  group: error-wolf-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.17.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm run format:check
+      - run: pnpm run lint
+      - run: pnpm run typecheck
+      - run: pnpm run test
+
+      - name: Build
+        env:
+          VITE_SITE_URL: ${{ vars.VITE_SITE_URL }}
+        run: pnpm run build
+
+      # Prints "Total Upload: ... / gzip: ...". Cloudflare rejects a Worker
+      # above 3 MiB gzip. Catching it here fails the PR instead of the
+      # Cloudflare build.
+      - name: Report Worker bundle size
+        run: pnpm exec wrangler deploy --dry-run

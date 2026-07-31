@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "error-wolf",
+  "compatibility_date": "2026-07-30",
+  "compatibility_flags": ["nodejs_compat"],
+  // Wraps `@tanstack/react-start/server-entry`, so there is one place to add
+  // request middleware or error reporting later.
+  "main": "src/server.ts",
+  "observability": {
+    "enabled": true,
+  },
+}
