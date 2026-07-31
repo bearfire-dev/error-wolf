@@ -1,3 +1,10 @@
+# This repo is not a workspace. The file exists only to hold pnpm settings.
+#
+# `allowBuilds` and `minimumReleaseAgeExclude` are pnpm 11 keys, and pnpm 10
+# rejects a workspace file that has no `packages` field. `package.json` pins
+# `packageManager` to pnpm 11 so every environment agrees, including the
+# Cloudflare build image, which defaults to pnpm 10.
+#
 # Postinstall scripts pnpm is allowed to run. Without these, `pnpm <script>`
 # aborts on its dependency-status check. esbuild backs Vitest, workerd backs the
 # Cloudflare Vite plugin and `wrangler dev`, and sharp backs vite-imagetools.
