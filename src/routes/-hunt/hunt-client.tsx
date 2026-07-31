@@ -1472,7 +1472,7 @@ function StatsStrip({
                   <li>
                     For this error stack, you paid more than you would have
                     without error-wolf (openrouter cost + cost of error-wolf
-                    output is greater then the estimated original cost)
+                    output is greater than the estimated original cost)
                   </li>
                   <li>
                     For small error stacks, it is often cheaper to pass them in
@@ -1480,7 +1480,7 @@ function StatsStrip({
                   </li>
                   <li>
                     error-wolf still cleans up the stack and simplifies the
-                    model context... so its not a total loss.
+                    model context, so it is not a total loss.
                   </li>
                   <li>
                     We recommend you use the Auto mode or a smaller version of

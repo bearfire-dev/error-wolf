@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { captureBrowserException } from "@/lib/product-analytics"
 import { clearAll } from "@/lib/wipe"
 
 import { SITE_HEADER_WIPE_HINT } from "./site-header-constants"
@@ -25,10 +26,15 @@ export function SiteHeaderWipeDialog() {
     clearAll()
     setOpen(false)
     // `invalidate` re-runs the loaders, which is what `router.refresh()` did in
-    // Next: /hunt must re-read the now-cleared consent cookie.
+    // Next: /hunt must re-read the now-cleared consent cookie. The data is
+    // already gone by this point, so a failed navigation must not surface as an
+    // unhandled rejection.
     void router
       .navigate({ to: "/", replace: true })
       .then(() => router.invalidate())
+      .catch((error: unknown) => {
+        captureBrowserException(error)
+      })
   }, [router])
 
   return (

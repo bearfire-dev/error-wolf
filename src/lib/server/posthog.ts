@@ -29,6 +29,14 @@ export type PostHogEnv = {
  */
 const DEFAULT_HOST = "https://us.i.posthog.com"
 
+/**
+ * Both waits are bounded, and they are independent. The server entry awaits
+ * these calls before it rethrows, so an unbounded one would hold the response
+ * open for as long as PostHog stalls. Losing an event beats hanging a request.
+ */
+const REQUEST_TIMEOUT_MS = 3_000
+const SHUTDOWN_TIMEOUT_MS = 3_000
+
 function resolveToken(env: PostHogEnv): string {
   return (
     env.POSTHOG_KEY?.trim() || import.meta.env.VITE_POSTHOG_KEY?.trim() || ""
@@ -40,6 +48,7 @@ function createClient(env: PostHogEnv, token: string): PostHog {
     host: env.POSTHOG_HOST?.trim() || DEFAULT_HOST,
     flushAt: 1,
     flushInterval: 0,
+    requestTimeout: REQUEST_TIMEOUT_MS,
   })
 }
 
@@ -83,7 +92,7 @@ export async function captureUserInitialize(
       },
     })
   } finally {
-    await client.shutdown()
+    await client.shutdown(SHUTDOWN_TIMEOUT_MS)
   }
 }
 
@@ -112,6 +121,6 @@ export async function captureServerException(
       }
     )
   } finally {
-    await client.shutdown()
+    await client.shutdown(SHUTDOWN_TIMEOUT_MS)
   }
 }
