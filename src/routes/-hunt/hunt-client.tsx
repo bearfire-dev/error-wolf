@@ -47,7 +47,7 @@ import type {
 import { type SimplifyWarning } from "@/lib/simplify/stub"
 import {
   HUNT_GITHUB_SOURCE_URL,
-  HUNT_SENTRY_URL,
+  HUNT_POSTHOG_URL,
   HUNT_STEP_INDEX,
   HUNT_STEPS,
   STACK_TRACE_PLACEHOLDER,
@@ -60,7 +60,6 @@ import {
 } from "@/lib/simplify/cost-reference-models"
 import { cn } from "@/lib/utils"
 import { useHydrated } from "@/hooks/use-hydrated"
-import { useSentryFeedbackAttach } from "@/hooks/use-sentry-feedback-attach"
 
 import { useCostReferenceModel } from "./use-cost-reference-model"
 import { useHuntInputs } from "./use-hunt-inputs"
@@ -607,16 +606,15 @@ function KeyStep({
           <p className="font-mono text-sm leading-snug text-pretty text-foreground max-sm:text-base md:text-xs">
             We use{" "}
             <a
-              href={HUNT_SENTRY_URL}
+              href={HUNT_POSTHOG_URL}
               target="_blank"
               rel="noreferrer"
               className="underline underline-offset-2 hover:text-primary"
             >
-              Sentry
+              PostHog
             </a>{" "}
-            in privacy mode for basic usage, performance, and error collection.
-            If you choose to submit an error report with a screenshot then we
-            see that too.
+            for anonymous usage and error collection only. We never link those
+            events to an identified person.
           </p>
           <p className="font-mono text-sm leading-snug text-pretty text-foreground max-sm:text-base md:text-xs">
             This site is open source under the O&apos;Saasy License. You can
@@ -929,8 +927,6 @@ function OutputStep({
   onCopy: () => void
 }) {
   const copyClickTimerRef = useRef<number | null>(null)
-  const leaveFeedbackRef = useRef<HTMLButtonElement>(null)
-  useSentryFeedbackAttach(leaveFeedbackRef, feedbackVote === "down")
 
   useEffect(() => {
     return () => {
@@ -1037,19 +1033,6 @@ function OutputStep({
                 <HugeiconsIcon icon={ThumbsDownIcon} strokeWidth={2} />
               </Button>
             </ButtonGroup>
-          )}
-          {feedbackVote === "down" && (
-            <div className="animate-in duration-200 fade-in-0 slide-in-from-right-2">
-              <Button
-                ref={leaveFeedbackRef}
-                type="button"
-                variant="destructive"
-                size="sm"
-                aria-label="Leave feedback about this output"
-              >
-                leave feedback
-              </Button>
-            </div>
           )}
         </div>
       </div>

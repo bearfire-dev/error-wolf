@@ -8,7 +8,7 @@ import {
 import { useRouter } from "@tanstack/react-router"
 
 import { hasConsent } from "@/lib/consent"
-import { emitUserSetupMetric } from "@/lib/sentry-product-metrics"
+import { captureUserSetup } from "@/lib/product-analytics"
 import type { HuntStep } from "@/lib/hunt-constants"
 import {
   clearOpenRouterKeyCookie,
@@ -123,7 +123,7 @@ export function useHuntSession({
       const ok = await verifyOpenRouterKey(apiKey)
       if (ok) {
         setOpenRouterKeyCookie(apiKey)
-        emitUserSetupMetric()
+        captureUserSetup()
         setKeyOk(true)
         setVerifyState("ok")
         setVerifyMessage(null)

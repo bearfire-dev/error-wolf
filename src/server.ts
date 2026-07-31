@@ -1,39 +1,29 @@
-import * as Sentry from "@sentry/cloudflare"
 import handler, { createServerEntry } from "@tanstack/react-start/server-entry"
+import { env } from "cloudflare:workers"
 import type { ServerEntry } from "@tanstack/react-start/server-entry"
 
 // Relative, not `@/`: the Cloudflare plugin loads this entry through its own
 // module runner, which does not apply the tsconfig path alias.
-import { getSentryDsn, getSentryInitEnvironment } from "./lib/sentry-dsn"
+import { captureServerException, type PostHogEnv } from "./lib/server/posthog"
 
 /**
- * Worker bindings this entry reads. Both are optional: with no DSN, Sentry is
- * off and the app still serves. They override the build-time `VITE_*` values,
- * which lets a deployed Worker point at a different Sentry project without a
- * rebuild.
+ * Worker entry. This replaces the `Sentry.withSentry` wrapper. PostHog ships no
+ * equivalent handler wrapper for Cloudflare, so the entry catches, reports, and
+ * rethrows on its own.
+ *
+ * The Start `fetch` signature is `(request, opts)` and carries no Worker
+ * bindings, so the `vars` from wrangler.jsonc come from `cloudflare:workers`.
+ *
+ * The report is awaited before the error propagates. A Worker can be torn down
+ * before an un-awaited flush completes, which loses the exception.
  */
-type RuntimeEnv = {
-  SENTRY_DSN?: string
-  SENTRY_ENVIRONMENT?: string
+const fetch: ServerEntry["fetch"] = async (request, opts) => {
+  try {
+    return await handler.fetch(request, opts)
+  } catch (error) {
+    await captureServerException(env as PostHogEnv, error, request)
+    throw error
+  }
 }
 
-const fetch: ServerEntry["fetch"] = (...args) => handler.fetch(...args)
-
-const serverEntry = createServerEntry({ fetch })
-
-export default Sentry.withSentry((env: RuntimeEnv) => {
-  const dsn = env.SENTRY_DSN?.trim() || getSentryDsn()
-
-  if (!dsn) {
-    return undefined
-  }
-
-  return {
-    dsn,
-    environment: env.SENTRY_ENVIRONMENT?.trim() || getSentryInitEnvironment(),
-    tracesSampleRate: 1,
-    enableLogs: true,
-    // Anonymous mode: do not send cookies, IP, or other default PII.
-    sendDefaultPii: false,
-  }
-}, serverEntry)
+export default createServerEntry({ fetch })

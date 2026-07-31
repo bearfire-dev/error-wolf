@@ -22,10 +22,7 @@ import {
   updateRecentResultTokens,
   type SimplifyStats,
 } from "@/lib/recent-results"
-import {
-  emitUserRunDownvoteMetric,
-  emitUserRunMetric,
-} from "@/lib/sentry-product-metrics"
+import { captureUserRun, captureUserRunDownvote } from "@/lib/product-analytics"
 import {
   createThroughputBus,
   type SimplifyProgressSnapshot,
@@ -443,7 +440,7 @@ export function useHuntRun({
       const latest = getRecentResults()[0]
       const estimatedCostUsd = latest?.estimatedCostUsd
 
-      emitUserRunMetric({
+      captureUserRun({
         modelDisplay: outputModelDisplay,
         feedbackAtCopy: outputFeedbackVote,
         ...(typeof estimatedCostUsd === "number" ? { estimatedCostUsd } : {}),
@@ -467,7 +464,7 @@ export function useHuntRun({
       if (vote === "down") {
         const latest = getRecentResults()[0]
         const estimatedCostUsd = latest?.estimatedCostUsd
-        emitUserRunDownvoteMetric({
+        captureUserRunDownvote({
           modelDisplay: outputModelDisplay,
           ...(typeof estimatedCostUsd === "number" ? { estimatedCostUsd } : {}),
         })

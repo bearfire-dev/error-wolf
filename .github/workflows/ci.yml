@@ -1,6 +1,14 @@
 # Deploy needs the repo secret CLOUDFLARE_API_TOKEN with the Workers Scripts:Edit
 # permission. Without it the job still runs lint, typecheck, test, and build, and
 # the deploy step reports that it was skipped.
+#
+# Source map upload needs the repo secret POSTHOG_CLI_API_KEY (a phx_ personal
+# API key) and the repo variable POSTHOG_CLI_ENV_ID. Same rule: absent means
+# skipped, not failed.
+#
+# The PostHog reverse proxy is a second Worker under workers/posthog-proxy. It
+# changes rarely, so it is not deployed here. Run `pnpm run deploy:proxy` by
+# hand after you edit it.
 
 name: CI
 
@@ -29,19 +37,38 @@ jobs:
 
       - run: pnpm run format:check
       - run: pnpm run lint
+
+      # Writes worker-configuration.d.ts, which declares `cloudflare:workers`.
+      # The file is generated from wrangler.jsonc plus the local .env, so it is
+      # gitignored and rebuilt here rather than committed.
+      - run: pnpm run cf-typegen
+
       - run: pnpm run typecheck
       - run: pnpm run test
 
-      # SENTRY_AUTH_TOKEN is CI-only. When it is absent, vite.config.ts turns
-      # off source maps and the Sentry plugin, and the build still succeeds.
+      # POSTHOG_CLI_* are CI-only. When they are absent, vite.config.ts turns
+      # source maps off and the build still succeeds.
       - name: Build
         env:
           VITE_SITE_URL: ${{ vars.VITE_SITE_URL }}
-          VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+          VITE_POSTHOG_KEY: ${{ vars.VITE_POSTHOG_KEY }}
+          VITE_POSTHOG_HOST: ${{ vars.VITE_POSTHOG_HOST }}
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
+          POSTHOG_CLI_ENV_ID: ${{ vars.POSTHOG_CLI_ENV_ID }}
         run: pnpm run build
+
+      # Injects a chunk id into each bundle, then uploads the maps so PostHog
+      # can symbolicate browser stack traces. Skipped without the credentials.
+      - name: Upload source maps
+        env:
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
+          POSTHOG_CLI_ENV_ID: ${{ vars.POSTHOG_CLI_ENV_ID }}
+        run: |
+          if [ -n "$POSTHOG_CLI_API_KEY" ] && [ -n "$POSTHOG_CLI_ENV_ID" ]; then
+            pnpm run sourcemaps:upload --release-version "$GITHUB_SHA"
+          else
+            echo "No POSTHOG_CLI_API_KEY / POSTHOG_CLI_ENV_ID: skipping source map upload."
+          fi
 
       # Prints "Total Upload: ... / gzip: ...". Cloudflare rejects a Worker
       # above 3 MiB gzip.

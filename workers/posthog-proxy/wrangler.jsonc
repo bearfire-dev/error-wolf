@@ -1,0 +1,24 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "error-wolf-posthog-proxy",
+  "compatibility_date": "2026-07-30",
+  "main": "src/index.js",
+  "observability": {
+    "enabled": true,
+  },
+  // The custom domain is what makes the proxy useful. On the default
+  // *.workers.dev hostname ad blockers match the pattern and drop the request,
+  // which is the thing this Worker exists to avoid.
+  //
+  // errorwolf.dev is not on Cloudflare yet (the app still serves from
+  // *.workers.dev until the domain moves), so this block stays commented out.
+  // Uncomment it once the zone exists, then run:
+  //   pnpm run deploy:proxy
+  //
+  // "routes": [
+  //   {
+  //     "pattern": "den.errorwolf.dev",
+  //     "custom_domain": true,
+  //   },
+  // ],
+}

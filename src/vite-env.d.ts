@@ -3,10 +3,14 @@
 interface ImportMetaEnv {
   /** Canonical site origin, e.g. `https://errorwolf.dev`. Optional in development. */
   readonly VITE_SITE_URL?: string
-  /** Sentry HTTPS Client Keys DSN. Unset disables Sentry. */
-  readonly VITE_SENTRY_DSN?: string
-  /** Environment tag in Sentry. Falls back to the Vite mode. */
-  readonly VITE_SENTRY_ENVIRONMENT?: string
+  /** PostHog project token (`phc_...`). Unset disables PostHog. Public by design. */
+  readonly VITE_POSTHOG_KEY?: string
+  /**
+   * Origin of the Cloudflare reverse proxy that fronts PostHog ingest, e.g.
+   * `https://den.errorwolf.dev`. Unset disables PostHog in the browser: without
+   * the proxy an ad blocker drops the requests anyway.
+   */
+  readonly VITE_POSTHOG_HOST?: string
 }
 
 interface ImportMeta {

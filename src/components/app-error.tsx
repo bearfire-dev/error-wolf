@@ -1,8 +1,7 @@
-import * as Sentry from "@sentry/react"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 
-import { CrashReportForm } from "@/components/sentry/crash-report-form"
 import { Button } from "@/components/ui/button"
+import { captureBrowserException } from "@/lib/product-analytics"
 import { clearAll } from "@/lib/wipe"
 
 /**
@@ -18,10 +17,10 @@ export function AppError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
-  const [eventId, setEventId] = useState<string | undefined>()
-
+  // React swallows the error here, so `capture_exceptions` never sees it. The
+  // boundary has to report it. PostHog returns no event id, unlike Sentry.
   useEffect(() => {
-    setEventId(Sentry.captureException(error))
+    captureBrowserException(error)
   }, [error])
 
   return (
@@ -65,7 +64,6 @@ export function AppError({
           Clearing removes your key, consent, and recent runs from this browser.
         </p>
       </div>
-      <CrashReportForm errorDigest={error.digest} eventId={eventId} />
     </div>
   )
 }

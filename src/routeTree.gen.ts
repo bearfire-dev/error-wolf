@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AnonymousTeaRouteImport } from './routes/anonymous-tea'
 import { Route as HuntRouteImport } from './routes/hunt'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
@@ -19,11 +18,6 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AnonymousTeaRoute = AnonymousTeaRouteImport.update({
-  id: '/anonymous-tea',
-  path: '/anonymous-tea',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HuntRoute = HuntRouteImport.update({
@@ -49,7 +43,6 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/anonymous-tea': typeof AnonymousTeaRoute
   '/hunt': typeof HuntRoute
   '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
@@ -57,7 +50,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/anonymous-tea': typeof AnonymousTeaRoute
   '/hunt': typeof HuntRoute
   '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
@@ -66,7 +58,6 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/anonymous-tea': typeof AnonymousTeaRoute
   '/hunt': typeof HuntRoute
   '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
@@ -74,34 +65,14 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/anonymous-tea'
-    | '/hunt'
-    | '/privacy'
-    | '/robots.txt'
-    | '/sitemap.xml'
+  fullPaths: '/' | '/hunt' | '/privacy' | '/robots.txt' | '/sitemap.xml'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/anonymous-tea'
-    | '/hunt'
-    | '/privacy'
-    | '/robots.txt'
-    | '/sitemap.xml'
-  id:
-    | '__root__'
-    | '/'
-    | '/anonymous-tea'
-    | '/hunt'
-    | '/privacy'
-    | '/robots.txt'
-    | '/sitemap.xml'
+  to: '/' | '/hunt' | '/privacy' | '/robots.txt' | '/sitemap.xml'
+  id: '__root__' | '/' | '/hunt' | '/privacy' | '/robots.txt' | '/sitemap.xml'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AnonymousTeaRoute: typeof AnonymousTeaRoute
   HuntRoute: typeof HuntRoute
   PrivacyRoute: typeof PrivacyRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
@@ -115,13 +86,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/anonymous-tea': {
-      id: '/anonymous-tea'
-      path: '/anonymous-tea'
-      fullPath: '/anonymous-tea'
-      preLoaderRoute: typeof AnonymousTeaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/hunt': {
@@ -157,7 +121,6 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AnonymousTeaRoute: AnonymousTeaRoute,
   HuntRoute: HuntRoute,
   PrivacyRoute: PrivacyRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,

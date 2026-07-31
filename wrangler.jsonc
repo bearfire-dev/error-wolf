@@ -3,9 +3,15 @@
   "name": "error-wolf",
   "compatibility_date": "2026-07-30",
   "compatibility_flags": ["nodejs_compat"],
-  // Wraps `@tanstack/react-start/server-entry` with `Sentry.withSentry`.
+  // Catches, reports, and rethrows uncaught exceptions to PostHog.
   "main": "src/server.ts",
   "observability": {
     "enabled": true,
+  },
+  "vars": {
+    // Public project token. Overrides the build-time VITE_POSTHOG_KEY for the
+    // Worker only, so a deployed Worker can point at another PostHog project
+    // without a rebuild. Set POSTHOG_HOST too if you move off the US region.
+    // "POSTHOG_KEY": "phc_...",
   },
 }

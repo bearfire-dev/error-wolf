@@ -7,7 +7,6 @@ import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 import { SiteHeaderAnnouncementsDialog } from "./site-header-announcements-dialog"
-import { SiteHeaderFeedbackButton } from "./site-header-feedback-button"
 import {
   SITE_HEADER_GITHUB_HINT,
   SITE_HEADER_GITHUB_URL,
@@ -57,7 +56,6 @@ export function SiteHeader({
           />
           <SiteHeaderHistoryDialog />
           <SiteHeaderWipeDialog />
-          <SiteHeaderFeedbackButton />
           <a
             href={SITE_HEADER_GITHUB_URL}
             target="_blank"
