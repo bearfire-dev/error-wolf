@@ -1,6 +1,5 @@
-# Deploy needs the repo secret CLOUDFLARE_API_TOKEN with the Workers Scripts:Edit
-# permission. Without it the job still runs lint, typecheck, test, and build, and
-# the deploy step reports that it was skipped.
+# Checks only. Cloudflare deploys this Worker through its Git integration
+# (Workers Builds), so nothing here needs a Cloudflare API token.
 
 name: CI
 
@@ -38,17 +37,7 @@ jobs:
         run: pnpm run build
 
       # Prints "Total Upload: ... / gzip: ...". Cloudflare rejects a Worker
-      # above 3 MiB gzip.
+      # above 3 MiB gzip. Catching it here fails the PR instead of the
+      # Cloudflare build.
       - name: Report Worker bundle size
         run: pnpm exec wrangler deploy --dry-run
-
-      - name: Deploy Worker
-        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          if [ -n "$CLOUDFLARE_API_TOKEN" ]; then
-            pnpm dlx wrangler@4.116.0 deploy
-          else
-            echo "No CLOUDFLARE_API_TOKEN: skipping wrangler. Set the repo secret to deploy from CI."
-          fi

@@ -159,10 +159,29 @@ To test against the Workers runtime and not the Vite dev server, run
 
 ### Deploy
 
-CI runs `.github/workflows/ci.yml` on Blacksmith runners. The deploy step needs
-the repo secret `CLOUDFLARE_API_TOKEN` with the `Workers Scripts:Edit`
-permission. Without the secret, the job still runs the checks and the build, and
-it reports that it skipped the deploy.
+**Cloudflare deploys this Worker itself**, through its Git integration (Workers
+Builds). A push to `master` triggers a Cloudflare build, and Cloudflare runs
+`wrangler deploy`. GitHub Actions does not deploy, and the repo needs no
+Cloudflare API token.
+
+Cloudflare build settings:
+
+| Setting        | Value                 |
+| -------------- | --------------------- |
+| Build command  | `pnpm run build`      |
+| Deploy command | `npx wrangler deploy` |
+| Root directory | repo root             |
+
+Set `VITE_SITE_URL` as a build variable in the Cloudflare project. Vite inlines
+it at build time, so it must be present in the Cloudflare build and not only in
+GitHub Actions.
+
+`.github/workflows/ci.yml` runs the checks on Blacksmith runners: format, lint,
+typecheck, test, build, and the Worker size report. It gates the pull request.
+It does not ship anything.
+
+`pnpm deploy` still works for a deploy by hand. It needs a local `wrangler
+login`.
 
 ## Environment variables
 
