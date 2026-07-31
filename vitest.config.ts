@@ -8,6 +8,10 @@ import { defineConfig } from "vitest/config"
  * would run the suite inside the Workers runtime.
  */
 export default defineConfig({
+  /** Mirrors the `define` in vite.config.ts so `lib/sentry/options.ts` builds. */
+  define: {
+    __SENTRY_RELEASE__: "null",
+  },
   test: {
     environment: "node",
     alias: {
