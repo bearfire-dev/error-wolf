@@ -28,6 +28,16 @@ pnpm build
 pnpm exec wrangler dev
 ```
 
+## Deploy
+
+Cloudflare builds and deploys the Worker from this repo through its Git
+integration. A push to `master` ships it. There is no deploy step in GitHub
+Actions and no Cloudflare API token in the repo.
+
+`VITE_SITE_URL` has to be set as a build variable in the Cloudflare project.
+Vite inlines it at build time, so a value set only in GitHub Actions never
+reaches the deployed bundle.
+
 ## License
 
 Licensed under the [O'Saasy License](./LICENSE.md). You may use, modify, and distribute the software broadly, but you may not offer it to third parties as a hosted SaaS or cloud service whose primary value is the software itself (see the license for the exact terms).
