@@ -8,6 +8,18 @@ Error Wolf is a small, open-source web app that shrinks noisy console logs and s
 
 All OpenRouter traffic is initiated from your browser. If verification, rankings, or completions cannot reach OpenRouter (network, DNS, or blocked IP), the app surfaces that as a client-side error. This project does not expose internal proxy routes for OpenRouter.
 
+### Anonymous crash reporting
+
+The app sends crash reports to Sentry. Reports carry no account, no cookies, no
+request headers, no request bodies, and no console output. Your OpenRouter key
+and the text you paste never leave the browser: messages are scrubbed for
+key-shaped strings and truncated first.
+
+The browser posts reports to `/wdyd` on this site, and the Worker forwards them.
+No third-party script loads in the page, and Sentry sees the report arrive from
+Cloudflare rather than from your IP address. Details are on the
+[privacy page](https://errorwolf.dev/privacy).
+
 ## Feedback and issues
 
 Suggestions, product feedback, and bug reports are welcome. Please **[open a GitHub issue](https://github.com/slate-rehm/error-wolf/issues/new)** so we can track them in one place.
@@ -37,6 +49,10 @@ Actions and no Cloudflare API token in the repo.
 `VITE_SITE_URL` has to be set as a build variable in the Cloudflare project.
 Vite inlines it at build time, so a value set only in GitHub Actions never
 reaches the deployed bundle.
+
+`SENTRY_AUTH_TOKEN` is optional. Set it as a secret build variable in the same
+place to upload source maps, which makes stack traces in Sentry readable. The
+build succeeds without it.
 
 ## License
 

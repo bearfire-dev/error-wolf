@@ -47,6 +47,7 @@ that way.
 | **Lint**              | **Oxlint** (`.oxlintrc.json`): TypeScript and React rules, **`--type-aware`** through **`oxlint-tsgolint`** |
 | **Format**            | **Oxfmt** (`.oxfmtrc.json`): Prettier-compatible options plus **`sortTailwindcss`**                         |
 | **Test**              | **Vitest** (`vitest.config.ts`), unit tests beside the sources in `src/lib/`                                |
+| **Error monitoring**  | **@sentry/react** (browser), **@sentry/cloudflare** (Worker), **@sentry/core** (tunnel), proxied at `/wdyd` |
 
 **Module system:** ESM. `package.json` sets `"type": "module"`.
 
@@ -59,12 +60,19 @@ that way.
   estimation, cost models, and token estimation. No framework imports.
 - **`src/lib/server/`** — the only server-side modules. They adapt the TanStack
   request helpers to the framework-free helpers in `src/lib/`.
+- **`src/lib/sentry/`** — the DSN, org, project, tunnel path, option objects,
+  and the scrubber. Only `browser.ts` imports a Sentry SDK at runtime, and it is
+  browser-only. Everywhere else the SDK imports are type-only.
 - **`src/components/`** — shared UI. `ui/` holds the shadcn primitives.
 - **`src/hooks/`** — shared hooks.
 - **`src/assets/`** — images that the build processes. Files in `public/` ship
   as-is, so do not put a large source image there.
 - **`src/client.tsx`**, **`src/router.tsx`**, **`src/server.ts`** — the browser
   entry, the router factory, and the Worker entry.
+- **`src/start.ts`** — global request middleware, discovered by file name. It is
+  bundled into **both** the browser and the Worker, so it must never import
+  `@sentry/cloudflare`, which pulls in `node:async_hooks` and
+  `cloudflare:workers`. Use the isomorphic helpers from `@sentry/core`.
 
 Colocate by feature as the app grows. Keep route-local UI under `src/routes/`
 with a `-` prefix.
@@ -78,12 +86,19 @@ with a `-` prefix.
 | `/privacy`     | `src/routes/privacy.tsx`      |                                            |
 | `/robots.txt`  | `src/routes/robots[.]txt.ts`  | Square brackets escape the dot in a path.  |
 | `/sitemap.xml` | `src/routes/sitemap[.]xml.ts` |                                            |
+| `/wdyd`        | `src/routes/wdyd.ts`          | Sentry envelope proxy. POST only.          |
 
-Do not change these URLs. The consent flow and the sitemap reference them.
+Do not change these URLs. The consent flow and the sitemap reference them, and
+the tunnel path is compiled into every browser bundle already in the wild —
+renaming it silently stops crash reports from older tabs.
+
+`/wdyd` answers every method except POST with 405. Without those handlers the
+router falls through to the SPA shell and serves the whole app as HTML with a
+200, which `robots.txt` (`Allow: /`) then invites crawlers to index.
 
 ## Server touchpoints
 
-There are three. Handle each with care.
+There are four. Handle each with care.
 
 1. `src/lib/server/consent.ts` sets the consent cookie. The home route then
    navigates to /hunt. The cookie attributes must not change.
@@ -94,8 +109,17 @@ There are three. Handle each with care.
 2. `src/routes/hunt.tsx` reads the consent cookie and the OpenRouter key cookie
    in a server function. It must keep the legacy cookie names. If you drop them,
    existing users lose their consent.
-3. `src/server.ts` wraps the TanStack Start server entry. It adds nothing
-   today. It exists so request middleware or error reporting has one home.
+3. `src/server.ts` wraps the TanStack Start server entry with
+   `withSentry`. Its `fetch` deliberately declares one parameter and its options
+   callback deliberately takes none. Both are what let it typecheck with no
+   cast: `Env` never has to resolve, which matters because
+   `worker-configuration.d.ts` is gitignored and absent in CI. Annotating it
+   with `ExportedHandler` or `Env` breaks CI only, never a local typecheck.
+4. `src/routes/wdyd.ts` forwards Sentry envelopes. `handleTunnelRequest`
+   validates each envelope's DSN against an allowlist, which is the only thing
+   stopping it from being an open relay into somebody else's Sentry project.
+   The Worker SDK must never set `tunnel`: it posts to Sentry directly, so an
+   error thrown while handling a tunnel request cannot tunnel itself.
 
 ## UI
 
@@ -187,9 +211,14 @@ login`.
 
 Vite inlines every `VITE_*` variable into both bundles at build time.
 
-| Name            | Where | Purpose                                        |
-| --------------- | ----- | ---------------------------------------------- |
-| `VITE_SITE_URL` | Build | Canonical origin for metadata and the sitemap. |
+| Name                | Where | Purpose                                        |
+| ------------------- | ----- | ---------------------------------------------- |
+| `VITE_SITE_URL`     | Build | Canonical origin for metadata and the sitemap. |
+| `SENTRY_AUTH_TOKEN` | Build | Uploads source maps. Optional.                 |
+
+`SENTRY_AUTH_TOKEN` is the only Sentry secret. The DSN, the org, and the project
+are public by design and live in `src/lib/sentry/constants.ts`. Without the
+token the Vite plugin disables itself and the build still succeeds.
 
 Vite inlines a `VITE_*` value into the browser bundle, so never put a secret in
 one. **The repo is public.**
@@ -219,6 +248,12 @@ These tests cover the parts that are hard to check by hand: cost models, model
 endpoint fetching, preprocessing, the OpenRouter client, recent results, and run
 deadlines. Keep them passing. If a test needs a change, change its framework
 assumptions and never the expected behavior.
+
+`src/lib/sentry/scrub.test.ts` and `src/lib/sentry/options.test.ts` are a
+different kind of test. They assert the privacy contract: no user info, no
+cookies, no headers, no bodies, no console breadcrumbs, and API keys redacted
+out of every message. A failure there is a live data leak, not a style problem.
+Do not weaken an assertion to make a change pass.
 
 ## Git
 

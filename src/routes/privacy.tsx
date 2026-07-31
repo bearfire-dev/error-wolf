@@ -34,8 +34,9 @@ function PrivacyPage() {
           <p className="text-foreground">
             error-wolf runs entirely in your browser. Stack normalization,
             compression, and model calls happen client-side. No accounts. No
-            server-side storage of your input or results. We collect no
-            analytics and no telemetry of any kind.
+            server-side storage of your input or results. We run no product
+            analytics and no ad trackers. We do collect anonymous crash reports,
+            described below.
           </p>
 
           <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">
@@ -67,14 +68,42 @@ function PrivacyPage() {
           </p>
 
           <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">
+            Crash reporting
+          </h3>
+          <p>
+            When the app breaks, it sends a crash report to Sentry so we can fix
+            the bug. There are no accounts, no profiles, and no identifiers that
+            follow you between visits.
+          </p>
+          <p className="mt-4">
+            A report contains the error type and message, a stack trace, the
+            page path, your browser and OS version, and the app release.
+          </p>
+          <p className="mt-4">
+            A report never contains your OpenRouter key, the traces or logs you
+            paste, your results, cookies, request headers, request bodies, or
+            console output. Messages are scrubbed for key-shaped strings and
+            truncated before they are sent.
+          </p>
+          <p className="mt-4">
+            Your browser posts the report to this site, not to Sentry, and our
+            server forwards it. Two things follow: no third-party script runs on
+            the page, and Sentry sees the report arrive from Cloudflare instead
+            of from your IP address.
+          </p>
+          <p className="mt-4">
+            There is no session recording. We count crash-free visits, which
+            uses a number that exists only for that page view and is never
+            stored.
+          </p>
+
+          <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">
             Consent
           </h3>
           <p>
             When you use the initialize flow on the home page, your consent is
             stored as a first-party cookie for that experience. That cookie is
-            the only thing it does. We run no analytics product, no error
-            tracking, and no third-party scripts, so nothing about your visit
-            leaves your browser.
+            the only thing it does.
           </p>
 
           <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">
