@@ -1,4 +1,7 @@
+import { lastEventId } from "@sentry/core"
+
 import { Button } from "@/components/ui/button"
+import { useHydrated } from "@/hooks/use-hydrated"
 import { clearAll } from "@/lib/wipe"
 
 /**
@@ -14,6 +17,12 @@ export function AppError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  // The router already reported this through `defaultOnCatch`. Reading the id
+  // only gives the user something to quote in a bug report. It has to wait for
+  // hydration, or the server HTML and the first client render disagree.
+  const hydrated = useHydrated()
+  const eventId = hydrated ? lastEventId() : undefined
+
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-6 px-4 py-16">
       <div className="space-y-2">
@@ -54,6 +63,11 @@ export function AppError({
         <p className="font-mono text-[0.6875rem] text-muted-foreground">
           Clearing removes your key, consent, and recent runs from this browser.
         </p>
+        {eventId ? (
+          <p className="font-mono text-[0.6875rem] text-muted-foreground">
+            Reference: {eventId}
+          </p>
+        ) : null}
       </div>
     </div>
   )

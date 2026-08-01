@@ -5,6 +5,7 @@ import {
   ThumbsUpIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { Link } from "@tanstack/react-router"
 
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
@@ -603,8 +604,16 @@ function KeyStep({
             (and their providers). We do not collect your key, input, or output.
           </p>
           <p className="font-mono text-sm leading-snug text-pretty text-foreground max-sm:text-base md:text-xs">
-            We run no analytics and no error tracking. Nothing about your visit
-            leaves your browser.
+            We run no analytics. We do track bugs in this site, meaning errors
+            error-wolf itself throws, never the errors you paste in. A crash
+            report carries no key, no input, and no IP address. See our{" "}
+            <Link
+              to="/privacy"
+              className="underline underline-offset-2 hover:text-primary"
+            >
+              privacy page
+            </Link>
+            .
           </p>
           <p className="font-mono text-sm leading-snug text-pretty text-foreground max-sm:text-base md:text-xs">
             This site is open source under the O&apos;Saasy License. You can
