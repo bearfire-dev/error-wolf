@@ -10,9 +10,9 @@ export function getRouter() {
     routeTree,
     scrollRestoration: true,
     defaultPreload: "intent",
-    // Replaces React's <ViewTransition> from the old root layout. See the
-    // `.ew-vt-main` rule and the ::view-transition selectors in globals.css.
-    defaultViewTransition: true,
+    // Browser view transitions reject overlapping updates with an unhandled
+    // InvalidStateError. Route changes remain ordinary React transitions.
+    defaultViewTransition: false,
     // Fires from the router's CatchBoundary `componentDidCatch`, which is what
     // renders `AppError`. `captureException` comes from `@sentry/core` rather
     // than `@sentry/react` so this import does not pull the browser SDK into
