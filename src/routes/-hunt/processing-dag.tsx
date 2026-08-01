@@ -1,8 +1,7 @@
-import { useMemo } from "react"
+import { memo, useMemo } from "react"
 
 import { formatDuration } from "@/lib/recent-results"
 import type { SimplifyPipelineNode } from "@/lib/simplify/pipeline-dag"
-import type { ThroughputBus } from "@/lib/simplify/throughput-bus"
 import type {
   SimplifyPipelineStepId,
   SimplifyPipelineStepStatus,
@@ -27,9 +26,6 @@ type ProcessingDagProps = {
   tier?: DagTier
   /** Kept for API compatibility with the previous DAG zoom-to-fit. No-op. */
   disableZoom?: boolean
-  /** Unused by the simplified renderer; retained so the throughput bus can
-   * continue to be plumbed without churning call sites. */
-  bus?: ThroughputBus | null
 }
 
 type Lane = {
@@ -97,49 +93,54 @@ export function ProcessingDag({
   )
 }
 
-function LoadingLane({ lane, nowMs }: { lane: Lane; nowMs: number }) {
-  const elapsedMs =
-    lane.endedAtMs !== null && lane.startedAtMs !== null
-      ? Math.max(0, lane.endedAtMs - lane.startedAtMs)
-      : lane.startedAtMs !== null
-        ? Math.max(0, nowMs - lane.startedAtMs)
-        : null
+const LoadingLane = memo(
+  function LoadingLane({ lane, nowMs }: { lane: Lane; nowMs: number }) {
+    const elapsedMs =
+      lane.endedAtMs !== null && lane.startedAtMs !== null
+        ? Math.max(0, lane.endedAtMs - lane.startedAtMs)
+        : lane.startedAtMs !== null
+          ? Math.max(0, nowMs - lane.startedAtMs)
+          : null
 
-  return (
-    <div className="grid grid-cols-[3rem_minmax(0,10rem)_1fr_auto] items-center gap-2 font-mono text-[0.625rem] tracking-wider uppercase">
-      <span className={cn("shrink-0 tabular-nums", statusTone(lane.status))}>
-        {statusLabel(lane.status)}
-      </span>
-      <span
-        className={cn(
-          "min-w-0 truncate",
-          lane.status === "pending"
-            ? "text-muted-foreground/70"
-            : "text-foreground/85"
-        )}
-      >
-        {lane.label}
-        {lane.retries > 0 && (
-          <span className="ml-1 text-muted-foreground">
-            ×{lane.retries + 1}
-          </span>
-        )}
-      </span>
-      <div
-        className="relative h-2 w-full overflow-hidden rounded-full border border-foreground/10 bg-foreground/[0.04]"
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={laneProgress(lane.status)}
-      >
-        <LoadingFill status={lane.status} />
+    return (
+      <div className="grid grid-cols-[3rem_minmax(0,10rem)_1fr_auto] items-center gap-2 font-mono text-[0.625rem] tracking-wider uppercase">
+        <span className={cn("shrink-0 tabular-nums", statusTone(lane.status))}>
+          {statusLabel(lane.status)}
+        </span>
+        <span
+          className={cn(
+            "min-w-0 truncate",
+            lane.status === "pending"
+              ? "text-muted-foreground/70"
+              : "text-foreground/85"
+          )}
+        >
+          {lane.label}
+          {lane.retries > 0 && (
+            <span className="ml-1 text-muted-foreground">
+              ×{lane.retries + 1}
+            </span>
+          )}
+        </span>
+        <div
+          className="relative h-2 w-full overflow-hidden rounded-full border border-foreground/10 bg-foreground/[0.04]"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={laneProgress(lane.status)}
+        >
+          <LoadingFill status={lane.status} />
+        </div>
+        <span className="shrink-0 text-muted-foreground tabular-nums">
+          {elapsedMs === null ? "—" : formatDuration(elapsedMs)}
+        </span>
       </div>
-      <span className="shrink-0 text-muted-foreground tabular-nums">
-        {elapsedMs === null ? "—" : formatDuration(elapsedMs)}
-      </span>
-    </div>
-  )
-}
+    )
+  },
+  (previous, next) =>
+    previous.lane === next.lane &&
+    (previous.lane.status !== "running" || previous.nowMs === next.nowMs)
+)
 
 function LoadingFill({ status }: { status: SimplifyPipelineStepStatus }) {
   if (status === "running") {

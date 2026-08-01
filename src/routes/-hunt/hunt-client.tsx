@@ -346,7 +346,6 @@ export function HuntClient({
                   <ProcessingReplayPanel
                     key={replayPanelEpoch}
                     frames={run.replay.frames}
-                    chunks={run.replay.chunks}
                     durationMs={run.replay.durationMs}
                     dag={replayEngine?.dag ?? resolvedEngine.dag}
                   />
@@ -383,7 +382,6 @@ export function HuntClient({
                 <ProcessingStep
                   progress={run.progress}
                   dag={run.activeRunDag ?? resolvedEngine.dag}
-                  bus={run.throughputBus}
                 />
                 <div className="pointer-events-auto absolute bottom-4 left-4 z-10 flex items-center gap-2">
                   <Button

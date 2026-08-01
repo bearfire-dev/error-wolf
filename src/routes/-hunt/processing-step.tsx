@@ -3,23 +3,18 @@ import { useEffect, useState } from "react"
 import { formatDuration } from "@/lib/recent-results"
 import { getProgressElapsedMs } from "@/lib/simplify/progress"
 import type { SimplifyEngineDefinition } from "@/lib/simplify/engines/types"
-import {
-  type SimplifyProgressSnapshot,
-  type ThroughputBus,
-} from "@/lib/simplify/stub"
+import type { SimplifyProgressSnapshot } from "@/lib/simplify/stub"
 
 import { ProcessingDag } from "./processing-dag"
 
 export function ProcessingStep({
   progress,
   dag,
-  bus,
   /** When set, drives the DAG and elapsed readout (replay); no live clock. */
   controlledNowMs,
 }: {
   progress: SimplifyProgressSnapshot | null
   dag: SimplifyEngineDefinition["dag"]
-  bus?: ThroughputBus | null
   controlledNowMs?: number
 }) {
   const [now, setNow] = useState(() =>
@@ -59,12 +54,7 @@ export function ProcessingStep({
         </p>
       </div>
 
-      <ProcessingDag
-        progress={progress}
-        dag={dag}
-        nowMs={effectiveNowMs}
-        bus={bus}
-      />
+      <ProcessingDag progress={progress} dag={dag} nowMs={effectiveNowMs} />
     </div>
   )
 }
