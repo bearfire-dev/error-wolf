@@ -22,10 +22,8 @@ import {
   type SimplifyStats,
 } from "@/lib/recent-results"
 import {
-  createThroughputBus,
   type SimplifyProgressSnapshot,
   type SimplifyWarning,
-  type ThroughputBus,
 } from "@/lib/simplify/stub"
 import {
   OpenRouterInsufficientCreditsError,
@@ -38,7 +36,6 @@ import {
   runTimeoutMsForEngine,
   type RunController,
 } from "@/lib/simplify/run-deadline"
-import type { SimplifyPipelineStepId } from "@/lib/simplify/types"
 
 const KEY_CREDITS_NOTICE =
   "OpenRouter reported insufficient credits. Add credits to your account or use a different API key."
@@ -84,16 +81,9 @@ export type SimplifyReplayFrame = {
   snapshot: SimplifyProgressSnapshot
 }
 
-export type SimplifyReplayChunk = {
-  timeMs: number
-  stepId: SimplifyPipelineStepId
-  chars: number
-}
-
 export type SimplifyReplay = {
   engineId: SimplifyEngineId
   frames: SimplifyReplayFrame[]
-  chunks: SimplifyReplayChunk[]
   durationMs: number
 } | null
 
@@ -143,9 +133,7 @@ export function useHuntRun({
   >(null)
   const [replay, setReplay] = useState<SimplifyReplay>(null)
   const replayFramesRef = useRef<SimplifyReplayFrame[]>([])
-  const replayChunksRef = useRef<SimplifyReplayChunk[]>([])
   const replayStartRef = useRef<number>(0)
-  const [throughputBus] = useState<ThroughputBus>(() => createThroughputBus())
   const [warnings, setWarnings] = useState<SimplifyWarning[]>([])
   const [outputFeedbackVote, setOutputFeedbackVote] = useState<
     "up" | "down" | null
@@ -183,13 +171,11 @@ export function useHuntRun({
     setActiveRunDag(null)
     setReplay(null)
     replayFramesRef.current = []
-    replayChunksRef.current = []
-    throughputBus.reset()
     setWarnings([])
     outputFeedbackLockedRef.current = false
     setOutputFeedbackVote(null)
     setStep("input")
-  }, [setStep, throughputBus])
+  }, [setStep])
 
   const simplify = useCallback(async () => {
     const trimmed = rawInput.trim()
@@ -214,8 +200,6 @@ export function useHuntRun({
     setProgress(null)
     setReplay(null)
     replayFramesRef.current = []
-    replayChunksRef.current = []
-    throughputBus.reset()
     replayStartRef.current = performance.now()
     outputFeedbackLockedRef.current = false
     setOutputFeedbackVote(null)
@@ -228,19 +212,6 @@ export function useHuntRun({
       setProgress(snapshot)
     }
 
-    const captureChunk = (
-      stepId: SimplifyPipelineStepId,
-      chars: number,
-      atMs: number
-    ) => {
-      throughputBus.report(stepId, chars, atMs)
-      replayChunksRef.current.push({
-        timeMs: atMs - replayStartRef.current,
-        stepId,
-        chars,
-      })
-    }
-
     try {
       const result = await engine.run({
         apiKey,
@@ -248,7 +219,6 @@ export function useHuntRun({
         resolvedModelId,
         signal: run.controller.signal,
         onProgress: captureProgress,
-        onChunk: captureChunk,
         provider: openRouterProvider,
         providerLatencyPolicy: openRouterLatencyPolicy,
         providerEndpoints: openRouterEndpoints,
@@ -283,7 +253,6 @@ export function useHuntRun({
       setWarnings(result.warnings)
       captureProgress(result.progress)
       const finalFrames = replayFramesRef.current
-      const finalChunks = replayChunksRef.current
       const finalDuration =
         finalFrames.length > 0
           ? finalFrames[finalFrames.length - 1].timeMs
@@ -291,7 +260,6 @@ export function useHuntRun({
       setReplay({
         engineId: engine.id,
         frames: finalFrames.slice(),
-        chunks: finalChunks.slice(),
         durationMs: finalDuration,
       })
 
@@ -426,7 +394,6 @@ export function useHuntRun({
     resolvedModelDisplay,
     setStats,
     setStep,
-    throughputBus,
   ])
 
   const copyOutput = useCallback(async () => {
@@ -467,7 +434,6 @@ export function useHuntRun({
     progress,
     activeRunDag,
     replay,
-    throughputBus,
     warnings,
     outputFeedbackVote,
     submitOutputFeedback,

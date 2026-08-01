@@ -282,6 +282,10 @@
   animation: var(--ew-vt-enter) ease-out both ew-vt-slide-in;
 }
 
+::view-transition-group(ew-main) {
+  animation: none;
+}
+
 ::view-transition-group(site-header) {
   animation: none;
   z-index: 100;

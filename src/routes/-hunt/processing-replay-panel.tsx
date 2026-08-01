@@ -1,72 +1,51 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import type { SimplifyPipelineNode } from "@/lib/simplify/pipeline-dag"
-import {
-  createThroughputBus,
-  type ThroughputBus,
-} from "@/lib/simplify/throughput-bus"
 import type { SimplifyProgressSnapshot } from "@/lib/simplify/types"
 
 import { ProcessingStep } from "./processing-step"
-import type { SimplifyReplayChunk, SimplifyReplayFrame } from "./use-hunt-run"
+import type { SimplifyReplayFrame } from "./use-hunt-run"
 
 export type ProcessingReplayPanelProps = {
   frames: SimplifyReplayFrame[]
-  chunks: SimplifyReplayChunk[]
   durationMs: number
   dag: SimplifyPipelineNode[]
 }
 
+const REPLAY_RENDER_INTERVAL_MS = 33
+
 /**
  * Replays a finished run through the same {@link ProcessingStep} + DAG as a
- * live compress: one real-time playback at 1×, chunk-fed bus, no zoom/speed UI.
+ * live compress: one real-time playback at 1×, no zoom/speed UI.
  */
 export function ProcessingReplayPanel({
   frames,
-  chunks,
   durationMs,
   dag,
 }: ProcessingReplayPanelProps) {
   const [currentMs, setCurrentMs] = useState(0)
   const [playing, setPlaying] = useState(true)
-
-  const [bus] = useState<ThroughputBus>(() => createThroughputBus())
-  const fedIndexRef = useRef(0)
-  const lastFedMsRef = useRef(0)
-
-  useEffect(() => {
-    if (currentMs < lastFedMsRef.current) {
-      bus.reset()
-      fedIndexRef.current = 0
-      lastFedMsRef.current = 0
-    }
-    const now = performance.now()
-    while (
-      fedIndexRef.current < chunks.length &&
-      chunks[fedIndexRef.current].timeMs <= currentMs
-    ) {
-      const evt = chunks[fedIndexRef.current]
-      bus.report(evt.stepId, evt.chars, now)
-      fedIndexRef.current += 1
-    }
-    lastFedMsRef.current = currentMs
-  }, [currentMs, chunks, bus])
+  const currentMsRef = useRef(0)
 
   useEffect(() => {
     if (!playing) return
     let rafId = 0
     let last = performance.now()
+    let lastRenderedMs = currentMsRef.current
     const tick = (now: number) => {
       const dt = now - last
       last = now
-      setCurrentMs((prev) => {
-        const next = prev + dt
-        if (next >= durationMs) {
-          setPlaying(false)
-          return durationMs
-        }
-        return next
-      })
+      const next = currentMsRef.current + dt
+      currentMsRef.current = next
+      const finished = next >= durationMs
+      if (finished || next - lastRenderedMs >= REPLAY_RENDER_INTERVAL_MS) {
+        lastRenderedMs = next
+        setCurrentMs(Math.min(next, durationMs))
+      }
+      if (finished) {
+        setPlaying(false)
+        return
+      }
       rafId = requestAnimationFrame(tick)
     }
     rafId = requestAnimationFrame(tick)
@@ -75,10 +54,19 @@ export function ProcessingReplayPanel({
 
   const currentSnapshot = useMemo<SimplifyProgressSnapshot | null>(() => {
     if (frames.length === 0) return null
+
+    let low = 0
+    let high = frames.length - 1
     let chosen = frames[0].snapshot
-    for (const frame of frames) {
-      if (frame.timeMs <= currentMs) chosen = frame.snapshot
-      else break
+    while (low <= high) {
+      const middle = Math.floor((low + high) / 2)
+      const frame = frames[middle]
+      if (frame.timeMs <= currentMs) {
+        chosen = frame.snapshot
+        low = middle + 1
+      } else {
+        high = middle - 1
+      }
     }
     return chosen
   }, [frames, currentMs])
@@ -90,7 +78,6 @@ export function ProcessingReplayPanel({
     <ProcessingStep
       progress={currentSnapshot}
       dag={dag}
-      bus={bus}
       controlledNowMs={nowMsForDag}
     />
   )
