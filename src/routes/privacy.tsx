@@ -4,7 +4,7 @@ import { SITE_HEADER_GITHUB_URL } from "@/components/site-header-constants"
 import { getSiteUrl } from "@/lib/site-url"
 
 const privacyDescription =
-  "error-wolf is local-first. All processing happens in your browser. Your OpenRouter key never touches our servers. Open source and fully auditable."
+  "Error Wolf processes your traces in the browser. Your input and results are not stored on our servers."
 
 export const Route = createFileRoute("/privacy")({
   head: () => ({
@@ -32,33 +32,32 @@ function PrivacyPage() {
 
         <div className="prose prose-sm mt-8 font-mono text-sm text-foreground/90">
           <p className="text-foreground">
-            error-wolf runs entirely in your browser. Stack normalization,
-            compression, and model calls happen client-side. No accounts. No
-            server-side storage of your input or results. We run no product
-            analytics and no ad trackers.
+            Error Wolf processes your traces in your browser. Stack
+            normalization, compression, and model calls run there. We do not use
+            accounts, product analytics, or ad trackers. We do not store your
+            input or results on our servers.
           </p>
           <p className="mt-4 text-foreground">
-            We do track bugs in this website, so we can fix them. That means
-            errors thrown by error-wolf itself. It does not mean the errors you
-            paste in. Your traces and logs are your data, and they stay in your
-            browser.
+            We collect anonymous crash reports for errors thrown by Error Wolf.
+            These reports do not include the traces or logs that you paste in.
           </p>
-
           <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">
-            Your Data & OpenRouter key are private
+            Your input and OpenRouter key
           </h3>
           <p>
-            Stored in a same-site cookie. Sent directly from your browser to
-            OpenRouter (and the selected providers). We never proxy your key or
-            see it. If your OpenRouter key allows storage of data (i.e. not
-            ZDR), model providers may store your data. Configure your key with{" "}
+            The app stores your key in a browser cookie. The browser sends the
+            key directly to OpenRouter and the providers that you select. Error
+            Wolf does not proxy or store your key. The server only checks if a
+            key exists for the hunt page. If your key does not use zero data
+            retention (ZDR), a model provider may store your data. Configure
+            your key with{" "}
             <a
               href="https://openrouter.ai/docs/guides/features/zdr"
               target="_blank"
               rel="noreferrer"
               className="text-foreground/85 underline underline-offset-2 hover:text-primary"
             >
-              OpenRouter’s ZDR guide
+              OpenRouter&apos;s ZDR guide
             </a>
             .
           </p>
@@ -67,67 +66,35 @@ function PrivacyPage() {
             Local history
           </h3>
           <p>
-            Up to 1024 recent runs are kept in localStorage. They are pruned
-            automatically after 30 days. The trash icon in the header clears
-            your key, consent, and all history in one step.
+            The browser keeps up to 1,024 recent runs in localStorage. It
+            removes runs after 30 days. The trash icon clears your key, consent,
+            and history from this browser.
           </p>
 
           <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">
             Our errors, not yours
           </h3>
-          <p>
-            This app exists to process error traces, so this distinction matters
-            more here than on most sites.
-          </p>
           <p className="mt-4">
             <span className="text-foreground">
-              The errors you paste in are your data.
+              The traces and logs you paste in are your data.
             </span>{" "}
-            They never reach our servers and never reach Sentry. They go from
-            your browser straight to OpenRouter, and the results come back the
-            same way, into this browser and nowhere else.
+            They do not go to Error Wolf servers or Sentry. The browser sends
+            them directly to OpenRouter. The results return to your browser.
           </p>
           <p className="mt-4">
-            <span className="text-foreground">
-              The errors error-wolf itself throws are our bugs.
-            </span>{" "}
-            When the app breaks, it sends a crash report to Sentry so we can fix
-            it. That report is about our broken code, not about your input.
+            <span className="text-foreground">Errors thrown by Error Wolf</span>{" "}
+            When the app breaks, it sends an anonymous crash report to Sentry.
+            The report contains no user, cookie, request, or console data. We
+            remove key-shaped strings and limit error text before the report
+            leaves the browser.
           </p>
-
-          <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">
-            What a crash report contains
-          </h3>
-          <p>
-            The error type and message, a stack trace through our code, the page
-            path, your browser and OS version, and the app release. No accounts,
-            no profiles, and no identifier that follows you between visits.
-          </p>
-          <p className="mt-4">
-            A report never contains your OpenRouter key, the traces or logs you
-            paste, your results, cookies, request headers, request bodies, or
-            console output. Before a report is sent, messages are scrubbed for
-            key-shaped strings and truncated.
-          </p>
-          <p className="mt-4">
-            Your browser posts the report to this site, not to Sentry, and our
-            server forwards it. Two things follow: no third-party script runs on
-            the page, and Sentry sees the report arrive from Cloudflare instead
-            of from your IP address.
-          </p>
-          <p className="mt-4">
-            There is no session recording. We count crash-free visits, which
-            uses a number that exists only for that page view and is never
-            stored.
-          </p>
-
           <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">
             Consent
           </h3>
           <p>
-            When you use the initialize flow on the home page, your consent is
-            stored as a first-party cookie for that experience. That cookie is
-            the only thing it does.
+            The initialize flow stores your consent in a first-party cookie. The
+            server uses this cookie to allow access to the hunt page. It does
+            not store any other user data.
           </p>
 
           <h3 className="mt-10 font-mono text-xs tracking-wider text-primary uppercase">
@@ -143,8 +110,8 @@ function PrivacyPage() {
             >
               GitHub
             </a>{" "}
-            with an O{"'"}SaaSy license. You can contribute, audit, or fork and
-            run it yourself.
+            under the O{"'"}SaaSy License. You can audit, modify, and run it
+            yourself.
           </p>
         </div>
 
