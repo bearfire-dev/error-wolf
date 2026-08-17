@@ -26,7 +26,9 @@ export default Alchemy.Stack(
           effect: "allow",
           permissionGroups: [
             "Account Settings Read",
+            "Secrets Store Read",
             "Secrets Store Write",
+            "Workers Scripts Read",
             "Workers Scripts Write",
           ],
           resources: {
