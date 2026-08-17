@@ -17,7 +17,7 @@ import { SENTRY_ORG, SENTRY_PROJECT } from "./src/lib/sentry/constants.js"
  */
 const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN
 
-/** Cloudflare Workers Builds sets the first; GitHub Actions sets the second. */
+/** Alchemy and GitHub Actions provide the commit SHA for release naming. */
 const release =
   process.env.WORKERS_CI_COMMIT_SHA ?? process.env.GITHUB_SHA ?? null
 

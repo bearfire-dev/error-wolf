@@ -9,9 +9,13 @@
 # aborts on its dependency-status check. esbuild backs Vitest, workerd backs the
 # Cloudflare Vite plugin and `wrangler dev`, sharp backs vite-imagetools, and
 # the Sentry CLI downloads the binary that uploads source maps.
+overrides:
+  "@effect/platform-node-shared": 4.0.0-beta.100
+
 allowBuilds:
   "@sentry/cli": true
   esbuild: true
+  msgpackr-extract: true
   msw: false
   sharp: true
   workerd: true
@@ -29,3 +33,5 @@ minimumReleaseAgeExclude:
   - vite@8.2.0
   - workerd@1.20260730.1
   - wrangler@4.116.0
+  - effect@4.0.0-beta.100
+  - "@effect/platform-node@4.0.0-beta.100"
