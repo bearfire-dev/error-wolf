@@ -191,8 +191,8 @@ To test against the Workers runtime and not the Vite dev server, run
 **Alchemy deploys this Worker.** Same-repository pull requests run an Alchemy
 plan after CI succeeds. Fork pull requests run CI only. A push to `master`
 deploys production after CI succeeds. The one-time `stacks/github.ts` stack
-creates the preview (read-only plan) and production (deploy) environment secrets
-used by these jobs.
+creates the preview (read-only plan token + Alchemy state credentials) and
+production (deploy) environment secrets used by these jobs.
 
 Set `VITE_SITE_URL` as a build variable in the Cloudflare project. Vite inlines
 it at build time, so it must be present in the Cloudflare build and not only in

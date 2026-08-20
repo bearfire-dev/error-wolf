@@ -1,6 +1,7 @@
 import * as Alchemy from "alchemy"
 import * as Cloudflare from "alchemy/Cloudflare"
 import * as GitHub from "alchemy/GitHub"
+import * as Config from "effect/Config"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Redacted from "effect/Redacted"
@@ -12,10 +13,9 @@ const repository = {
 
 /**
  * Creates account-owned Cloudflare tokens for GitHub Actions.
- * Preview (plan) still needs Secrets Store Write and Workers Scripts Write:
- * `alchemy plan` with Cloudflare.state() resolves CI credentials by uploading
- * an edge-preview Worker that binds Secrets Store values. Production keeps
- * the same write groups to deploy.
+ * Preview (plan) gets a read-only token plus Alchemy state-store credentials
+ * so plan can load shared state without Workers script write access.
+ * Production gets the deploy write token.
  */
 export default Alchemy.Stack(
   "error-wolf-github",
@@ -26,6 +26,9 @@ export default Alchemy.Stack(
   Effect.gen(function* () {
     const { accountId } = yield* yield* Cloudflare.CloudflareEnvironment
     const account = `com.cloudflare.api.account.${accountId}`
+    const stateStoreCredentials = yield* Config.redacted(
+      "ALCHEMY_STATE_STORE_CREDENTIALS"
+    )
 
     const planToken = yield* Cloudflare.ApiToken.AccountApiToken("PlanToken", {
       accountId,
@@ -35,9 +38,7 @@ export default Alchemy.Stack(
           permissionGroups: [
             "Account Settings Read",
             "Secrets Store Read",
-            "Secrets Store Write",
             "Workers Scripts Read",
-            "Workers Scripts Write",
           ],
           resources: { [account]: "*" },
         },
@@ -75,6 +76,12 @@ export default Alchemy.Stack(
       environment: "preview",
       name: "CLOUDFLARE_ACCOUNT_ID",
       value: Redacted.make(accountId),
+    })
+    yield* GitHub.Secret("PreviewAlchemyStateStore", {
+      ...repository,
+      environment: "preview",
+      name: "ALCHEMY_STATE_STORE_CREDENTIALS",
+      value: stateStoreCredentials,
     })
     yield* GitHub.Secret("ProductionCloudflareApiToken", {
       ...repository,

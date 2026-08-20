@@ -28,6 +28,8 @@ describe("Alchemy deployment contracts", () => {
     expect(ci).toContain("github.event_name == 'pull_request'")
     expect(ci).toContain("pnpm exec alchemy plan")
     expect(ci).toContain("alchemy plan --stage prod")
+    expect(ci).toContain("ALCHEMY_STATE_STORE_CREDENTIALS")
+    expect(ci).toContain("ALCHEMY_PROFILE: ci")
     expect(ci).not.toContain("alchemy deploy")
     expect(ci).not.toContain("alchemy destroy")
 

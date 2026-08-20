@@ -51,6 +51,8 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: blacksmith-4vcpu-ubuntu-2404
     environment: preview
+    env:
+      ALCHEMY_PROFILE: ci
     permissions:
       contents: read
     steps:
@@ -61,6 +63,18 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Configure Alchemy state access
+        env:
+          ALCHEMY_STATE_STORE_CREDENTIALS: ${{ secrets.ALCHEMY_STATE_STORE_CREDENTIALS }}
+        run: |
+          credentials_dir="$HOME/.alchemy/credentials/$ALCHEMY_PROFILE"
+          credentials_file="$credentials_dir/cloudflare-state-store.json"
+          install -d -m 700 "$credentials_dir"
+          printf '%s' '{"version":0,"profiles":{"ci":{"Cloudflare":{"method":"env"}}}}' > "$HOME/.alchemy/profiles.json"
+          printf '%s' "$ALCHEMY_STATE_STORE_CREDENTIALS" > "$credentials_file"
+          jq -e \
+            '(.url | length > 0) and (.authToken | length > 0) and (.accountId | length > 0)' \
+            "$credentials_file" >/dev/null
       - name: Plan production changes
         run: pnpm exec alchemy plan --stage prod
         env:
