@@ -1,5 +1,5 @@
-# Checks only. Cloudflare deploys this Worker through its Git integration
-# (Workers Builds), so nothing here needs a Cloudflare API token.
+# Checks and Alchemy plan. Production deploy runs from deploy.yml after a
+# successful push CI on master.
 
 name: CI
 
@@ -31,17 +31,54 @@ jobs:
       - run: pnpm run typecheck
       - run: pnpm run test
 
-      # No SENTRY_AUTH_TOKEN here on purpose. Cloudflare builds and deploys the
-      # Worker, so a release uploaded from CI would never match a shipped
-      # bundle, and a fork PR cannot read the secret anyway. Without the token
-      # the Sentry Vite plugin disables itself and the build stays fast.
+      # No SENTRY_AUTH_TOKEN here on purpose. A fork PR cannot read the secret.
+      # Without the token the Sentry Vite plugin disables itself and the build
+      # stays fast.
       - name: Build
         env:
           VITE_SITE_URL: ${{ vars.VITE_SITE_URL }}
         run: pnpm run build
 
-      # Prints "Total Upload: ... / gzip: ...". Cloudflare rejects a Worker
-      # above 3 MiB gzip. Catching it here fails the PR instead of the
-      # Cloudflare build.
+      # Prints "Total Upload: ... / gzip: ...". Production is on Workers Paid
+      # (10 MiB gzip). Fail the PR if the bundle is unexpectedly huge.
+      # Point at the Vite SSR bundle; Alchemy injects its Cloudflare plugin
+      # during plan/deploy, so root wrangler.jsonc is not the size path.
       - name: Report Worker bundle size
-        run: pnpm exec wrangler deploy --dry-run
+        run: pnpm exec wrangler deploy --dry-run --name error-wolf dist/server/server.js
+
+  plan:
+    needs: build
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    environment: preview
+    env:
+      ALCHEMY_PROFILE: ci
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Configure Alchemy state access
+        env:
+          ALCHEMY_STATE_STORE_CREDENTIALS: ${{ secrets.ALCHEMY_STATE_STORE_CREDENTIALS }}
+        run: |
+          credentials_dir="$HOME/.alchemy/credentials/$ALCHEMY_PROFILE"
+          credentials_file="$credentials_dir/cloudflare-state-store.json"
+          install -d -m 700 "$credentials_dir"
+          printf '%s' '{"version":0,"profiles":{"ci":{"Cloudflare":{"method":"env"}}}}' > "$HOME/.alchemy/profiles.json"
+          printf '%s' "$ALCHEMY_STATE_STORE_CREDENTIALS" > "$credentials_file"
+          jq -e \
+            '(.url | length > 0) and (.authToken | length > 0) and (.accountId | length > 0)' \
+            "$credentials_file" >/dev/null
+      - name: Plan production changes
+        run: pnpm exec alchemy plan --stage prod
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GITHUB_SHA: ${{ github.sha }}
+          VITE_SITE_URL: ${{ vars.VITE_SITE_URL }}

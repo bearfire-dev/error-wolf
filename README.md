@@ -44,9 +44,16 @@ pnpm exec wrangler dev
 
 ## Deployment
 
-Cloudflare builds and deploys the Worker from this repo through its Git
-integration. A push to `master` ships it. There is no deploy step in GitHub
-Actions and no Cloudflare API token in the repo.
+Alchemy manages the existing `error-wolf` Worker. Same-repository pull requests
+run an Alchemy plan after CI succeeds. Fork pull requests run CI only. A push
+to `master` deploys production after CI succeeds.
+
+The one-time `stacks/github.ts` stack creates an account-owned, least-privilege
+Cloudflare plan token (read-only) and Alchemy state-store credentials for the
+`preview` environment, and a separate deploy token for `production`. Run that
+stack with the local bootstrap profile and
+`ALCHEMY_STATE_STORE_CREDENTIALS` set. The bootstrap token is not used by
+deployment workflows.
 
 Set `VITE_SITE_URL` as a build variable in the Cloudflare project. Vite inlines
 this value at build time.

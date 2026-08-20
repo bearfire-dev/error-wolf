@@ -142,7 +142,7 @@ Use **pnpm**.
 | `pnpm dev`           | Vite dev server on port 3000                   |
 | `pnpm build`         | Production build into `dist/`                  |
 | `pnpm preview`       | Serve the production build                     |
-| `pnpm deploy`        | Build, then `wrangler deploy`                  |
+| `pnpm deploy`        | Deploy with Alchemy                            |
 | `pnpm test`          | Vitest, one run                                |
 | `pnpm test:watch`    | Vitest in watch mode                           |
 | `pnpm lint`          | Oxlint (`--type-aware`)                        |
@@ -168,44 +168,44 @@ There is no combined `check` script. After a substantive edit, run
 - There is no `routes` block. The site serves from `*.workers.dev` until the
   custom domain moves.
 
-The Vite build writes `dist/server/wrangler.json`. Run `wrangler deploy` from the
-repo root after `vite build`. It finds that file.
+Alchemy injects its Cloudflare Vite plugin during `alchemy plan` and
+`alchemy deploy`. Local Wrangler checks use root `wrangler.jsonc`
+(`main`: `src/server.ts`). Keep that file aligned with `alchemy.run.ts`.
 
 **Workers have no filesystem.** Do not use `node:fs` or `process.cwd()` in code
 that the server bundle reaches. Read files at build time instead. See
 `src/lib/example-traces.ts` and `src/lib/announcements/load.ts`.
 
-**Bundle size.** Cloudflare rejects a Worker above 3 MiB gzip. Run
-`pnpm exec wrangler deploy --dry-run` to print the current size.
+**Bundle size.** Production runs on the Cloudflare Workers Paid plan (10 MiB
+gzip). After `pnpm build`, run
+`pnpm exec wrangler deploy --dry-run --name error-wolf dist/server/server.js`
+to print the current size. This is a read-only size check, not the deployment
+path. Keep the Worker under the paid limit; treat 3 MiB as a soft target so a
+plan downgrade would still fit.
 
 To test against the Workers runtime and not the Vite dev server, run
 `pnpm build`, then `pnpm exec wrangler dev`. Node API differences appear there.
 
 ### Deploy
 
-**Cloudflare deploys this Worker itself**, through its Git integration (Workers
-Builds). A push to `master` triggers a Cloudflare build, and Cloudflare runs
-`wrangler deploy`. GitHub Actions does not deploy, and the repo needs no
-Cloudflare API token.
-
-Cloudflare build settings:
-
-| Setting        | Value                 |
-| -------------- | --------------------- |
-| Build command  | `pnpm run build`      |
-| Deploy command | `npx wrangler deploy` |
-| Root directory | repo root             |
+**Alchemy deploys this Worker.** Same-repository pull requests run an Alchemy
+plan after CI succeeds. Fork pull requests run CI only. A push to `master`
+deploys production after CI succeeds. The one-time `stacks/github.ts` stack
+creates the preview (read-only plan token + Alchemy state credentials) and
+production (deploy) environment secrets used by these jobs.
 
 Set `VITE_SITE_URL` as a build variable in the Cloudflare project. Vite inlines
 it at build time, so it must be present in the Cloudflare build and not only in
 GitHub Actions.
 
 `.github/workflows/ci.yml` runs the checks on Blacksmith runners: format, lint,
-typecheck, test, build, and the Worker size report. It gates the pull request.
-It does not ship anything.
+typecheck, test, build, and the Worker size report. Same-repository pull
+requests then run `alchemy plan --stage prod` with the `preview` environment.
+`.github/workflows/deploy.yml` deploys production after a successful push CI on
+`master`.
 
-`pnpm deploy` still works for a deploy by hand. It needs a local `wrangler
-login`.
+`pnpm deploy` runs `alchemy deploy --stage prod` for a deploy by hand. It needs
+a Cloudflare API token with the same deployment permissions as CI.
 
 ## Environment variables
 

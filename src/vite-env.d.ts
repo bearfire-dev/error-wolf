@@ -11,7 +11,7 @@ interface ImportMeta {
 
 /**
  * Sentry release name, injected by `define` in `vite.config.ts`. It is the
- * commit SHA on Cloudflare Workers Builds and in Actions, and `null` locally.
+ * commit SHA in Alchemy and Actions, and `null` locally.
  */
 declare const __SENTRY_RELEASE__: string | null
 

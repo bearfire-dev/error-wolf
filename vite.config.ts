@@ -1,4 +1,3 @@
-import { cloudflare } from "@cloudflare/vite-plugin"
 import babel from "@rolldown/plugin-babel"
 import { sentryVitePlugin } from "@sentry/vite-plugin"
 import tailwindcss from "@tailwindcss/vite"
@@ -17,7 +16,7 @@ import { SENTRY_ORG, SENTRY_PROJECT } from "./src/lib/sentry/constants.js"
  */
 const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN
 
-/** Cloudflare Workers Builds sets the first; GitHub Actions sets the second. */
+/** Alchemy and GitHub Actions provide the commit SHA for release naming. */
 const release =
   process.env.WORKERS_CI_COMMIT_SHA ?? process.env.GITHUB_SHA ?? null
 
@@ -42,7 +41,8 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   plugins: [
-    cloudflare({ viteEnvironment: { name: "ssr" } }),
+    // Alchemy's Cloudflare.Website.Vite injects its own Cloudflare Vite plugin
+    // during plan/deploy. Do not add @cloudflare/vite-plugin; they conflict.
     tailwindcss(),
     imagetools(),
     tanstackStart(),
@@ -52,7 +52,7 @@ export default defineConfig({
     // through the Rolldown Babel bridge.
     babel({ presets: [reactCompilerPreset({ target: "19" })] }),
     // Last on purpose: it injects debug IDs at chunk-render time and uploads on
-    // close, after the Cloudflare plugin has written `dist/server`.
+    // close, after Vite has written the server bundle.
     sentryVitePlugin({
       org: SENTRY_ORG,
       project: SENTRY_PROJECT,
