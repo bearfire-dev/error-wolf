@@ -12,7 +12,10 @@ const repository = {
 
 /**
  * Creates account-owned Cloudflare tokens for GitHub Actions.
- * Preview (plan) gets a read-only token; production gets deploy write access.
+ * Preview (plan) still needs Secrets Store Write and Workers Scripts Write:
+ * `alchemy plan` with Cloudflare.state() resolves CI credentials by uploading
+ * an edge-preview Worker that binds Secrets Store values. Production keeps
+ * the same write groups to deploy.
  */
 export default Alchemy.Stack(
   "error-wolf-github",
@@ -32,7 +35,9 @@ export default Alchemy.Stack(
           permissionGroups: [
             "Account Settings Read",
             "Secrets Store Read",
+            "Secrets Store Write",
             "Workers Scripts Read",
+            "Workers Scripts Write",
           ],
           resources: { [account]: "*" },
         },
