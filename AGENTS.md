@@ -168,37 +168,41 @@ There is no combined `check` script. After a substantive edit, run
 - There is no `routes` block. The site serves from `*.workers.dev` until the
   custom domain moves.
 
-The Vite build writes `dist/server/wrangler.json` for local Wrangler runtime
-checks. Alchemy runs the Vite build and deploys the resulting Worker.
+Alchemy injects its Cloudflare Vite plugin during `alchemy plan` and
+`alchemy deploy`. Local Wrangler checks use root `wrangler.jsonc`
+(`main`: `src/server.ts`). Keep that file aligned with `alchemy.run.ts`.
 
 **Workers have no filesystem.** Do not use `node:fs` or `process.cwd()` in code
 that the server bundle reaches. Read files at build time instead. See
 `src/lib/example-traces.ts` and `src/lib/announcements/load.ts`.
 
-**Bundle size.** Cloudflare rejects a Worker above 3 MiB gzip. Run
-`pnpm exec wrangler deploy --dry-run` to print the current size. This is a
-read-only size check, not the deployment path.
+**Bundle size.** Cloudflare rejects a Worker above 3 MiB gzip. After `pnpm build`,
+run `pnpm exec wrangler deploy --dry-run --name error-wolf dist/server/server.js`
+to print the current size. This is a read-only size check, not the deployment
+path.
 
 To test against the Workers runtime and not the Vite dev server, run
 `pnpm build`, then `pnpm exec wrangler dev`. Node API differences appear there.
 
 ### Deploy
 
-**Alchemy deploys this Worker.** Pull requests run an Alchemy plan after CI.
-A push to `master` deploys production after CI succeeds. The one-time
-`stacks/github.ts` stack creates the repository secrets used by these jobs.
+**Alchemy deploys this Worker.** Same-repository pull requests run an Alchemy
+plan after CI succeeds. Fork pull requests run CI only. A push to `master`
+deploys production after CI succeeds. The one-time `stacks/github.ts` stack
+creates the preview and production environment secrets used by these jobs.
 
 Set `VITE_SITE_URL` as a build variable in the Cloudflare project. Vite inlines
 it at build time, so it must be present in the Cloudflare build and not only in
 GitHub Actions.
 
 `.github/workflows/ci.yml` runs the checks on Blacksmith runners: format, lint,
-typecheck, test, build, and the Worker size report. It gates the pull request.
-`.github/workflows/deploy.yml` runs the Alchemy plan or production deploy after
-CI completes successfully.
+typecheck, test, build, and the Worker size report. Same-repository pull
+requests then run `alchemy plan --stage prod` with the `preview` environment.
+`.github/workflows/deploy.yml` deploys production after a successful push CI on
+`master`.
 
-`pnpm deploy` runs `alchemy deploy` for a deploy by hand. It needs a Cloudflare
-API token with the same deployment permissions as CI.
+`pnpm deploy` runs `alchemy deploy --stage prod` for a deploy by hand. It needs
+a Cloudflare API token with the same deployment permissions as CI.
 
 ## Environment variables
 

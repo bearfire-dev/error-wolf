@@ -6,9 +6,9 @@
 # Cloudflare build image, which defaults to pnpm 10.
 #
 # Postinstall scripts pnpm is allowed to run. Without these, `pnpm <script>`
-# aborts on its dependency-status check. esbuild backs Vitest, workerd backs the
-# Cloudflare Vite plugin and `wrangler dev`, sharp backs vite-imagetools, and
-# the Sentry CLI downloads the binary that uploads source maps.
+# aborts on its dependency-status check. esbuild backs Vitest, workerd backs
+# Wrangler local checks, sharp backs vite-imagetools, and the Sentry CLI
+# downloads the binary that uploads source maps.
 overrides:
   "@effect/platform-node-shared": 4.0.0-beta.100
 
@@ -20,7 +20,6 @@ allowBuilds:
   sharp: true
   workerd: true
 minimumReleaseAgeExclude:
-  - "@cloudflare/vite-plugin@1.49.0"
   - "@cloudflare/workerd-darwin-64@1.20260730.1"
   - "@cloudflare/workerd-darwin-arm64@1.20260730.1"
   - "@cloudflare/workerd-linux-64@1.20260730.1"

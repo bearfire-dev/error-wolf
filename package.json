@@ -11,7 +11,7 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "alchemy deploy",
+    "deploy": "alchemy deploy --stage prod",
     "cf-typegen": "wrangler types",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -45,7 +45,6 @@
   },
   "devDependencies": {
     "@babel/core": "^8.0.1",
-    "@cloudflare/vite-plugin": "^1.49.0",
     "@effect/platform-node": "4.0.0-beta.100",
     "@resvg/resvg-js": "^2.6.2",
     "@rolldown/plugin-babel": "^0.2.3",

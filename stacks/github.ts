@@ -38,14 +38,29 @@ export default Alchemy.Stack(
       ],
     })
 
-    yield* GitHub.Secret("cf-api-token", {
+    // Scope Cloudflare credentials to GitHub environments so pull_request jobs
+    // only see preview secrets, and production deploy only sees production.
+    yield* GitHub.Secret("PreviewCloudflareApiToken", {
       ...repository,
+      environment: "preview",
       name: "CLOUDFLARE_API_TOKEN",
       value: apiToken.value,
     })
-
-    yield* GitHub.Secret("cf-account-id", {
+    yield* GitHub.Secret("PreviewCloudflareAccountId", {
       ...repository,
+      environment: "preview",
+      name: "CLOUDFLARE_ACCOUNT_ID",
+      value: Redacted.make(accountId),
+    })
+    yield* GitHub.Secret("ProductionCloudflareApiToken", {
+      ...repository,
+      environment: "production",
+      name: "CLOUDFLARE_API_TOKEN",
+      value: apiToken.value,
+    })
+    yield* GitHub.Secret("ProductionCloudflareAccountId", {
+      ...repository,
+      environment: "production",
       name: "CLOUDFLARE_ACCOUNT_ID",
       value: Redacted.make(accountId),
     })
