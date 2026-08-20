@@ -22,16 +22,19 @@ describe("Alchemy deployment contracts", () => {
   })
 
   it("keeps pull requests plan-only and production behind successful CI", async () => {
-    const workflow = await read(".github/workflows/deploy.yml")
+    const ci = await read(".github/workflows/ci.yml")
+    const deploy = await read(".github/workflows/deploy.yml")
 
-    expect(workflow).toContain('workflows: ["CI"]')
-    expect(workflow).toContain(
-      "github.event.workflow_run.event == 'pull_request'"
-    )
-    expect(workflow).toContain("pnpm exec alchemy plan")
-    expect(workflow).toContain("alchemy plan --stage prod")
-    expect(workflow).toContain("github.event.workflow_run.event == 'push'")
-    expect(workflow).toContain("pnpm exec alchemy deploy")
-    expect(workflow).not.toContain("alchemy destroy")
+    expect(ci).toContain("github.event_name == 'pull_request'")
+    expect(ci).toContain("pnpm exec alchemy plan")
+    expect(ci).toContain("alchemy plan --stage prod")
+    expect(ci).not.toContain("alchemy deploy")
+    expect(ci).not.toContain("alchemy destroy")
+
+    expect(deploy).toContain('workflows: ["CI"]')
+    expect(deploy).toContain("github.event.workflow_run.event == 'push'")
+    expect(deploy).toContain("pnpm exec alchemy deploy")
+    expect(deploy).not.toContain("alchemy plan")
+    expect(deploy).not.toContain("alchemy destroy")
   })
 })
