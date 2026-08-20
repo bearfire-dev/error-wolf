@@ -39,8 +39,8 @@ jobs:
           VITE_SITE_URL: ${{ vars.VITE_SITE_URL }}
         run: pnpm run build
 
-      # Prints "Total Upload: ... / gzip: ...". Cloudflare rejects a Worker
-      # above 3 MiB gzip. Catching it here fails the PR instead of deploy.
+      # Prints "Total Upload: ... / gzip: ...". Production is on Workers Paid
+      # (10 MiB gzip). Fail the PR if the bundle is unexpectedly huge.
       # Point at the Vite SSR bundle; Alchemy injects its Cloudflare plugin
       # during plan/deploy, so root wrangler.jsonc is not the size path.
       - name: Report Worker bundle size

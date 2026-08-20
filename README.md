@@ -49,10 +49,9 @@ run an Alchemy plan after CI succeeds. Fork pull requests run CI only. A push
 to `master` deploys production after CI succeeds.
 
 The one-time `stacks/github.ts` stack creates an account-owned, least-privilege
-Cloudflare token and stores it as `CLOUDFLARE_API_TOKEN` and
-`CLOUDFLARE_ACCOUNT_ID` in the `preview` and `production` GitHub environments.
-Run that stack with the local bootstrap profile. The bootstrap token is not
-used by deployment workflows.
+Cloudflare plan token (read-only) for the `preview` environment and a separate
+deploy token for `production`. Run that stack with the local bootstrap profile.
+The bootstrap token is not used by deployment workflows.
 
 Set `VITE_SITE_URL` as a build variable in the Cloudflare project. Vite inlines
 this value at build time.

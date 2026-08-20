@@ -10,7 +10,10 @@ const repository = {
   repository: "error-wolf",
 }
 
-/** Creates the account-owned, least-privilege token used by GitHub Actions. */
+/**
+ * Creates account-owned Cloudflare tokens for GitHub Actions.
+ * Preview (plan) gets a read-only token; production gets deploy write access.
+ */
 export default Alchemy.Stack(
   "error-wolf-github",
   {
@@ -19,7 +22,9 @@ export default Alchemy.Stack(
   },
   Effect.gen(function* () {
     const { accountId } = yield* yield* Cloudflare.CloudflareEnvironment
-    const apiToken = yield* Cloudflare.ApiToken.AccountApiToken("CIToken", {
+    const account = `com.cloudflare.api.account.${accountId}`
+
+    const planToken = yield* Cloudflare.ApiToken.AccountApiToken("PlanToken", {
       accountId,
       policies: [
         {
@@ -27,24 +32,38 @@ export default Alchemy.Stack(
           permissionGroups: [
             "Account Settings Read",
             "Secrets Store Read",
-            "Secrets Store Write",
             "Workers Scripts Read",
-            "Workers Scripts Write",
           ],
-          resources: {
-            [`com.cloudflare.api.account.${accountId}`]: "*",
-          },
+          resources: { [account]: "*" },
         },
       ],
     })
 
-    // Scope Cloudflare credentials to GitHub environments so pull_request jobs
-    // only see preview secrets, and production deploy only sees production.
+    const deployToken = yield* Cloudflare.ApiToken.AccountApiToken(
+      "DeployToken",
+      {
+        accountId,
+        policies: [
+          {
+            effect: "allow",
+            permissionGroups: [
+              "Account Settings Read",
+              "Secrets Store Read",
+              "Secrets Store Write",
+              "Workers Scripts Read",
+              "Workers Scripts Write",
+            ],
+            resources: { [account]: "*" },
+          },
+        ],
+      }
+    )
+
     yield* GitHub.Secret("PreviewCloudflareApiToken", {
       ...repository,
       environment: "preview",
       name: "CLOUDFLARE_API_TOKEN",
-      value: apiToken.value,
+      value: planToken.value,
     })
     yield* GitHub.Secret("PreviewCloudflareAccountId", {
       ...repository,
@@ -56,7 +75,7 @@ export default Alchemy.Stack(
       ...repository,
       environment: "production",
       name: "CLOUDFLARE_API_TOKEN",
-      value: apiToken.value,
+      value: deployToken.value,
     })
     yield* GitHub.Secret("ProductionCloudflareAccountId", {
       ...repository,

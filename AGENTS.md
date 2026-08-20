@@ -176,10 +176,12 @@ Alchemy injects its Cloudflare Vite plugin during `alchemy plan` and
 that the server bundle reaches. Read files at build time instead. See
 `src/lib/example-traces.ts` and `src/lib/announcements/load.ts`.
 
-**Bundle size.** Cloudflare rejects a Worker above 3 MiB gzip. After `pnpm build`,
-run `pnpm exec wrangler deploy --dry-run --name error-wolf dist/server/server.js`
+**Bundle size.** Production runs on the Cloudflare Workers Paid plan (10 MiB
+gzip). After `pnpm build`, run
+`pnpm exec wrangler deploy --dry-run --name error-wolf dist/server/server.js`
 to print the current size. This is a read-only size check, not the deployment
-path.
+path. Keep the Worker under the paid limit; treat 3 MiB as a soft target so a
+plan downgrade would still fit.
 
 To test against the Workers runtime and not the Vite dev server, run
 `pnpm build`, then `pnpm exec wrangler dev`. Node API differences appear there.
@@ -189,7 +191,8 @@ To test against the Workers runtime and not the Vite dev server, run
 **Alchemy deploys this Worker.** Same-repository pull requests run an Alchemy
 plan after CI succeeds. Fork pull requests run CI only. A push to `master`
 deploys production after CI succeeds. The one-time `stacks/github.ts` stack
-creates the preview and production environment secrets used by these jobs.
+creates the preview (read-only plan) and production (deploy) environment secrets
+used by these jobs.
 
 Set `VITE_SITE_URL` as a build variable in the Cloudflare project. Vite inlines
 it at build time, so it must be present in the Cloudflare build and not only in
