@@ -22,7 +22,7 @@ Read the [privacy page](https://errorwolf.dev/privacy) for the full policy.
 
 ## Feedback and issues
 
-Suggestions, product feedback, and bug reports are welcome. Please **[open a GitHub issue](https://github.com/slate-rehm/error-wolf/issues/new)** so we can track them in one place.
+Suggestions, product feedback, and bug reports are welcome. Please **[open a GitHub issue](https://github.com/paperkeel/error-wolf/issues/new)** so we can track them in one place.
 
 ## Development
 

@@ -11,7 +11,7 @@
 export const SENTRY_DSN =
   "https://5acd315994aa7dbf371fc6690440205e@o4510046563663872.ingest.us.sentry.io/4511827764445184"
 
-export const SENTRY_ORG = "bearfire"
+export const SENTRY_ORG = "paperkeel"
 
 export const SENTRY_PROJECT = "error-wolf"
 

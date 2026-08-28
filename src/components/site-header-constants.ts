@@ -1,5 +1,4 @@
-export const SITE_HEADER_GITHUB_URL =
-  "https://github.com/slate-rehm/error-wolf/"
+export const SITE_HEADER_GITHUB_URL = "https://github.com/paperkeel/error-wolf/"
 
 export const SITE_HEADER_HISTORY_HINT =
   "Opens a dialog with your last simplify runs so you can review or copy outputs."

@@ -7,7 +7,7 @@ import * as Layer from "effect/Layer"
 import * as Redacted from "effect/Redacted"
 
 const repository = {
-  owner: "bearfire-dev",
+  owner: "paperkeel",
   repository: "error-wolf",
 }
 
